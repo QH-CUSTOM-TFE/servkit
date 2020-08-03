@@ -1,3 +1,4 @@
+import { asyncThrowMessage, asyncThrow } from '../common/index';
 export interface ServDeclOptions {
     id: string;
     version: string;
@@ -26,7 +27,7 @@ export type ServEventListener<A = any> = (args: A) => void;
 export type ServEventUnListener = () => void;
 
 export interface ServEventer<A = void> {
-    on(listener: ServEventListener<A>): ServEventUnListener ;
+    on(listener: ServEventListener<A>): ServEventUnListener;
     once(listener: ServEventListener<A>): ServEventUnListener;
     emit(args: A): void;
 }
@@ -47,7 +48,7 @@ export interface ServServiceMeta {
 }
 
 export class ServService {
-    
+
 }
 
 (ServService as any).IS_SERV_SERVICE = true;
@@ -68,53 +69,72 @@ export interface ServAnnoImpl {
 
 const decl: ServAnnoDecl = ((options: ServDeclOptions) => {
     return function(cls: typeof ServService) {
-        if (!(cls as any).IS_SERV_SERVICE) {
-            throw new Error(`[SERVKIT] The Service should extends from ServService.`);
-        }
-        const metas = meta(cls, true);
-        if (!metas) {
-            throw new Error(`[SERVKIT] Invalid Service class.`);
-        }
+        try {
+            if (!(cls as any).IS_SERV_SERVICE) {
+                asyncThrowMessage(`The Service should extends from ServService.`);
+                return;
+            }
+            const metas = meta(cls, true);
+            if (!metas) {
+                asyncThrowMessage(`Invalid Service class.`);
+                return;
+            }
 
-        metas.id = options.id;
-        metas.version = options.version;
+            metas.id = options.id;
+            metas.version = options.version;
+        } catch (e) {
+            asyncThrow(e);
+        }
     };
 }) as any;
 
 const impl: ServAnnoImpl = ((options?: ServImplOptions) => {
     return function(cls: any) {
-        if (!(cls as any).IS_SERV_SERVICE) {
-            throw new Error(`[SERVKIT] The Service should extends from ServService.`);
-        }
-        const metas = meta(cls);
-        if (!metas) {
-            throw new Error(`[SERVKIT] Invalid Service class.`);
-        }
-        const proto = cls.prototype;
-        metas.apis.forEach((item) => {
-            if (!proto.hasOwnProperty(item.name)) {
-                throw new Error(`[SERVKIT] The service impl forget to implement api [${item.name}].`);
+        try {
+            if (!(cls as any).IS_SERV_SERVICE) {
+                asyncThrowMessage(`The Service should extends from ServService.`);
+                return;
             }
-        });
+
+            const metas = meta(cls);
+            if (!metas) {
+                asyncThrowMessage(`Invalid Service class.`);
+                return;
+            }
+            const proto = cls.prototype;
+            metas.apis.forEach((item) => {
+                if (!proto.hasOwnProperty(item.name)) {
+                    asyncThrowMessage(`The service impl forget to implement api [${item.name}].`);
+                }
+            });
+        } catch (e) {
+            asyncThrow(e);
+        }
     };
 }) as any;
 
 function apiDecorate(proto: any, propKey: string) {
-    const metas = meta(proto, true);
-    if (!metas) {
-        throw new Error(`[SERVKIT] Can't get meta in api [${propKey}].`);
-    }
-
-    const apis = metas.apis;
-    for (let i = 0, iz = apis.length; i < iz; ++i) {
-        if (apis[i].name === propKey) {
-            throw new Error(`[SERVKIT] Api conflicts [${propKey}].`);
+    try {
+        const metas = meta(proto, true);
+        if (!metas) {
+            asyncThrowMessage(`Can't get meta in api [${propKey}].`);
+            return;
         }
-    }
 
-    apis.push({
-        name: propKey,
-    });
+        const apis = metas.apis;
+        for (let i = 0, iz = apis.length; i < iz; ++i) {
+            if (apis[i].name === propKey) {
+                asyncThrowMessage(`Api conflicts [${propKey}].`);
+                return;
+            }
+        }
+
+        apis.push({
+            name: propKey,
+        });
+    } catch (e) {
+        asyncThrow(e);
+    }
 }
 
 function api() {
@@ -122,36 +142,56 @@ function api() {
 }
 
 function eventDecorate(proto: any, propKey: string) {
-    const metas = meta(proto, true);
-    if (!metas) {
-        throw new Error(`[SERVKIT] Can't get meta in event [${propKey}].`);
-    }
-
-    const events = metas.evts;
-    for (let i = 0, iz = events.length; i < iz; ++i) {
-        if (events[i].name === propKey) {
-            throw new Error(`[SERVKIT] Event conflicts [${propKey}].`);
+    try {
+        const metas = meta(proto, true);
+        if (!metas) {
+            asyncThrowMessage(`Can't get meta in event [${propKey}].`);
+            return;
         }
-    }
 
-    events.push({
-        name: propKey,
-    });
+        const events = metas.evts;
+        for (let i = 0, iz = events.length; i < iz; ++i) {
+            if (events[i].name === propKey) {
+                asyncThrowMessage(`Event conflicts [${propKey}].`);
+                return;
+            }
+        }
+
+        events.push({
+            name: propKey,
+        });
+    } catch (e) {
+        asyncThrow(e);
+    }
 }
 
 function event() {
     return eventDecorate;
 }
 
-function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta {
-    let ret = (obj as any)[META] as ServServiceMeta;
-    if (ret) {
-        return ret;
-    }
+function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta | undefined {
+    try {
+        let ret = (obj as any)[META] as ServServiceMeta;
+        if (ret) {
+            return ret;
+        }
 
-    if (typeof obj === 'function') {
-        ret = (obj.prototype as any)[META];
-        if (!ret && create) {
+        if (typeof obj === 'function') {
+            ret = (obj.prototype as any)[META];
+            if (!ret && create) {
+                ret = {
+                    id: '',
+                    version: '',
+                    apis: [],
+                    evts: [],
+                };
+
+                (obj.prototype as any)[META] = ret;
+            }
+
+            return ret;
+        } else if (create && typeof obj === 'object' && (obj as any).IS_SERV_SERVICE) {
+            // Prototype of Interface
             ret = {
                 id: '',
                 version: '',
@@ -159,58 +199,52 @@ function meta(obj: typeof ServService | ServService, create?: boolean): ServServ
                 evts: [],
             };
 
-            (obj.prototype as any)[META] = ret;
+            (obj as any)[META] = ret;
+
+            return ret;
         }
 
-        return ret;
-    } else if (create && typeof obj === 'object' && (obj as any).IS_SERV_SERVICE) {
-        // Prototype of Interface
-        ret = {
-            id: '',
-            version: '',
-            apis: [],
-            evts: [],
-        };
-
-        (obj as any)[META] = ret;
-
-        return ret;
+        asyncThrowMessage('Get meta from an invalid serv target!');
+    } catch (e) {
+        asyncThrow(e);
     }
-
-    throw new Error('[SERVKIT] Get meta from an invalid serv target!');
 }
 
 const IMPL = '__serv_service_impl_meta';
 
-function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta {
-    let ret = (obj as any)[IMPL] as ServServiceImplMeta;
-    if (ret) {
-        return ret;
-    }
+function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta | undefined {
+    try {
+        let ret = (obj as any)[IMPL] as ServServiceImplMeta;
+        if (ret) {
+            return ret;
+        }
 
-    if (typeof obj === 'function') {
-        ret = (obj.prototype as any)[IMPL];
-        if (!ret && create) {
+        if (typeof obj === 'function') {
+            ret = (obj.prototype as any)[IMPL];
+            if (!ret && create) {
+                ret = {
+                    injects: {},
+                };
+
+                (obj.prototype as any)[IMPL] = ret;
+            }
+
+            return ret;
+        } else if (create && typeof obj === 'object' && (obj as any).IS_SERV_SERVICE) {
+            // Prototype of Interface
             ret = {
                 injects: {},
             };
 
-            (obj.prototype as any)[IMPL] = ret;
+            (obj as any)[IMPL] = ret;
+
+            return ret;
         }
 
-        return ret;
-    } else if (create && typeof obj === 'object' && (obj as any).IS_SERV_SERVICE) {
-        // Prototype of Interface
-        ret = {
-            injects: {},
-        };
-
-        (obj as any)[IMPL] = ret;
-
-        return ret;
+        asyncThrowMessage('Get meta from an invalid impl target!');
+    } catch (e) {
+        asyncThrow(e);
     }
-
-    throw new Error('[SERVKIT] Get meta from an invalid impl target!');
 }
 
 export enum EServImplInject {
@@ -231,15 +265,20 @@ export type ServImplGetService = (decl: typeof ServService) => ServService;
 
 function implInject(type: EServImplInject) {
     return function(proto: any, propKey: string) {
-        const metas: ServServiceImplMeta = implMeta(proto, true);
-        if (!metas) {
-            throw new Error(`[SERVKIT] Can't get impl metas in inject [${propKey}].`);
-        }
+        try {
+            const metas = implMeta(proto, true);
+            if (!metas) {
+                asyncThrowMessage(`Can't get impl metas in inject [${propKey}].`);
+                return;
+            }
 
-        metas.injects[type] = {
-            type,
-            name: propKey,
-        };
+            metas.injects[type] = {
+                type,
+                name: propKey,
+            };
+        } catch (e) {
+            asyncThrow(e);
+        }
     };
 }
 

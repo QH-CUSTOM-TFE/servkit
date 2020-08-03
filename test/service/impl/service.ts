@@ -31,14 +31,6 @@ export class TestImpl extends Test {
         return API_SUCCEED(args);
     }
 
-    notifyNoArgs(): void {
-        //
-    }
-
-    notifyWithArgs(args: ServAPIArgs<string>): void {
-        expect(args).toBe(STRING_VALUE);
-    }
-
     eventNoArgs: ServEventer;
     
     eventWithArgs: ServEventer<string>;
@@ -65,14 +57,6 @@ export class Test1Impl extends Test1 {
 
     apiWithAny<T = any>(args: ServAPIArgs<T>): ServAPIRetn<T> {
         return API_SUCCEED(args);
-    }
-
-    notifyNoArgs(): void {
-        //
-    }
-
-    notifyWithArgs(args: ServAPIArgs<string>): void {
-        expect(args).toBe(STRING_VALUE);
     }
 
     eventNoArgs: ServEventer;

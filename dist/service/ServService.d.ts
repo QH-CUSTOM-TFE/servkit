@@ -49,8 +49,8 @@ declare function apiDecorate(proto: any, propKey: string): void;
 declare function api(): typeof apiDecorate;
 declare function eventDecorate(proto: any, propKey: string): void;
 declare function event(): typeof eventDecorate;
-declare function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta;
-declare function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta;
+declare function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta | undefined;
+declare function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta | undefined;
 export declare enum EServImplInject {
     NULL = 0,
     GET_SERVICE = 1

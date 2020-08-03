@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logSession = exports.noop = exports.asyncThrow = exports.EServConstant = exports.Env = void 0;
+exports.logSession = exports.noop = exports.asyncThrowMessage = exports.asyncThrow = exports.EServConstant = exports.Env = void 0;
 exports.Env = {
     DEV: false,
 };
@@ -22,6 +22,10 @@ exports.asyncThrow = function (error) {
     setTimeout(function () {
         throw error;
     });
+};
+exports.asyncThrowMessage = function (msg) {
+    msg = "[SERVKIT] " + msg;
+    exports.asyncThrow(new Error(msg));
 };
 exports.noop = function () { return ({}); };
 exports.logSession = exports.Env.DEV ? function (session) {

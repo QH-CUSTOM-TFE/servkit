@@ -27,6 +27,11 @@ export const asyncThrow = (error: any) => {
     });
 };
 
+export const asyncThrowMessage = (msg: string) => {
+    msg = `[SERVKIT] ${msg}`;
+    asyncThrow(new Error(msg));
+};
+
 export const noop = () => ({});
 
 export const logSession = Env.DEV ? function(session: ServSession, ...args: any[]) {

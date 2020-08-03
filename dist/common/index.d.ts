@@ -11,5 +11,6 @@ export declare enum EServConstant {
     SERV_SESSION_CALL_MESSAGE_TIMEOUT = 30000
 }
 export declare const asyncThrow: (error: any) => void;
+export declare const asyncThrowMessage: (msg: string) => void;
 export declare const noop: () => {};
 export declare const logSession: (session: ServSession, ...args: any[]) => void;
