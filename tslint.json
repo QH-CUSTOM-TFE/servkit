@@ -1,0 +1,20 @@
+{
+    "extends": "tslint:recommended",
+    "rules": {
+        "object-literal-sort-keys": false,
+        "ordered-imports": false,
+        "quotemark": false,
+        "no-trailing-whitespace": false,
+        "no-string-literal": false,
+        "interface-name": false,
+        "unified-signatures": false,
+        "callable-types": false,
+        "variable-name": false,
+        "class-name": false,
+        "member-access": false,
+        "max-classes-per-file": false,
+        "ban-types": false,
+        "member-ordering": false,
+        "only-arrow-functions": false
+    }
+}

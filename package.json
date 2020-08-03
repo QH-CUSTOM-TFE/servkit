@@ -1,0 +1,44 @@
+{
+  "name": "servkit",
+  "version": "1.0.1",
+  "description": "RPC服务通信库，用于构建前端多窗口（或者IFrame）页面应用，或者基于微应用架构的页面应用。",
+  "main": "./dist/index.js",
+  "author": "Yang G",
+  "license": "MIT",
+  "dependencies": {
+    "eventemitter3": "2.0.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-decorators": "^7.10.5",
+    "@babel/plugin-proposal-export-default-from": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "@types/jest": "^24.0.16",
+    "babel-jest": "^24.8.0",
+    "husky": "3.1.0",
+    "jest": "^24.8.0",
+    "regenerator-runtime": "^0.13.6",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.1"
+  },
+  "scripts": {
+    "tslint": "tslint 'src/**/*.ts'",
+    "build": "npm run tslint && npm run test && rm -rf ./build && tsc -p ./src && rm -rf ./dist && mv ./build ./dist",
+    "test": "jest",
+    "precommit": "npm run tslint && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BuildItNow/servkit"
+  },
+  "keywords": [
+    "rpc",
+    "iframe",
+    "window",
+    "micro service",
+    "micro app"
+  ]
+}

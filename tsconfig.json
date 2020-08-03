@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "Node",
+        "strictNullChecks": true,
+        "types": [
+            "jest"
+        ],
+        "lib": [
+            "es2015",
+            "dom",
+            "es2018.promise"
+        ],
+        "declaration": true,
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
+    },
+}

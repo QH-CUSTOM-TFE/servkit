@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "Node",
+        "strictNullChecks": true,
+        "lib": [
+            "es2015",
+            "dom",
+            "es2018.promise"
+        ],
+        "declaration": true,
+        "outDir": "../build",
+        "skipLibCheck": true,
+        "experimentalDecorators": true
+    },
+    "include": [
+        "./**/*",
+    ]
+}
