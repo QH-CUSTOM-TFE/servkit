@@ -8,9 +8,33 @@ export const Env = {
 };
 
 try {
-    const jsonData = window.localStorage.getItem('__servkit.config__');
-    const config = jsonData ? JSON.parse(jsonData) : {};
-    Object.assign(Env, config);
+    const LOCAL_ENV = '__$$servkit';
+    const __$$servkit = {
+        getLocalEnv: (key?: string) => {
+            try {
+                const jsonData = window.localStorage.getItem(LOCAL_ENV);
+                const data = jsonData ? JSON.parse(jsonData) : {};
+                return key ? data[key] : data;
+            } catch (e) {
+                //
+            }
+        },
+        setLocalEnv: (key: string, val: any = true) => {
+            try {
+                const data = __$$servkit.getLocalEnv();
+                data[key] = val;
+                window.localStorage.setItem(LOCAL_ENV, JSON.stringify(data));
+                return data;
+            } catch (e) {
+                //
+            }
+        },
+        Env,
+    };
+    const localEnv = __$$servkit.getLocalEnv();
+    Object.assign(Env, localEnv);
+
+    (window as any).__$$servkit = __$$servkit;
 } catch (e) {
     //
 }

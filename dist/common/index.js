@@ -5,9 +5,35 @@ exports.Env = {
     DEV: false,
 };
 try {
-    var jsonData = window.localStorage.getItem('__servkit.config__');
-    var config = jsonData ? JSON.parse(jsonData) : {};
-    Object.assign(exports.Env, config);
+    var LOCAL_ENV_1 = '__$$servkit';
+    var __$$servkit_1 = {
+        getLocalEnv: function (key) {
+            try {
+                var jsonData = window.localStorage.getItem(LOCAL_ENV_1);
+                var data = jsonData ? JSON.parse(jsonData) : {};
+                return key ? data[key] : data;
+            }
+            catch (e) {
+                //
+            }
+        },
+        setLocalEnv: function (key, val) {
+            if (val === void 0) { val = true; }
+            try {
+                var data = __$$servkit_1.getLocalEnv();
+                data[key] = val;
+                window.localStorage.setItem(LOCAL_ENV_1, JSON.stringify(data));
+                return data;
+            }
+            catch (e) {
+                //
+            }
+        },
+        Env: exports.Env,
+    };
+    var localEnv = __$$servkit_1.getLocalEnv();
+    Object.assign(exports.Env, localEnv);
+    window.__$$servkit = __$$servkit_1;
 }
 catch (e) {
     //
