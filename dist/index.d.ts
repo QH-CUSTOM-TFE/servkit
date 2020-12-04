@@ -4,3 +4,4 @@ export * from './servkit';
 export * from './message';
 export * from './session';
 export * from './window';
+export * from './sapp';

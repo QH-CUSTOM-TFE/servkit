@@ -1,8 +1,17 @@
-import { ConstructorOf } from '../common/index';
+import { logACL } from '../common/index';
 import { ServServiceMessageCreator } from '../message/creator';
-import { ServMessage, ServServiceAPIMessage, ServServiceMessage, ServServiceReturnMessage } from '../message/type';
+import {
+    ServMessage,
+    ServServiceAPIMessage,
+    ServServiceMessage,
+    ServServiceReturnMessage,
+    ServServiceGetVersionReturnMessage,
+    EServServiceMessage,
+} from '../message/type';
+
 import { ServTerminal } from '../terminal/ServTerminal';
-import { ServService, util } from './ServService';
+import { ServService } from './ServService';
+import { ServServiceServerACLResolver } from './ServServiceServerACLResolver';
 import {
     ServServiceConfig,
     ServServiceManager,
@@ -16,12 +25,15 @@ import {
 export interface ServServiceServerConfig {
     service?: ServServiceConfig;
     serviceRefer?: ServServiceReferPattern;
+    ACLResolver?: ServServiceServerACLResolver;
 }
 
 export class ServServiceServer {
+    terminal: ServTerminal;
+
     protected service: ServServiceManager;
     protected serviceRefer?: ServServiceRefer;
-    protected terminal: ServTerminal;
+    protected ACLResolver?: ServServiceServerACLResolver;
     protected sessionUnlisten?: (() => void);
 
     constructor(terminal: ServTerminal) {
@@ -34,6 +46,7 @@ export class ServServiceServer {
         this.service = new ServServiceManager();
         this.service.init(config.service);
         this.service.onEvnterEmit = this.onEventerEmit;
+        this.ACLResolver = config.ACLResolver;
 
         if (config.serviceRefer) {
             this.serviceRefer = this.terminal.servkit.service.referServices(config.serviceRefer);
@@ -54,9 +67,11 @@ export class ServServiceServer {
             this.serviceRefer = undefined;
         }
         this.service.release();
+
+        delete this.ACLResolver;
     }
 
-    serviceExec<T extends ConstructorOf<any>, R>(decl: T, exec: ((service: InstanceType<T>) => R)) {
+    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)) {
         const service = this.getService(decl);
         if (!service) {
             return null;
@@ -83,8 +98,8 @@ export class ServServiceServer {
         return service as T;
     }
 
-    getService<T extends ConstructorOf<any>>(decl: T): InstanceType<T> | undefined {
-        const meta = util.meta(decl);
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
+        const meta = decl.meta();
         if (!meta) {
             return;
         }
@@ -112,6 +127,10 @@ export class ServServiceServer {
         const servMessage = message as ServServiceMessage;
         if (ServServiceMessageCreator.isAPIMessage(servMessage)) {
             return this.handleAPIMessage(servMessage as ServServiceAPIMessage);
+        } 
+
+        if (ServServiceMessageCreator.isGetVersionMessage(servMessage)) {
+            return this.handleGetVesionMessage(servMessage);
         }
 
         return false;
@@ -119,19 +138,44 @@ export class ServServiceServer {
 
     protected handleAPIMessage(message: ServServiceAPIMessage): boolean {
         const id = message.service;
-        const service = this.getServiceByID<any>(id);
+        const service = this.getServiceByID<ServService>(id);
 
         let retnPromise: Promise<any>;
         
         if (!service) {
-            retnPromise = Promise.reject(new Error(`Unknown service [${id}]`));
+            retnPromise = Promise.reject(`Unknown service [${id}]`);
         } else {
             const api = message.api;
+            const meta = service.meta()!;
+            const apiMeta = meta.apis.find((item) => item.name === api)!;
+
             if (typeof service[api] !== 'function') {
-                retnPromise = Promise.reject(new Error(`Unknown api [${api}] in service ${id}`));
+                retnPromise = Promise.reject(`Unknown api [${api}] in service ${id}`);
             } else {
                 try {
-                    retnPromise = Promise.resolve(service[api](message.args));
+                    if (this.ACLResolver) {
+                        if (!this.ACLResolver.canAccessService(this, meta)) {
+                            logACL(this, `API denied because of server ACL, [${id}][${api}]`);
+                            // tslint:disable-next-line:no-string-throw
+                            throw `Access service ${id} denied`;
+                        } else if (!this.ACLResolver.canAccessAPI(this, meta, apiMeta)) {
+                            logACL(this, `API denied because of api ACL, [${id}][${api}]`);
+                            // tslint:disable-next-line:no-string-throw
+                            throw `Access api ${api} denied in service ${id}`;
+                        }
+                    }
+                    
+                    let args = message.args;
+                    if (apiMeta && apiMeta.options && apiMeta.options.onCallTransform) {
+                        args = apiMeta.options.onCallTransform.recv(args);
+                    }
+                    retnPromise = Promise.resolve(service[api](args));
+                    if (apiMeta && apiMeta.options && apiMeta.options.onRetnTransform) {
+                        retnPromise = retnPromise.then((data) => {
+                            data = apiMeta.options!.onRetnTransform!.send(data);
+                            return data;
+                        });
+                    }
                 } catch (e) {
                     retnPromise = Promise.reject(e);
                 }
@@ -139,6 +183,26 @@ export class ServServiceServer {
         }
             
         this.sendReturnMessage(retnPromise, message, ServServiceMessageCreator.createAPIReturn);
+
+        return true;
+    }
+
+    protected handleGetVesionMessage(message: ServServiceGetVersionReturnMessage): boolean {
+        const id = message.service;
+        const service = this.getServiceByID<ServService>(id);
+
+        let retnPromise: Promise<any>;
+        
+        if (!service) {
+            retnPromise = Promise.reject(`Unknown service [${id}]`);
+        } else {
+            const meta = service.meta()!;
+            retnPromise = Promise.resolve(meta.version);
+        }
+            
+        this.sendReturnMessage(retnPromise, message, (origin, data, error) => {
+            return ServServiceMessageCreator.createReturn(origin, EServServiceMessage.GET_VERSION_RETURN, data, error);
+        });
 
         return true;
     }
@@ -161,23 +225,27 @@ export class ServServiceServer {
         return this.terminal.session.sendMessage(message);
     }
 
-    protected sendEventMessage(
-        session: any,
-        retnPromise: Promise<any>,
-        origin: ServServiceMessage,
-        retnCreator: (message: ServServiceMessage, data?: any, error?: any) => ServServiceReturnMessage,
-    ): void {
-        retnPromise.then((data) => {
-            const retnMesage = retnCreator(origin, data);
-            this.sendMessage(retnMesage);
-        }, (error) => {
-            const retnMesage = retnCreator(origin, undefined, error);
-            this.sendMessage(retnMesage);
-        });
-    }
+    protected onEventerEmit: ServServiceOnEmitListener = (serviceId, event, args) => {
+        if (this.ACLResolver) {
+            const service = this.getServiceByID<ServService>(serviceId);
+            if (!service) {
+                logACL(this, `Event denied because of server ACL, [${serviceId}][${event}]`);
+                return;
+            }
+            const meta = service.meta();
+            if (!meta || !this.ACLResolver.canAccessService(this, meta)) {
+                logACL(this, `Event denied because of server ACL, [${serviceId}][${event}]`);
+                return;
+            } else {
+                const evtMeta = meta.evts.find((item) => item.name === event);
+                if (!evtMeta || !this.ACLResolver.canAccessEventer(this, meta, evtMeta)) {
+                    logACL(this, `Event denied because of event ACL, [${serviceId}][${event}]`);
+                    return;
+                }
+            }
+        }
 
-    protected onEventerEmit: ServServiceOnEmitListener = (service, event, args) => {
-        const message = ServServiceMessageCreator.createEvent(service, event, args);
+        const message = ServServiceMessageCreator.createEvent(serviceId, event, args);
         return this.sendMessage(message).catch(() => undefined);
     }
 }

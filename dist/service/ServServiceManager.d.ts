@@ -1,4 +1,3 @@
-import { ConstructorOf } from '../common/index';
 import { ServEventerManager } from './event/ServEventerManager';
 import { ServService, ServServiceMeta } from './ServService';
 interface ServServiceInfo {
@@ -18,7 +17,7 @@ export declare class ServServiceRefer {
     constructor(manager: ServServiceManager, pattern: ServServiceReferPattern);
     canRefer(service: string): boolean;
     getServiceByID<T extends ServService>(id: string): T | undefined;
-    getService<T extends ConstructorOf<any>>(decl: T): InstanceType<T> | undefined;
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
     rawEmit(service: string, event: string, args: any): void;
     setPattern(pattern: ServServiceReferPattern): void;
     detach(): void;
@@ -44,9 +43,9 @@ export declare class ServServiceManager {
     init(config?: ServServiceConfig): void;
     release(): void;
     getServiceByID<T extends ServService>(id: string): T | undefined;
-    getService<T extends ConstructorOf<any>>(decl: T): InstanceType<T> | undefined;
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
     serviceExecByID<T extends ServService, R>(id: string, exec: ((service: T) => R)): R | null;
-    serviceExec<T extends ConstructorOf<any>, R>(decl: T, exec: ((service: InstanceType<T>) => R)): R | null;
+    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)): R | null;
     addService<D extends typeof ServService, I extends D>(decl: D, impl: I, options?: ServServiceOptions): boolean;
     addServices(items: Array<{
         decl: typeof ServService;

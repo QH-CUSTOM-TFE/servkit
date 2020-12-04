@@ -1,3 +1,4 @@
+import { ServServiceGetVersionMessage, ServServiceGetVersionReturnMessage } from './type';
 import {
     EServMessage,
     EServServiceMessage,
@@ -33,10 +34,20 @@ export class ServMessageCreator {
 }
 
 export class ServServiceMessageCreator {
-    protected static create(type: EServServiceMessage, service: string): ServServiceMessage {
+    static create(type: EServServiceMessage, service: string): ServServiceMessage {
         const msg = ServMessageCreator.create(EServMessage.SERVICE) as ServServiceMessage;
         msg.service = service;
-        msg.serviceType = type;
+        msg.type = type;
+
+        return msg;
+    }
+
+    static createReturn(origin: ServServiceGetVersionMessage, type: EServServiceMessage,
+                        data: any, error?: any): ServServiceGetVersionReturnMessage {
+        const msg = ServServiceMessageCreator.clone(origin) as ServServiceGetVersionReturnMessage;
+        msg.type = type;
+        msg.data = data;
+        msg.error = error;
 
         return msg;
     }
@@ -44,7 +55,7 @@ export class ServServiceMessageCreator {
     static clone(origin: ServServiceMessage): ServServiceMessage {
         const msg = ServMessageCreator.clone(origin) as ServServiceMessage;
         msg.service = origin.service;
-        msg.serviceType = origin.serviceType;
+        msg.type = origin.type;
 
         return msg;
     }
@@ -59,7 +70,7 @@ export class ServServiceMessageCreator {
 
     static createAPIReturn(origin: ServServiceAPIMessage, data?: any, error?: any): ServServiceAPIReturnMessage {
         const msg = ServServiceMessageCreator.clone(origin) as ServServiceAPIReturnMessage;
-        msg.serviceType = EServServiceMessage.API_RETURN;
+        msg.type = EServServiceMessage.API_RETURN;
         msg.api = origin.api;
         msg.data = data;
         msg.error = error;
@@ -80,16 +91,26 @@ export class ServServiceMessageCreator {
     }
 
     static isAPIMessage(message: ServServiceMessage): boolean {
-        return message.serviceType === EServServiceMessage.API && ServServiceMessageCreator.isServiceMessage(message);
+        return message.type === EServServiceMessage.API && ServServiceMessageCreator.isServiceMessage(message);
     }
 
     static isEventMessage(message: ServServiceMessage): boolean {
-        return message.serviceType === EServServiceMessage.EVENT && ServServiceMessageCreator.isServiceMessage(message);
+        return message.type === EServServiceMessage.EVENT && ServServiceMessageCreator.isServiceMessage(message);
     }
 
     static isAPIReturnMessage(message: ServServiceReturnMessage, origin?: ServServiceMessage) {
-        return message.serviceType === EServServiceMessage.API_RETURN
+        return message.type === EServServiceMessage.API_RETURN
         && ServServiceMessageCreator.isServiceMessage(message) && (origin ? message.$id === origin.$id : true);
+    }
+
+    static isGetVersionMessage(message: ServServiceMessage): boolean {
+        return message.type === EServServiceMessage.GET_VERSION
+            && ServServiceMessageCreator.isServiceMessage(message);
+    }
+
+    static isGetVersionReturnMessage(message: ServServiceMessage): boolean {
+        return message.type === EServServiceMessage.GET_VERSION_RETURN
+            && ServServiceMessageCreator.isServiceMessage(message);
     }
 }
 

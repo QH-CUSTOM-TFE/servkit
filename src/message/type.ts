@@ -15,11 +15,13 @@ export enum EServServiceMessage {
     API,
     API_RETURN,
     EVENT,
+    GET_VERSION,
+    GET_VERSION_RETURN,
 }
 
 export interface ServServiceMessage extends ServMessage {
     service: string;
-    serviceType: EServServiceMessage;
+    type: EServServiceMessage;
 }
 
 export interface ServServiceReturnMessage extends ServServiceMessage {
@@ -39,6 +41,15 @@ export interface ServServiceAPIReturnMessage extends ServServiceReturnMessage {
 export interface ServServiceEventMessage extends ServServiceMessage {
     event: string;
     args?: any;
+}
+
+// tslint:disable-next-line:no-empty-interface
+export interface ServServiceGetVersionMessage extends ServServiceMessage {
+    
+}
+
+// tslint:disable-next-line:no-empty-interface
+export interface ServServiceGetVersionReturnMessage extends ServServiceReturnMessage {
 }
 
 export interface ServSessionCallMessage<T = any> extends ServMessage {

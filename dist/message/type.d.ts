@@ -12,11 +12,13 @@ export declare enum EServServiceMessage {
     NULL = 0,
     API = 1,
     API_RETURN = 2,
-    EVENT = 3
+    EVENT = 3,
+    GET_VERSION = 4,
+    GET_VERSION_RETURN = 5
 }
 export interface ServServiceMessage extends ServMessage {
     service: string;
-    serviceType: EServServiceMessage;
+    type: EServServiceMessage;
 }
 export interface ServServiceReturnMessage extends ServServiceMessage {
     data?: any;
@@ -32,6 +34,10 @@ export interface ServServiceAPIReturnMessage extends ServServiceReturnMessage {
 export interface ServServiceEventMessage extends ServServiceMessage {
     event: string;
     args?: any;
+}
+export interface ServServiceGetVersionMessage extends ServServiceMessage {
+}
+export interface ServServiceGetVersionReturnMessage extends ServServiceReturnMessage {
 }
 export interface ServSessionCallMessage<T = any> extends ServMessage {
     type: string;

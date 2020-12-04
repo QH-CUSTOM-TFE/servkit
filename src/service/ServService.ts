@@ -1,7 +1,13 @@
 import { asyncThrowMessage, asyncThrow } from '../common/index';
+
+export type ServACL = any;
+export type ServEXT = any;
+
 export interface ServDeclOptions {
     id: string;
     version: string;
+    ACL?: ServACL;
+    EXT?: ServEXT;
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -11,17 +17,45 @@ export interface ServImplOptions {
 
 export interface ServAPIOptions {
     timeout?: number;
+    onCallTransform?: {
+        send: (args: any) => any;
+        recv: (rawArgs: any) => any;
+    };
+    onRetnTransform?: {
+        send: (data: any) => any;
+        recv: (rawData: any) => any;
+    };
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+
+export interface ServEventerOptions {
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+
+const DEFAULT_SERV_API_OPTIONS: ServAPIOptions = {};
+const DEFAULT_SERV_EVENTER_OPTIONS: ServEventerOptions = {};
+
+export interface ServAPICallOptions {
+    timeout?: number;
 }
 
 export interface ServAPI<A, R = void> {
-    (args: A, options?: ServAPIOptions): Promise<R>;
+    (args: A, options?: ServAPICallOptions): Promise<R>;
 }
 
 export type ServAPIArgs<A = void> = A;
 export type ServAPIRetn<R = void> = Promise<R>;
 export const API_UNSUPPORT = () => Promise.reject(new Error('unsupport'));
-export const API_ERROR = (error?: any) => Promise.reject(error || 'error');
-export const API_SUCCEED = (data?: any) => Promise.resolve(data);
+export const API_ERROR = (error?: any) => Promise.reject(error || new Error('unknown'));
+
+export function API_SUCCEED(): Promise<any>;
+export function API_SUCCEED<T>(data: Promise<T>): Promise<T>;
+export function API_SUCCEED<T>(data: T): Promise<T>;
+export function API_SUCCEED(data?: any) { 
+    return Promise.resolve(data);
+}
 
 export type ServEventListener<A = any> = (args: A) => void;
 export type ServEventUnListener = () => void;
@@ -34,21 +68,31 @@ export interface ServEventer<A = void> {
 
 export interface ServAPIMeta {
     name: string;
+    options: ServAPIOptions;
 }
 
 export interface ServEventerMeta {
     name: string;
+    options: ServEventerOptions;
 }
 
 export interface ServServiceMeta {
     id: string;
     version: string;
+    ACL?: ServACL;
+    EXT?: ServEXT;
     apis: ServAPIMeta[];
     evts: ServEventerMeta[];
 }
 
 export class ServService {
+    meta() {
+        return meta(this);
+    }
 
+    static meta() {
+        return meta(this);
+    }
 }
 
 (ServService as any).IS_SERV_SERVICE = true;
@@ -80,8 +124,19 @@ const decl: ServAnnoDecl = ((options: ServDeclOptions) => {
                 return;
             }
 
+            if (!options.id) {
+                throw new Error('[SERVKIT] id is empty in service declaration');
+            }
+
+            if (!options.version) {
+                throw new Error(`[SERVKIT] version is empty in ${options.id} service declaration`);
+            }
+
             metas.id = options.id;
             metas.version = options.version;
+            metas.ACL = options.ACL;
+            metas.EXT = options.EXT;
+
         } catch (e) {
             asyncThrow(e);
         }
@@ -113,60 +168,70 @@ const impl: ServAnnoImpl = ((options?: ServImplOptions) => {
     };
 }) as any;
 
-function apiDecorate(proto: any, propKey: string) {
-    try {
-        const metas = meta(proto, true);
-        if (!metas) {
-            asyncThrowMessage(`Can't get meta in api [${propKey}].`);
-            return;
-        }
-
-        const apis = metas.apis;
-        for (let i = 0, iz = apis.length; i < iz; ++i) {
-            if (apis[i].name === propKey) {
-                asyncThrowMessage(`Api conflicts [${propKey}].`);
+function api(options?: ServAPIOptions) {
+    return function(proto: any, propKey: string) {
+        try {
+            const metas = meta(proto, true);
+            if (!metas) {
+                asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
             }
-        }
+    
+            const apis = metas.apis;
+            for (let i = 0, iz = apis.length; i < iz; ++i) {
+                if (apis[i].name === propKey) {
+                    asyncThrowMessage(`Api conflicts [${propKey}].`);
+                    return;
+                }
+            }
 
-        apis.push({
-            name: propKey,
-        });
-    } catch (e) {
-        asyncThrow(e);
-    }
+            const item: ServAPIMeta = {
+                name: propKey,
+                options: DEFAULT_SERV_API_OPTIONS,
+            };
+
+            if (options) {
+                item.options = options;
+            }
+    
+            apis.push(item);
+        } catch (e) {
+            asyncThrow(e);
+        }
+    };
 }
 
-function api() {
-    return apiDecorate;
-}
-
-function eventDecorate(proto: any, propKey: string) {
-    try {
-        const metas = meta(proto, true);
-        if (!metas) {
-            asyncThrowMessage(`Can't get meta in event [${propKey}].`);
-            return;
-        }
-
-        const events = metas.evts;
-        for (let i = 0, iz = events.length; i < iz; ++i) {
-            if (events[i].name === propKey) {
-                asyncThrowMessage(`Event conflicts [${propKey}].`);
+function event(options?: ServEventerOptions) {
+    return function(proto: any, propKey: string) {
+        try {
+            const metas = meta(proto, true);
+            if (!metas) {
+                asyncThrowMessage(`Can't get meta in event [${propKey}].`);
                 return;
             }
+    
+            const events = metas.evts;
+            for (let i = 0, iz = events.length; i < iz; ++i) {
+                if (events[i].name === propKey) {
+                    asyncThrowMessage(`Event conflicts [${propKey}].`);
+                    return;
+                }
+            }
+
+            const item: ServEventerMeta = {
+                name: propKey,
+                options: DEFAULT_SERV_EVENTER_OPTIONS,
+            };
+
+            if (options) {
+                item.options = options;
+            }
+    
+            events.push(item);
+        } catch (e) {
+            asyncThrow(e);
         }
-
-        events.push({
-            name: propKey,
-        });
-    } catch (e) {
-        asyncThrow(e);
-    }
-}
-
-function event() {
-    return eventDecorate;
+    };
 }
 
 function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta | undefined {
@@ -293,6 +358,5 @@ export const anno = {
 };
 
 export const util = {
-    meta,
     implMeta,
 };

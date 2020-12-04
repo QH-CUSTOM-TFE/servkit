@@ -1,6 +1,6 @@
 {
   "name": "servkit",
-  "version": "1.0.3",
+  "version": "1.0.7",
   "description": "RPC服务通信库，用于构建前端多窗口（或者IFrame）页面应用，或者基于微应用架构的页面应用。",
   "main": "./dist/index.js",
   "author": "Yang G",
@@ -25,6 +25,7 @@
     "typescript": "^3.1.1"
   },
   "scripts": {
+    "start": "npm run tslint && npm run test && npm run build",
     "tslint": "tslint 'src/**/*.ts'",
     "build": "npm run tslint && npm run test && rm -rf ./build && tsc -p ./src && rm -rf ./dist && mv ./build ./dist",
     "test": "jest",

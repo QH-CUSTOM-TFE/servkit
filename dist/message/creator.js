@@ -30,13 +30,20 @@ var ServServiceMessageCreator = /** @class */ (function () {
     ServServiceMessageCreator.create = function (type, service) {
         var msg = ServMessageCreator.create(type_1.EServMessage.SERVICE);
         msg.service = service;
-        msg.serviceType = type;
+        msg.type = type;
+        return msg;
+    };
+    ServServiceMessageCreator.createReturn = function (origin, type, data, error) {
+        var msg = ServServiceMessageCreator.clone(origin);
+        msg.type = type;
+        msg.data = data;
+        msg.error = error;
         return msg;
     };
     ServServiceMessageCreator.clone = function (origin) {
         var msg = ServMessageCreator.clone(origin);
         msg.service = origin.service;
-        msg.serviceType = origin.serviceType;
+        msg.type = origin.type;
         return msg;
     };
     ServServiceMessageCreator.createAPI = function (service, api, args) {
@@ -47,7 +54,7 @@ var ServServiceMessageCreator = /** @class */ (function () {
     };
     ServServiceMessageCreator.createAPIReturn = function (origin, data, error) {
         var msg = ServServiceMessageCreator.clone(origin);
-        msg.serviceType = type_1.EServServiceMessage.API_RETURN;
+        msg.type = type_1.EServServiceMessage.API_RETURN;
         msg.api = origin.api;
         msg.data = data;
         msg.error = error;
@@ -63,14 +70,22 @@ var ServServiceMessageCreator = /** @class */ (function () {
         return message.$type === type_1.EServMessage.SERVICE;
     };
     ServServiceMessageCreator.isAPIMessage = function (message) {
-        return message.serviceType === type_1.EServServiceMessage.API && ServServiceMessageCreator.isServiceMessage(message);
+        return message.type === type_1.EServServiceMessage.API && ServServiceMessageCreator.isServiceMessage(message);
     };
     ServServiceMessageCreator.isEventMessage = function (message) {
-        return message.serviceType === type_1.EServServiceMessage.EVENT && ServServiceMessageCreator.isServiceMessage(message);
+        return message.type === type_1.EServServiceMessage.EVENT && ServServiceMessageCreator.isServiceMessage(message);
     };
     ServServiceMessageCreator.isAPIReturnMessage = function (message, origin) {
-        return message.serviceType === type_1.EServServiceMessage.API_RETURN
+        return message.type === type_1.EServServiceMessage.API_RETURN
             && ServServiceMessageCreator.isServiceMessage(message) && (origin ? message.$id === origin.$id : true);
+    };
+    ServServiceMessageCreator.isGetVersionMessage = function (message) {
+        return message.type === type_1.EServServiceMessage.GET_VERSION
+            && ServServiceMessageCreator.isServiceMessage(message);
+    };
+    ServServiceMessageCreator.isGetVersionReturnMessage = function (message) {
+        return message.type === type_1.EServServiceMessage.GET_VERSION_RETURN
+            && ServServiceMessageCreator.isServiceMessage(message);
     };
     return ServServiceMessageCreator;
 }());

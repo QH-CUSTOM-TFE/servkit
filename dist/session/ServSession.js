@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ServSession = exports.EServSessionStatus = exports.EServSession = void 0;
+exports.ServSession = exports.EServSessionStatus = void 0;
 var index_1 = require("../common/index");
 var creator_1 = require("../message/creator");
 var ServMessageContextManager_1 = require("../message/ServMessageContextManager");
@@ -10,12 +10,6 @@ var ServEventChannel_1 = require("./channel/ServEventChannel");
 var ServMessageChannel_1 = require("./channel/ServMessageChannel");
 var ServWindowChannel_1 = require("./channel/ServWindowChannel");
 var ServSessionChecker_1 = require("./ServSessionChecker");
-var EServSession;
-(function (EServSession) {
-    EServSession[EServSession["NULL"] = 0] = "NULL";
-    EServSession[EServSession["MASTER"] = 1] = "MASTER";
-    EServSession[EServSession["SLAVE"] = 2] = "SLAVE";
-})(EServSession = exports.EServSession || (exports.EServSession = {}));
 var EServSessionStatus;
 (function (EServSessionStatus) {
     EServSessionStatus[EServSessionStatus["CLOSED"] = 0] = "CLOSED";
@@ -25,8 +19,6 @@ var EServSessionStatus;
 var ServSession = /** @class */ (function () {
     function ServSession(terminal) {
         this.terminal = terminal;
-        this.id = terminal.id;
-        this.type = terminal.type;
     }
     ServSession.prototype.init = function (config) {
         this.status = EServSessionStatus.CLOSED;
@@ -71,10 +63,10 @@ var ServSession = /** @class */ (function () {
         this.channel.release();
     };
     ServSession.prototype.isMaster = function () {
-        return this.type === EServSession.MASTER;
+        return this.terminal.isMaster();
     };
     ServSession.prototype.getID = function () {
-        return this.id;
+        return this.terminal.id;
     };
     ServSession.prototype.isOpened = function () {
         return this.status === EServSessionStatus.OPENED;
@@ -82,6 +74,7 @@ var ServSession = /** @class */ (function () {
     ServSession.prototype.open = function (options) {
         var _this = this;
         if (this.status > EServSessionStatus.CLOSED) {
+            index_1.logSession(this, 'OPEN WHILE ' + (this.status === EServSessionStatus.OPENNING ? 'OPENNING' : 'OPENED'));
             return this.openningPromise || Promise.reject(new Error('unknown'));
         }
         this.status = EServSessionStatus.OPENNING;
@@ -143,6 +136,7 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.close = function () {
         if (this.status <= EServSessionStatus.CLOSED) {
+            index_1.logSession(this, 'CLOSE WHILE CLOSED');
             return;
         }
         this.channel.close();
@@ -158,9 +152,12 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.sendMessage = function (msg) {
         if (this.status !== EServSessionStatus.OPENED) {
+            index_1.logSession(this, 'Send(NOOPEN)', msg);
             return Promise.reject(new Error('Session not opened'));
         }
-        index_1.logSession(this, 'Send', msg);
+        if (msg.$type !== type_1.EServMessage.SESSION_HEARTBREAK) {
+            index_1.logSession(this, 'Send', msg);
+        }
         // const pkg: ServSessionPackage = {
         //     $msg: msg,
         //     $sid: this.id,
@@ -174,8 +171,15 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.callMessage = function (type, args, options) {
         var message = creator_1.ServSessionCallMessageCreator.create(type, args);
+        var timeout = undefined;
+        if (options && options.timeout !== undefined) {
+            timeout = options.timeout;
+        }
+        else {
+            timeout = index_1.EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT;
+        }
         var addOptions = {
-            timeout: (options && options.timeout) || index_1.EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT,
+            timeout: timeout,
             prewait: this.sendMessage(message),
         };
         var promise = this.messageContextManager.add(message, addOptions);
@@ -197,9 +201,11 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.recvPackage = function (pkg) {
         if (this.status !== EServSessionStatus.OPENED) {
+            index_1.logSession(this, 'Recv(NOOPEN)', pkg);
             return;
         }
         if (!pkg || typeof pkg !== 'object') {
+            index_1.logSession(this, 'Recv(INVALID)', pkg);
             return;
         }
         // if (pkg.$sid !== this.id) {
@@ -211,7 +217,6 @@ var ServSession = /** @class */ (function () {
         // if (this.type === EServSession.SLAVE && pkg.$stp !== EServSession.MASTER) {
         //     return;
         // }
-        index_1.logSession(this, 'Recv', pkg);
         this.dispatchMessage(pkg);
     };
     ServSession.prototype.dispatchMessage = function (msg) {
@@ -220,6 +225,7 @@ var ServSession = /** @class */ (function () {
             this.sessionChecker.handleEchoMessage(msg);
             return;
         }
+        index_1.logSession(this, 'Recv', msg);
         if (creator_1.ServSessionCallMessageCreator.isCallReturnMessage(msg)) {
             this.handleReturnMessage(msg);
             return;

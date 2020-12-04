@@ -76,8 +76,8 @@ export class ServServiceRefer {
         return this.manager.getServiceByID(id) as T;
     }
 
-    getService<T extends ConstructorOf<any>>(decl: T): InstanceType<T> | undefined {
-        const meta = util.meta(decl);
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
+        const meta = decl.meta();
         if (!meta) {
             return;
         }
@@ -166,8 +166,8 @@ export class ServServiceManager {
         return this.getService(info.decl) as T;
     }
 
-    getService<T extends ConstructorOf<any>>(decl: T): InstanceType<T> | undefined {
-        const metas = util.meta(decl);
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
+        const metas = decl.meta();
         if (!metas) {
             return;
         }
@@ -195,7 +195,7 @@ export class ServServiceManager {
         return exec(service);
     }
 
-    serviceExec<T extends ConstructorOf<any>, R>(decl: T, exec: ((service: InstanceType<T>) => R)): R | null {
+    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)): R | null {
         const service = this.getService(decl);
         if (!service) {
             return null;
@@ -205,52 +205,61 @@ export class ServServiceManager {
     }
 
     addService<D extends typeof ServService, I extends D>(decl: D, impl: I, options?: ServServiceOptions): boolean {
-        const meta = util.meta(decl);
-        if (!meta) {
+        try {
+            const meta = decl.meta();
+            if (!meta) {
+                return false;
+            }
+
+            if (impl.meta() !== meta) {
+                return false;
+            }
+
+            let info = this.serviceInfos[meta.id];
+            if (info) {
+                return false;
+            }
+
+            info = {
+                meta,
+                decl,
+                impl,
+            };
+
+            this.serviceInfos[meta.id] = info;
+
+            const lazy = (options && options.lazy) === true || false;
+            if (!lazy) {
+                const service = this.generateService(info);
+                this.services[meta.id] = service;
+            }
+
+            return true;
+        } catch (e) {
+            asyncThrow(e);
             return false;
         }
-
-        if (util.meta(impl) !== meta) {
-            return false;
-        }
-
-        let info = this.serviceInfos[meta.id];
-        if (info) {
-            return false;
-        }
-
-        info = {
-            meta,
-            decl,
-            impl,
-        };
-
-        this.serviceInfos[meta.id] = info;
-
-        const lazy = (options && options.lazy) === true || false;
-        if (!lazy) {
-            const service = this.generateService(info);
-            this.services[meta.id] = service;
-        }
-
-        return true;
     }
 
     addServices(
         items: Array<{ decl: typeof ServService, impl: typeof ServService, options?: ServServiceOptions }>,
         options?: ServServiceOptions,
     ): void {
-        items.forEach((item) => {
-            let opts = options;
-            if (item.options) {
-                opts = opts ? Object.assign({}, options, item.options) : item.options;
-            }
-            this.addService(item.decl, item.impl, opts);
-        });
+        try {
+            items.forEach((item) => {
+                let opts = options;
+                if (item.options) {
+                    opts = opts ? Object.assign({}, options, item.options) : item.options;
+                }
+                this.addService(item.decl, item.impl, opts);
+            });
+        } catch (e) {
+            asyncThrow(e);
+        }
     }
 
     remService(decl: typeof ServService): boolean {
-        const meta = util.meta(decl);
+        const meta = decl.meta();
         if (!meta) {
             return false;
         }

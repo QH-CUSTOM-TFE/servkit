@@ -54,7 +54,7 @@ var ServServiceRefer = /** @class */ (function () {
         return this.manager.getServiceByID(id);
     };
     ServServiceRefer.prototype.getService = function (decl) {
-        var meta = ServService_1.util.meta(decl);
+        var meta = decl.meta();
         if (!meta) {
             return;
         }
@@ -143,7 +143,7 @@ var ServServiceManager = /** @class */ (function () {
         return this.getService(info.decl);
     };
     ServServiceManager.prototype.getService = function (decl) {
-        var metas = ServService_1.util.meta(decl);
+        var metas = decl.meta();
         if (!metas) {
             return;
         }
@@ -174,42 +174,53 @@ var ServServiceManager = /** @class */ (function () {
         return exec(service);
     };
     ServServiceManager.prototype.addService = function (decl, impl, options) {
-        var meta = ServService_1.util.meta(decl);
-        if (!meta) {
+        try {
+            var meta = decl.meta();
+            if (!meta) {
+                return false;
+            }
+            if (impl.meta() !== meta) {
+                return false;
+            }
+            var info = this.serviceInfos[meta.id];
+            if (info) {
+                return false;
+            }
+            info = {
+                meta: meta,
+                decl: decl,
+                impl: impl,
+            };
+            this.serviceInfos[meta.id] = info;
+            var lazy = (options && options.lazy) === true || false;
+            if (!lazy) {
+                var service = this.generateService(info);
+                this.services[meta.id] = service;
+            }
+            return true;
+        }
+        catch (e) {
+            index_1.asyncThrow(e);
             return false;
         }
-        if (ServService_1.util.meta(impl) !== meta) {
-            return false;
-        }
-        var info = this.serviceInfos[meta.id];
-        if (info) {
-            return false;
-        }
-        info = {
-            meta: meta,
-            decl: decl,
-            impl: impl,
-        };
-        this.serviceInfos[meta.id] = info;
-        var lazy = (options && options.lazy) === true || false;
-        if (!lazy) {
-            var service = this.generateService(info);
-            this.services[meta.id] = service;
-        }
-        return true;
     };
     ServServiceManager.prototype.addServices = function (items, options) {
         var _this = this;
-        items.forEach(function (item) {
-            var opts = options;
-            if (item.options) {
-                opts = opts ? Object.assign({}, options, item.options) : item.options;
-            }
-            _this.addService(item.decl, item.impl, opts);
-        });
+        try {
+            items.forEach(function (item) {
+                var opts = options;
+                if (item.options) {
+                    opts = opts ? Object.assign({}, options, item.options) : item.options;
+                }
+                _this.addService(item.decl, item.impl, opts);
+            });
+        }
+        catch (e) {
+            index_1.asyncThrow(e);
+        }
     };
     ServServiceManager.prototype.remService = function (decl) {
-        var meta = ServService_1.util.meta(decl);
+        var meta = decl.meta();
         if (!meta) {
             return false;
         }

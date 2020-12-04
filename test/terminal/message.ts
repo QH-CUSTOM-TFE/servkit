@@ -3,6 +3,7 @@ import { Test1Impl, TestImpl } from '../service/impl/service';
 import { servkit } from '../../src/servkit/Servkit';
 import { EServTerminal } from '../../src/terminal/ServTerminal';
 import { EServChannel } from '../../src/session/channel/ServChannel';
+import { ACLResolver } from '../util';
 
 export const createTerminal = () => {
     const master = servkit.createTerminal({
@@ -16,6 +17,7 @@ export const createTerminal = () => {
                 ],
             },
             serviceRefer: /.*/,
+            ACLResolver: new ACLResolver(),
         },
         session: {
             channel: {

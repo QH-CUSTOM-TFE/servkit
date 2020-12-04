@@ -2,12 +2,23 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.util = exports.anno = exports.EServImplInject = exports.ServService = exports.API_SUCCEED = exports.API_ERROR = exports.API_UNSUPPORT = void 0;
 var index_1 = require("../common/index");
+var DEFAULT_SERV_API_OPTIONS = {};
+var DEFAULT_SERV_EVENTER_OPTIONS = {};
 exports.API_UNSUPPORT = function () { return Promise.reject(new Error('unsupport')); };
-exports.API_ERROR = function (error) { return Promise.reject(error || 'error'); };
-exports.API_SUCCEED = function (data) { return Promise.resolve(data); };
+exports.API_ERROR = function (error) { return Promise.reject(error || new Error('unknown')); };
+function API_SUCCEED(data) {
+    return Promise.resolve(data);
+}
+exports.API_SUCCEED = API_SUCCEED;
 var ServService = /** @class */ (function () {
     function ServService() {
     }
+    ServService.prototype.meta = function () {
+        return meta(this);
+    };
+    ServService.meta = function () {
+        return meta(this);
+    };
     return ServService;
 }());
 exports.ServService = ServService;
@@ -26,8 +37,16 @@ var decl = (function (options) {
                 index_1.asyncThrowMessage("Invalid Service class.");
                 return;
             }
+            if (!options.id) {
+                throw new Error('[SERVKIT] id is empty in service declaration');
+            }
+            if (!options.version) {
+                throw new Error("[SERVKIT] version is empty in " + options.id + " service declaration");
+            }
             metas.id = options.id;
             metas.version = options.version;
+            metas.ACL = options.ACL;
+            metas.EXT = options.EXT;
         }
         catch (e) {
             index_1.asyncThrow(e);
@@ -58,55 +77,63 @@ var impl = (function (options) {
         }
     };
 });
-function apiDecorate(proto, propKey) {
-    try {
-        var metas = meta(proto, true);
-        if (!metas) {
-            index_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
-            return;
-        }
-        var apis = metas.apis;
-        for (var i = 0, iz = apis.length; i < iz; ++i) {
-            if (apis[i].name === propKey) {
-                index_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
+function api(options) {
+    return function (proto, propKey) {
+        try {
+            var metas = meta(proto, true);
+            if (!metas) {
+                index_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
                 return;
             }
+            var apis = metas.apis;
+            for (var i = 0, iz = apis.length; i < iz; ++i) {
+                if (apis[i].name === propKey) {
+                    index_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
+                    return;
+                }
+            }
+            var item = {
+                name: propKey,
+                options: DEFAULT_SERV_API_OPTIONS,
+            };
+            if (options) {
+                item.options = options;
+            }
+            apis.push(item);
         }
-        apis.push({
-            name: propKey,
-        });
-    }
-    catch (e) {
-        index_1.asyncThrow(e);
-    }
-}
-function api() {
-    return apiDecorate;
-}
-function eventDecorate(proto, propKey) {
-    try {
-        var metas = meta(proto, true);
-        if (!metas) {
-            index_1.asyncThrowMessage("Can't get meta in event [" + propKey + "].");
-            return;
+        catch (e) {
+            index_1.asyncThrow(e);
         }
-        var events = metas.evts;
-        for (var i = 0, iz = events.length; i < iz; ++i) {
-            if (events[i].name === propKey) {
-                index_1.asyncThrowMessage("Event conflicts [" + propKey + "].");
+    };
+}
+function event(options) {
+    return function (proto, propKey) {
+        try {
+            var metas = meta(proto, true);
+            if (!metas) {
+                index_1.asyncThrowMessage("Can't get meta in event [" + propKey + "].");
                 return;
             }
+            var events = metas.evts;
+            for (var i = 0, iz = events.length; i < iz; ++i) {
+                if (events[i].name === propKey) {
+                    index_1.asyncThrowMessage("Event conflicts [" + propKey + "].");
+                    return;
+                }
+            }
+            var item = {
+                name: propKey,
+                options: DEFAULT_SERV_EVENTER_OPTIONS,
+            };
+            if (options) {
+                item.options = options;
+            }
+            events.push(item);
         }
-        events.push({
-            name: propKey,
-        });
-    }
-    catch (e) {
-        index_1.asyncThrow(e);
-    }
-}
-function event() {
-    return eventDecorate;
+        catch (e) {
+            index_1.asyncThrow(e);
+        }
+    };
 }
 function meta(obj, create) {
     try {
@@ -206,7 +233,6 @@ exports.anno = {
     impl: impl,
 };
 exports.util = {
-    meta: meta,
     implMeta: implMeta,
 };
 //# sourceMappingURL=ServService.js.map

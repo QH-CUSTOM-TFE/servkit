@@ -1,10 +1,12 @@
 import { servkit } from '../../src/servkit/Servkit';
 import { EServChannel } from '../../src/session/channel/ServChannel';
-import { Test, Test1 } from '../service/decl/service';
+import { Test, Test1, EACL } from '../service/decl/service';
 import { TestImpl, Test1Impl } from '../service/impl/service';
 import { EServTerminal } from '../../src/terminal/ServTerminal';
+import { ACLResolver } from '../util';
 
 export const createTerminal = () => {
+    
     const master = servkit.createTerminal({
         id: 'com.session.event.test',
         type: EServTerminal.MASTER,
@@ -15,6 +17,7 @@ export const createTerminal = () => {
                 ],
             },
             serviceRefer: /.*/,
+            ACLResolver: new ACLResolver(),
         },
         session: {
             channel: {

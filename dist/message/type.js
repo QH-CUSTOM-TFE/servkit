@@ -20,5 +20,7 @@ var EServServiceMessage;
     EServServiceMessage[EServServiceMessage["API"] = 1] = "API";
     EServServiceMessage[EServServiceMessage["API_RETURN"] = 2] = "API_RETURN";
     EServServiceMessage[EServServiceMessage["EVENT"] = 3] = "EVENT";
+    EServServiceMessage[EServServiceMessage["GET_VERSION"] = 4] = "GET_VERSION";
+    EServServiceMessage[EServServiceMessage["GET_VERSION_RETURN"] = 5] = "GET_VERSION_RETURN";
 })(EServServiceMessage = exports.EServServiceMessage || (exports.EServServiceMessage = {}));
 //# sourceMappingURL=type.js.map

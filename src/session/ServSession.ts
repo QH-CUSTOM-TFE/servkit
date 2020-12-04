@@ -8,11 +8,6 @@ import { ServEventChannel, ServEventChannelConfig } from './channel/ServEventCha
 import { ServMessageChannel, ServMessageChannelConfig } from './channel/ServMessageChannel';
 import { ServWindowChannel, ServWindowChannelConfig } from './channel/ServWindowChannel';
 import { ServSessionChecker, ServSessionCheckerStartOptions } from './ServSessionChecker';
-export enum EServSession {
-    NULL = 0,
-    MASTER,
-    SLAVE,
-}
 
 export enum EServSessionStatus {
     CLOSED = 0,
@@ -39,12 +34,6 @@ export interface ServSessionOpenOptions {
 
 export type ServSessionPackage = ServMessage;
 
-// export interface ServSessionPackage {
-//     $sid: string;
-//     $stp: EServSession;
-//     $msg: ServMessage;
-// }
-
 export interface ServSessionListener {
     onRecvData<T>(data: any): boolean;
 }
@@ -65,8 +54,6 @@ export type ServSessionOnRecvCallMessageListener = (
 
 export class ServSession {
     protected terminal: ServTerminal;
-    protected id: string;
-    protected type: EServSession;
     protected status: EServSessionStatus;
     protected openningPromise?: Promise<void>;
     protected openningCancel?: (() => void);
@@ -79,8 +66,6 @@ export class ServSession {
 
     constructor(terminal: ServTerminal) {
         this.terminal = terminal;
-        this.id = terminal.id;
-        this.type = terminal.type as number;
     }
 
     init(config: ServSessionConfig) {
@@ -132,11 +117,11 @@ export class ServSession {
     }
 
     isMaster() {
-        return this.type === EServSession.MASTER;
+        return this.terminal.isMaster();
     }
 
     getID() {
-        return this.id;
+        return this.terminal.id;
     }
 
     isOpened() {
@@ -145,6 +130,7 @@ export class ServSession {
 
     open(options?: ServSessionOpenOptions): Promise<void> {
         if (this.status > EServSessionStatus.CLOSED) {
+            logSession(this, 'OPEN WHILE ' + (this.status === EServSessionStatus.OPENNING ? 'OPENNING' : 'OPENED') );
             return this.openningPromise || Promise.reject(new Error('unknown'));
         }
 
@@ -214,6 +200,7 @@ export class ServSession {
 
     close() {
         if (this.status <= EServSessionStatus.CLOSED) {
+            logSession(this, 'CLOSE WHILE CLOSED');
             return;
         }
 
@@ -234,10 +221,14 @@ export class ServSession {
 
     sendMessage(msg: ServMessage): Promise<void> {
         if (this.status !== EServSessionStatus.OPENED) {
+            logSession(this, 'Send(NOOPEN)', msg);
             return Promise.reject(new Error('Session not opened'));
         }
 
-        logSession(this, 'Send', msg);
+        if (msg.$type !== EServMessage.SESSION_HEARTBREAK) {
+            logSession(this, 'Send', msg);
+        }
+        
         // const pkg: ServSessionPackage = {
         //     $msg: msg,
         //     $sid: this.id,
@@ -255,8 +246,14 @@ export class ServSession {
 
     callMessage<T = any>(type: string, args?: any, options?: ServSessionCallOptions): Promise<T> {
         const message = ServSessionCallMessageCreator.create(type, args);
+        let timeout: number = undefined!;
+        if (options && options.timeout !== undefined) {
+            timeout = options.timeout;
+        } else {
+            timeout = EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT;
+        }
         const addOptions = {
-            timeout: (options && options.timeout) || EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT,
+            timeout,
             prewait: this.sendMessage(message),
         };
 
@@ -282,10 +279,13 @@ export class ServSession {
 
     recvPackage(pkg: ServSessionPackage): void {
         if (this.status !== EServSessionStatus.OPENED) {
+            logSession(this, 'Recv(NOOPEN)', pkg);
+        
             return;
         }
 
         if (!pkg || typeof pkg !== 'object') {
+            logSession(this, 'Recv(INVALID)', pkg);
             return;
         }
 
@@ -301,8 +301,6 @@ export class ServSession {
         //     return;
         // }
 
-        logSession(this, 'Recv', pkg);
-        
         this.dispatchMessage(pkg);
     }
 
@@ -312,6 +310,8 @@ export class ServSession {
             return;
         }
 
+        logSession(this, 'Recv', msg);
+        
         if (ServSessionCallMessageCreator.isCallReturnMessage(msg)) {
             this.handleReturnMessage(msg);
             return;

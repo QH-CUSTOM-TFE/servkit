@@ -1,20 +1,43 @@
+export declare type ServACL = any;
+export declare type ServEXT = any;
 export interface ServDeclOptions {
     id: string;
     version: string;
+    ACL?: ServACL;
+    EXT?: ServEXT;
 }
 export interface ServImplOptions {
 }
 export interface ServAPIOptions {
     timeout?: number;
+    onCallTransform?: {
+        send: (args: any) => any;
+        recv: (rawArgs: any) => any;
+    };
+    onRetnTransform?: {
+        send: (data: any) => any;
+        recv: (rawData: any) => any;
+    };
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+export interface ServEventerOptions {
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+export interface ServAPICallOptions {
+    timeout?: number;
 }
 export interface ServAPI<A, R = void> {
-    (args: A, options?: ServAPIOptions): Promise<R>;
+    (args: A, options?: ServAPICallOptions): Promise<R>;
 }
 export declare type ServAPIArgs<A = void> = A;
 export declare type ServAPIRetn<R = void> = Promise<R>;
 export declare const API_UNSUPPORT: () => Promise<never>;
 export declare const API_ERROR: (error?: any) => Promise<never>;
-export declare const API_SUCCEED: (data?: any) => Promise<any>;
+export declare function API_SUCCEED(): Promise<any>;
+export declare function API_SUCCEED<T>(data: Promise<T>): Promise<T>;
+export declare function API_SUCCEED<T>(data: T): Promise<T>;
 export declare type ServEventListener<A = any> = (args: A) => void;
 export declare type ServEventUnListener = () => void;
 export interface ServEventer<A = void> {
@@ -24,17 +47,23 @@ export interface ServEventer<A = void> {
 }
 export interface ServAPIMeta {
     name: string;
+    options: ServAPIOptions;
 }
 export interface ServEventerMeta {
     name: string;
+    options: ServEventerOptions;
 }
 export interface ServServiceMeta {
     id: string;
     version: string;
+    ACL?: ServACL;
+    EXT?: ServEXT;
     apis: ServAPIMeta[];
     evts: ServEventerMeta[];
 }
 export declare class ServService {
+    meta(): ServServiceMeta | undefined;
+    static meta(): ServServiceMeta | undefined;
 }
 export interface ServAnnoDecl {
     (options: ServDeclOptions): ((cls: typeof ServService) => void);
@@ -45,11 +74,8 @@ export interface ServAnnoImpl {
     (options?: ServImplOptions): ((cls: typeof ServService) => void);
     inject: typeof implInject;
 }
-declare function apiDecorate(proto: any, propKey: string): void;
-declare function api(): typeof apiDecorate;
-declare function eventDecorate(proto: any, propKey: string): void;
-declare function event(): typeof eventDecorate;
-declare function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta | undefined;
+declare function api(options?: ServAPIOptions): (proto: any, propKey: string) => void;
+declare function event(options?: ServEventerOptions): (proto: any, propKey: string) => void;
 declare function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta | undefined;
 export declare enum EServImplInject {
     NULL = 0,
@@ -71,7 +97,6 @@ export declare const anno: {
     impl: ServAnnoImpl;
 };
 export declare const util: {
-    meta: typeof meta;
     implMeta: typeof implMeta;
 };
 export {};

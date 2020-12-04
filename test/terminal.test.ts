@@ -6,6 +6,7 @@ import { ServTerminal } from '../src/terminal/ServTerminal';
 import * as tEvent from './terminal/event';
 import * as tMessage from './terminal/message';
 import * as tWindow from './terminal/window';
+import * as tSappSDK from './terminal/sapp';
 import { STRING_VALUE, STRING_VALUE1, OBJECT_VALUE1, delay, OBJECT_VALUE } from './util';
 import { servkit } from '../src/servkit/Servkit';
 
@@ -58,6 +59,40 @@ const serviceAPITest = async (
         await expect(service.apiWithArgsWithRetn(STRING_VALUE1)).resolves.toBe(STRING_VALUE1);
         const data = await service.apiWithAny(OBJECT_VALUE1);
         expect(data.value).toBe(OBJECT_VALUE1.value);
+
+        await expect(service.apiRetnPlusTransform(0)).resolves.toBe(4);
+        await service.apiCallTransform(STRING_VALUE);
+        await expect(service.apiRetnTransform()).resolves.toBe(STRING_VALUE);
+    });
+
+    expect(ret).not.toBeNull();
+};
+
+const serviceAPITimeoutTest = async (
+    { master, slave }: { master: ServTerminal, slave: ServTerminal },
+) => {
+    const decl = Test;
+    const ret = await slave.client.serviceExec(decl, async (service) => {
+        try {
+            await service.apiCustomTimeout();
+            expect(true).toBeFalsy();
+        } catch (e) {
+            expect(e.message).toBe('timeout');
+        }
+
+        try {
+            await service.apiDefaultTimeout();
+            expect(true).toBeFalsy();
+        } catch (e) {
+            expect(e.message).toBe('timeout');
+        }
+
+        const v = await Promise.race([service.apiNeverTimeout(), new Promise((res) => {
+            setTimeout(() => {
+                res(STRING_VALUE);
+            }, 800);
+        })]);
+        expect(v).toBe(STRING_VALUE);
     });
 
     expect(ret).not.toBeNull();
@@ -234,6 +269,10 @@ const testTerminal = async (port: typeof tEvent) => {
 
     await serviceMessageTest(datas);
 
+    await serviceAPITimeoutTest(datas);
+
+    await delay(800);
+
     datas.destroy();
 };
 
@@ -246,5 +285,6 @@ test('Terminal Service', async () => {
     await testTerminal(tEvent);
     await testTerminal(tMessage);
     await testTerminal(tWindow);
+    await testTerminal(tSappSDK);
     servkit.service.remServices([Test1]);
-});
+}, 60000);

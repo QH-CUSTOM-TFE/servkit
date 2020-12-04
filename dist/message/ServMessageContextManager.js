@@ -41,9 +41,12 @@ var ServMessageContextManager = /** @class */ (function () {
             reject: reject,
             resolve: resolve,
         };
+        if (options && options.ctxData !== undefined) {
+            ctxt.ctxData = options.ctxData;
+        }
         this.contexts[message.$id] = ctxt;
         var timeout = options && options.timeout;
-        if (timeout) {
+        if (timeout && timeout > 0) {
             ctxt.timeout = setTimeout(function () {
                 _this.timeout(id);
             }, timeout);
@@ -66,6 +69,10 @@ var ServMessageContextManager = /** @class */ (function () {
     ServMessageContextManager.prototype.getPromise = function (id) {
         var ctxt = this.contexts[id];
         return ctxt ? ctxt.promise : undefined;
+    };
+    ServMessageContextManager.prototype.getCtxData = function (id) {
+        var ctxt = this.contexts[id];
+        return ctxt ? ctxt.ctxData : undefined;
     };
     ServMessageContextManager.prototype.succeed = function (id, data) {
         var ctxt = this.contexts[id];

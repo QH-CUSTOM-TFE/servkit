@@ -1,9 +1,10 @@
 import { servkit } from '../../src/servkit/Servkit';
 import { EServChannel } from '../../src/session/channel/ServChannel';
-import { EServTerminal } from '../../src/terminal/ServTerminal';
-import { Test, Test1 } from '../service/decl/service';
-import { TestImpl, Test1Impl } from '../service/impl/service';
+import { EServTerminal, ServTerminal } from '../../src/terminal/ServTerminal';
+import { Test } from '../service/decl/service';
+import { TestImpl } from '../service/impl/service';
 import { ACLResolver } from '../util';
+import { sappSDK } from '../../src/sapp/SappSDK';
 
 export const createTerminal = () => {
     const dom = window.document.createElement('iframe');
@@ -42,29 +43,43 @@ export const createTerminal = () => {
         },
     });
 
-    const slave = servkit.createTerminal({
-        id: 'com.session.window.test',
-        type: EServTerminal.SLAVE,
-
-        session: {
-            channel: {
-                type: EServChannel.WINDOW,
-                config: {
-                    slave: {
-                        getWindow(channel) {
-                            return {
-                                target: window,
-                                window: domWindow,
-                            };
+    sappSDK.setConfig({
+        resolveStartParams(sdk) {
+            return {
+                id: 'com.session.window.test',
+            };
+        },
+        resolveSessionConfig(sdk) {
+            return {
+                channel: {
+                    type: EServChannel.WINDOW,
+                    config: {
+                        slave: {
+                            getWindow(channel) {
+                                return {
+                                    target: window,
+                                    window: domWindow,
+                                };
+                            },
                         },
                     },
                 },
-            },
+            };
         },
     });
 
-    return { master, slave, destroy: () => {
-        servkit.destroyTerminal(slave);
+    return { master, slave: {
+        get session() {
+            return sappSDK.terminal.session;
+        },
+        get server() {
+            return sappSDK.terminal.server;
+        },
+        openSession: () => sappSDK.start(),
+        client: sappSDK,
+        closeSession: () => sappSDK.destroy(),
+    } as any as ServTerminal, destroy: () => {
+        sappSDK.destroy();
         servkit.destroyTerminal(master);
         document.body.removeChild(dom);
     } };

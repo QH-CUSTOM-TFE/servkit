@@ -8,11 +8,13 @@ interface MessageContext {
     reject: (error?: any) => void;
     resolve: (data?: any) => void;
     timeout?: number;
+    ctxData?: any;
 }
 
 export interface ServMessageAddOptions {
     timeout?: number;
     prewait?: Promise<any>;
+    ctxData?: any;
 }
 
 export class ServMessageContextManager {
@@ -52,10 +54,14 @@ export class ServMessageContextManager {
             resolve,
         };
 
+        if (options && options.ctxData !== undefined) {
+            ctxt.ctxData = options.ctxData;
+        }
+
         this.contexts[message.$id] = ctxt;
 
         const timeout = options && options.timeout;
-        if (timeout) {
+        if (timeout && timeout > 0) {
             ctxt.timeout = setTimeout(() => {
                 this.timeout(id);
             }, timeout) as any;
@@ -85,6 +91,12 @@ export class ServMessageContextManager {
         const ctxt = this.contexts[id];
 
         return ctxt ? ctxt.promise : undefined;
+    }
+
+    getCtxData<T = any>(id: string): T {
+        const ctxt = this.contexts[id];
+
+        return ctxt ? ctxt.ctxData : undefined;
     }
 
     succeed(id: string, data?: any): boolean {

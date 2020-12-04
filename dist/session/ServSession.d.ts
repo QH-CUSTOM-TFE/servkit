@@ -6,11 +6,6 @@ import { ServEventChannelConfig } from './channel/ServEventChannel';
 import { ServMessageChannelConfig } from './channel/ServMessageChannel';
 import { ServWindowChannelConfig } from './channel/ServWindowChannel';
 import { ServSessionChecker, ServSessionCheckerStartOptions } from './ServSessionChecker';
-export declare enum EServSession {
-    NULL = 0,
-    MASTER = 1,
-    SLAVE = 2
-}
 export declare enum EServSessionStatus {
     CLOSED = 0,
     OPENNING = 1,
@@ -38,8 +33,6 @@ export declare type ServSessionOnRecvMessageListener = (message: ServMessage, se
 export declare type ServSessionOnRecvCallMessageListener = (type: string, args: any, doReturn: ((data?: any, error?: any) => void), session: ServSession, terminal: ServTerminal) => boolean;
 export declare class ServSession {
     protected terminal: ServTerminal;
-    protected id: string;
-    protected type: EServSession;
     protected status: EServSessionStatus;
     protected openningPromise?: Promise<void>;
     protected openningCancel?: (() => void);

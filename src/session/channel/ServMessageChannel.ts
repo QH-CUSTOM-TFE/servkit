@@ -1,10 +1,4 @@
-import { EServSession, ServSession, ServSessionPackage } from '../ServSession';
-import { ServChannelObjectPackage } from './ServChannel';
-import { ServWindowChannel, ServWindowChannelConfig } from './ServWindowChannel';
-
-interface ServMessageChannelObjectPackage extends ServChannelObjectPackage {
-    __chan__: string;
-}
+import { ServWindowChannel } from './ServWindowChannel';
 
 // tslint:disable-next-line:no-empty-interface
 export interface ServMessageChannelConfig {
