@@ -1,10 +1,8 @@
 import { ServServiceGetVersionMessage, ServServiceGetVersionReturnMessage } from './type';
 import { EServMessage, EServServiceMessage, ServMessage, ServServiceAPIMessage, ServServiceAPIReturnMessage, ServServiceEventMessage, ServServiceMessage, ServServiceReturnMessage, ServSessionCallMessage, ServSessionCallReturnMessage } from './type';
 export declare class ServMessageCreator {
-    private static id;
     static create(type: EServMessage): ServMessage;
     static clone(origin: ServMessage): ServMessage;
-    static nextID(): string;
 }
 export declare class ServServiceMessageCreator {
     static create(type: EServServiceMessage, service: string): ServServiceMessage;

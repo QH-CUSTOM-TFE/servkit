@@ -6,6 +6,13 @@ export enum EServIFrameShowPolicy {
     SHOW_ON_ECHO,
 }
 
+export interface ServIFrameWindowInfo {
+    container: HTMLElement;
+    element: HTMLIFrameElement;
+    target: Window;
+    origin: string;
+}
+
 export interface ServIFrameCreatorConfig {
     url: string | (() => string);
     id?: string;
@@ -16,8 +23,10 @@ export interface ServIFrameCreatorConfig {
     style?: Partial<HTMLElement['style']>;
     show?: (element: HTMLIFrameElement, container?: HTMLElement) => void;
     hide?: (element: HTMLIFrameElement, container?: HTMLElement) => void;
+    onCreateWindow?(info: ServIFrameWindowInfo): void;
+    onDestroyWindow?(info: ServChannelWindow): void;
 
-    onCreate?: (info: ServChannelWindow) => void;
+    onCreate?(info: ServChannelWindow): void;
     onEcho?(info: ServChannelWindow): void;
     onOpened?(info: ServChannelWindow): void;
     onDestroy?(info: ServChannelWindow): void;
@@ -33,7 +42,7 @@ export class IFrameUtil {
         const container = config.container || document.body;
 
         return {
-            createWindow: () => {
+            createWindow: (): ServIFrameWindowInfo => {
                 const element: HTMLIFrameElement = document.createElement('iframe');
                 element.src = typeof config.url === 'function' ? config.url() : config.url;
                 if (config.id) {
@@ -59,12 +68,17 @@ export class IFrameUtil {
                 container.appendChild(element);
 
                 return {
+                    container,
                     element,
-                    target: element.contentWindow,
-                    origin: config.postOrigin,
+                    target: element.contentWindow as Window,
+                    origin: config.postOrigin || '*',
                 };
             },
             destroyWindow: (windowInfo: ServChannelWindow) => {
+                if (config.onDestroyWindow) {
+                    config.onDestroyWindow(windowInfo);
+                }
+
                 if (windowInfo.element) {
                     container.removeChild(windowInfo.element!);
                 }

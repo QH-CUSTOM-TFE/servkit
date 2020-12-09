@@ -5,6 +5,12 @@ export declare enum EServIFrameShowPolicy {
     SHOW = 2,
     SHOW_ON_ECHO = 3
 }
+export interface ServIFrameWindowInfo {
+    container: HTMLElement;
+    element: HTMLIFrameElement;
+    target: Window;
+    origin: string;
+}
 export interface ServIFrameCreatorConfig {
     url: string | (() => string);
     id?: string;
@@ -15,7 +21,9 @@ export interface ServIFrameCreatorConfig {
     style?: Partial<HTMLElement['style']>;
     show?: (element: HTMLIFrameElement, container?: HTMLElement) => void;
     hide?: (element: HTMLIFrameElement, container?: HTMLElement) => void;
-    onCreate?: (info: ServChannelWindow) => void;
+    onCreateWindow?(info: ServIFrameWindowInfo): void;
+    onDestroyWindow?(info: ServChannelWindow): void;
+    onCreate?(info: ServChannelWindow): void;
     onEcho?(info: ServChannelWindow): void;
     onOpened?(info: ServChannelWindow): void;
     onDestroy?(info: ServChannelWindow): void;

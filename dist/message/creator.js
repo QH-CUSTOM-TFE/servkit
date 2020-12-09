@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServSessionCallMessageCreator = exports.ServServiceMessageCreator = exports.ServMessageCreator = void 0;
+var index_1 = require("../common/index");
 var type_1 = require("./type");
 var ServMessageCreator = /** @class */ (function () {
     function ServMessageCreator() {
     }
     ServMessageCreator.create = function (type) {
         return {
-            $id: ServMessageCreator.nextID(),
+            $id: index_1.nextUUID(),
             $type: type,
         };
     };
@@ -17,10 +18,6 @@ var ServMessageCreator = /** @class */ (function () {
             $type: origin.$type,
         };
     };
-    ServMessageCreator.nextID = function () {
-        return (ServMessageCreator.id++) + '';
-    };
-    ServMessageCreator.id = 1;
     return ServMessageCreator;
 }());
 exports.ServMessageCreator = ServMessageCreator;

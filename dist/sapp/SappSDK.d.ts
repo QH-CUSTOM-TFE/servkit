@@ -1,15 +1,17 @@
 import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
-import { Deferred } from '../common/index';
 import { Servkit } from '../servkit/Servkit';
 import { ServService } from '../service/ServService';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
+import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
+import { SappShowParams as ShowParams, SappHideParams as HideParams } from './service/m/SappLifecycle';
+import { Deferred } from '../common/Deferred';
 /**
  * SappSDK启动参数
  */
-export interface SappStartParams {
-    id?: string;
+export interface SappSDKStartParams {
+    uuid?: string;
 }
 /**
  * SappSDK配置
@@ -26,11 +28,11 @@ export interface SappSDKConfig {
     beforeStart?(sdk: SappSDK): Promise<void>;
     /**
      * SappSDK启动参数的构造回调；
-     * 优先使用SappStartOptions.params，其次SappSDKConfig.resolveStartParams，默认使用parseQueryParams；
+     * 优先使用SappSDKStartOptions.params，其次SappSDKConfig.resolveStartParams，默认使用parseQueryParams；
      * parseQueryParams将会从window.location.href中解析query参数
      * @param sdk
      */
-    resolveStartParams?(sdk: SappSDK): Promise<SappStartParams> | SappStartParams;
+    resolveStartParams?(sdk: SappSDK): Promise<SappSDKStartParams> | SappSDKStartParams;
     /**
      * ServiceServerConfig的构造回调
      * @param sdk
@@ -57,12 +59,44 @@ export interface SappSDKConfig {
      * @param sdk
      */
     afterStart?(sdk: SappSDK): Promise<void>;
+    /**
+     * 生命周期回调，应用创建时回调
+     *
+     * @param {SappSDK} sdk
+     * @returns {Promise<void>}
+     * @memberof SappSDKConfig
+     */
+    onCreate?(sdk: SappSDK, params: SappSDKStartParams, data?: any): Promise<void>;
+    /**
+     * 生命周期回调，应用显示时回调
+     *
+     * @param {SappSDK} sdk
+     * @returns {Promise<void>}
+     * @memberof SappSDKConfig
+     */
+    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean>;
+    /**
+     * 生命周期回调，应用隐藏时回调
+     *
+     * @param {SappSDK} sdk
+     * @returns {Promise<void>}
+     * @memberof SappSDKConfig
+     */
+    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean>;
+    /**
+     * 生命周期回调，应用关闭时回调
+     *
+     * @param {SappSDK} sdk
+     * @returns {Promise<void>}
+     * @memberof SappSDKConfig
+     */
+    onClose?(sdk: SappSDK): Promise<void>;
 }
 /**
  * SappSDK start参数项
  */
-export interface SappStartOptions {
-    params?: SappStartParams | SappSDKConfig['resolveStartParams'];
+export interface SappSDKStartOptions {
+    params?: SappSDKStartParams | SappSDKConfig['resolveStartParams'];
 }
 /**
  * SappSDK是为Servkit应用提供的一个SDK
@@ -90,7 +124,6 @@ export declare class SappSDK {
      */
     terminal: ServTerminal;
     protected config: SappSDKConfig;
-    protected starting?: Deferred;
     constructor();
     /**
      * SappSDK的全局配置，需要在start之前设定好
@@ -110,15 +143,20 @@ export declare class SappSDK {
     /**
      * 启动SDK
      *
-     * @param {SappStartOptions} [options]
+     * @param {SappSDKStartOptions} [options]
      * @returns {Promise<void>}
      * @memberof SappSDK
      */
-    start(options?: SappStartOptions): Promise<void>;
+    start: ((options?: SappSDKStartOptions | undefined) => Promise<void>) & {
+        deferred: Deferred<void> | undefined;
+    };
+    show(params?: ShowParams): Promise<void>;
+    hide(params?: HideParams): Promise<void>;
+    close(): Promise<void>;
     /**
      * 销毁SDK，该方法主要用于CI测试（建议业务不要使用，因为SappSDK生命周期通常与应用程序的生命周期保一致）
      */
-    destroy(): Promise<void>;
+    destroy(): void;
     /**
      * 根据服务声明获取服务对象
      *
@@ -176,5 +214,17 @@ export declare class SappSDK {
     }, R>(decls: M, exec: ((services: {
         [key in keyof M]: InstanceType<M[key]>;
     }) => R)): any;
+    protected beforeStart(options: SappSDKStartOptions): Promise<void>;
+    protected afterStart(): Promise<void>;
+    protected onStartFailed(): void;
+    protected resolveStartParams(options: SappSDKStartOptions): Promise<SappSDKStartParams>;
+    protected beforeInitTerminal(): Promise<void>;
+    protected initTerminal(options: SappSDKStartOptions, params: SappSDKStartParams): Promise<void>;
+    protected afterInitTerminal(): Promise<void>;
+    protected initSDK(): Promise<void>;
+    protected onCreate(params: SappSDKStartParams, data: any): Promise<void>;
+    protected onShow(params: SappShowParams): Promise<boolean>;
+    protected onHide(params: SappHideParams): Promise<boolean>;
+    protected onClose(): Promise<void>;
 }
 export declare const sappSDK: SappSDK;

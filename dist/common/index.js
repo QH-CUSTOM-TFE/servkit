@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setServConstant = exports.EServConstant = exports.createDeferred = exports.parseQueryParams = exports.generateQueryParams = exports.setEnv = exports.logACL = exports.logSession = exports.noop = exports.asyncThrowMessage = exports.asyncThrow = exports.Env = void 0;
+exports.setServConstant = exports.EServConstant = exports.nextUUID = exports.aspectAfter = exports.aspectBefore = exports.aspect = exports.parseServQueryParams = exports.generateServQueryParams = exports.wrapServQueryParams = exports.setEnv = exports.logACL = exports.logSession = exports.noop = exports.asyncThrowMessage = exports.asyncThrow = exports.Env = void 0;
 exports.Env = {
     DEV: false,
     JEST: false,
 };
 try {
+    if (window.__$$servkit) {
+        asyncThrowMessage("\n        NOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n        YOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.\n        PLEASE FIX IT.\n        ");
+    }
     var LOCAL_ENV_1 = '__$$servkit';
     var __$$servkit_1 = {
         getLocalEnv: function (key) {
@@ -46,10 +49,22 @@ catch (e) {
     //
 }
 function asyncThrow(error) {
-    if (!exports.Env.JEST) {
-        setTimeout(function () {
-            throw error;
-        });
+    try {
+        if (!(error instanceof Error)) {
+            error = new Error(error && error.toString ? error.toString() : 'unknown');
+        }
+        if (!exports.Env.JEST) {
+            setTimeout(function () {
+                throw error;
+            });
+        }
+        else {
+            // tslint:disable-next-line:no-console
+            console.log(error);
+        }
+    }
+    catch (e) {
+        //
     }
 }
 exports.asyncThrow = asyncThrow;
@@ -104,7 +119,18 @@ exports.setEnv = function (env) {
     exports.logACL = exports.Env.DEV ? logServerACLImpl : noop;
 };
 var QUERY_PARAMS_KEY = '__SERVKIT_QUERY_PARAMS__';
-function generateQueryParams(params) {
+function wrapServQueryParams(url, params) {
+    var query = generateServQueryParams(params);
+    if (url.indexOf('?') >= 0) {
+        url += query;
+    }
+    else {
+        url += '?' + query;
+    }
+    return query;
+}
+exports.wrapServQueryParams = wrapServQueryParams;
+function generateServQueryParams(params) {
     if (params === undefined) {
         return '';
     }
@@ -117,8 +143,8 @@ function generateQueryParams(params) {
     }
     return '';
 }
-exports.generateQueryParams = generateQueryParams;
-function parseQueryParams() {
+exports.generateServQueryParams = generateServQueryParams;
+function parseServQueryParams() {
     var ret;
     try {
         var query = window.location.search;
@@ -147,26 +173,60 @@ function parseQueryParams() {
     }
     return ret;
 }
-exports.parseQueryParams = parseQueryParams;
-function createDeferred() {
-    var reject = undefined;
-    var resolve = undefined;
-    var promise = new Promise(function (res, rej) {
-        resolve = res;
-        reject = rej;
-    });
-    promise.resolve = resolve;
-    promise.reject = reject;
-    return promise;
+exports.parseServQueryParams = parseServQueryParams;
+function aspect(obj, fn, beforeImpl, afterImpl) {
+    var oldFn = obj[fn];
+    var newFn = function () {
+        // Do before aspect
+        if (beforeImpl) {
+            try {
+                beforeImpl();
+            }
+            catch (e) {
+                asyncThrow(e);
+            }
+        }
+        var ret = oldFn.apply(this, arguments);
+        // Do after aspect
+        if (afterImpl) {
+            try {
+                afterImpl(ret);
+            }
+            catch (e) {
+                asyncThrow(e);
+            }
+        }
+        return ret;
+    };
+    obj[fn] = newFn;
+    newFn.__aopOld = oldFn;
 }
-exports.createDeferred = createDeferred;
+exports.aspect = aspect;
+function aspectBefore(obj, fn, impl) {
+    aspect(obj, fn, impl, undefined);
+}
+exports.aspectBefore = aspectBefore;
+function aspectAfter(obj, fn, impl) {
+    aspect(obj, fn, undefined, impl);
+}
+exports.aspectAfter = aspectAfter;
+var nextId = 0;
+var startTimestamp = Date.now();
+function nextUUID() {
+    ++nextId;
+    return startTimestamp + "-" + Date.now() + "-" + nextId;
+}
+exports.nextUUID = nextUUID;
 //////////////////////////////////////
 // Constant
 exports.EServConstant = {
+    SERV_APP_SHOW_HIDE_TIMEOUT: 5000,
+    SERV_SAPP_ON_START_TIMEOUT: 30000,
     SERV_COMMON_RETURN_TIMEOUT: 15000,
     SERV_API_TIMEOUT: 30000,
     SERV_SESSION_OPEN_TIMEOUT: 30000,
     SERV_SESSION_CALL_MESSAGE_TIMEOUT: 30000,
+    SAPP_HIDE_MAX_TIME: 36000000,
 };
 function setServConstant(constans) {
     Object.assign(exports.EServConstant, constans);

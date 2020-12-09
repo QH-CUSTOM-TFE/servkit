@@ -10,6 +10,13 @@ export const Env = {
 };
 
 try {
+    if ((window as any).__$$servkit) {
+        asyncThrowMessage(`
+        NOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        YOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.
+        PLEASE FIX IT.
+        `);
+    }
     const LOCAL_ENV = '__$$servkit';
     const __$$servkit = {
         getLocalEnv: (key?: string) => {
@@ -48,10 +55,20 @@ try {
 }
 
 export function asyncThrow(error: any) {
-    if (!Env.JEST) {
-        setTimeout(() => {
-            throw error;
-        });
+    try {
+        if (!(error instanceof Error)) {
+            error = new Error(error && error.toString ? error.toString() : 'unknown');
+        }
+        if (!Env.JEST) {
+            setTimeout(() => {
+                throw error;
+            });
+        } else {
+            // tslint:disable-next-line:no-console
+            console.log(error);
+        }
+    } catch (e) {
+        //
     }
 }
 
@@ -102,7 +119,18 @@ export const setEnv = (env: Partial<typeof Env>) => {
 
 const QUERY_PARAMS_KEY = '__SERVKIT_QUERY_PARAMS__';
 
-export function generateQueryParams(params: any) {
+export function wrapServQueryParams(url: string, params: any) {
+    const query = generateServQueryParams(params);
+    if (url.indexOf('?') >= 0) {
+        url += query;
+    } else {
+        url += '?' + query;
+    }
+
+    return query;
+}
+
+export function generateServQueryParams(params: any) {
     if (params === undefined) {
         return '';
     }
@@ -117,7 +145,7 @@ export function generateQueryParams(params: any) {
     return '';
 }
 
-export function parseQueryParams() {
+export function parseServQueryParams() {
     let ret: any;
     try {
         let query = window.location.search;
@@ -151,32 +179,60 @@ export function parseQueryParams() {
     return ret;
 }
 
-export interface Deferred<T = void> extends Promise<T> {
-    reject(error?: any): void;
-    resolve(): void;
-    resolve(data: T): void;
+export function aspect<O = any>(obj: O, fn: string, beforeImpl?: () => void, afterImpl?: (result?: any) => any) {
+    const oldFn = (obj as any)[fn];
+    const newFn = function() {
+        // Do before aspect
+        if (beforeImpl) {
+            try {
+                beforeImpl();
+            } catch (e) {
+                asyncThrow(e);
+            }
+        }
+        
+        const ret = oldFn.apply(this, arguments);
+
+        // Do after aspect
+        if (afterImpl) {
+            try {
+                afterImpl(ret);
+            } catch (e) {
+                asyncThrow(e);
+            }
+        }
+        
+        return ret;
+    };
+    (obj as any)[fn] = newFn;
+    (newFn as any).__aopOld = oldFn;
 }
 
-export function createDeferred<T = void>() {
-    let reject: (error: any) => void = undefined!;
-    let resolve: (data?: T) => void = undefined!;
-    const promise = new Promise<T>((res, rej) => {
-        resolve = res;
-        reject = rej;
-    }) as Deferred<T>;
-    promise.resolve = resolve;
-    promise.reject = reject;
+export function aspectBefore<O = any>(obj: O, fn: string, impl: () => void) {
+    aspect(obj, fn, impl, undefined);
+}
 
-    return promise;
+export function aspectAfter<O = any>(obj: O, fn: string, impl: (result: any) => any) {
+    aspect(obj, fn, undefined, impl);
+}
+
+let nextId = 0;
+const startTimestamp = Date.now();
+export function nextUUID() {
+    ++nextId;
+    return `${startTimestamp}-${Date.now()}-${nextId}`;
 }
 
 //////////////////////////////////////
 // Constant
 export const EServConstant = {
+    SERV_APP_SHOW_HIDE_TIMEOUT: 5000,
+    SERV_SAPP_ON_START_TIMEOUT: 30000,
     SERV_COMMON_RETURN_TIMEOUT: 15000,
     SERV_API_TIMEOUT: 30000,
     SERV_SESSION_OPEN_TIMEOUT: 30000,
     SERV_SESSION_CALL_MESSAGE_TIMEOUT: 30000,
+    SAPP_HIDE_MAX_TIME: 36000000,
 };
 
 export function setServConstant(constans: Partial<typeof EServConstant>) {

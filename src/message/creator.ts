@@ -1,4 +1,5 @@
 import { ServServiceGetVersionMessage, ServServiceGetVersionReturnMessage } from './type';
+import { nextUUID } from '../common/index';
 import {
     EServMessage,
     EServServiceMessage,
@@ -13,10 +14,9 @@ import {
 } from './type';
 
 export class ServMessageCreator {
-    private static id = 1;
     static create(type: EServMessage): ServMessage {
         return {
-            $id: ServMessageCreator.nextID(),
+            $id: nextUUID(),
             $type: type,
         };
     }
@@ -26,10 +26,6 @@ export class ServMessageCreator {
             $id: origin.$id,
             $type: origin.$type,
         };
-    }
-
-    static nextID(): string {
-        return (ServMessageCreator.id++) + '';
     }
 }
 

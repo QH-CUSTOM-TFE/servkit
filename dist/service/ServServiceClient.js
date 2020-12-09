@@ -124,7 +124,7 @@ var ServServiceClient = /** @class */ (function () {
             .then(function (curVersion) {
             var version = service.version;
             if (curVersion !== version) {
-                index_1.asyncThrowMessage("[SERVKIT] " + service.id + " curren version is " + curVersion + ", but " + version + " is used in your projet now, Please update your service npm package.");
+                index_1.asyncThrowMessage(service.id + " curren version is " + curVersion + ", but " + version + " is used in your projet now, Please update your service npm package.");
             }
         }, function (error) {
             index_1.asyncThrow(error);

@@ -156,7 +156,7 @@ export class ServServiceClient {
         .then((curVersion) => {
             const version = service.version;
             if (curVersion !== version) {
-                asyncThrowMessage(`[SERVKIT] ${service.id} curren version is ${curVersion}, but ${version} is used in your projet now, Please update your service npm package.`);
+                asyncThrowMessage(`${service.id} curren version is ${curVersion}, but ${version} is used in your projet now, Please update your service npm package.`);
             }
         }, (error) => {
             asyncThrow(error);

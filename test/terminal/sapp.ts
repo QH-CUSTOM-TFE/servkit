@@ -46,7 +46,7 @@ export const createTerminal = () => {
     sappSDK.setConfig({
         resolveStartParams(sdk) {
             return {
-                id: 'com.session.window.test',
+                uuid: 'com.session.window.test',
             };
         },
         resolveSessionConfig(sdk) {
