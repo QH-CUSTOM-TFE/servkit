@@ -18,7 +18,7 @@ export declare enum EServServiceMessage {
 }
 export interface ServServiceMessage extends ServMessage {
     service: string;
-    type: EServServiceMessage;
+    serviceType: EServServiceMessage;
 }
 export interface ServServiceReturnMessage extends ServServiceMessage {
     data?: any;

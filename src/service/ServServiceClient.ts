@@ -244,7 +244,9 @@ export class ServServiceClient {
                     message as ServServiceReturnMessage,
                     origin as ServServiceMessage,
                 );
-            } else {
+            } else if (ServServiceMessageCreator.isGetVersionReturnMessage(
+                message as ServServiceReturnMessage,
+                origin as ServServiceMessage)) {
                 return this.handleCommonMessageReturn(
                     message as ServServiceReturnMessage,
                     origin as ServServiceMessage,

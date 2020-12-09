@@ -19,7 +19,7 @@ var ServServiceClient = /** @class */ (function () {
                 if (creator_1.ServServiceMessageCreator.isAPIReturnMessage(message, origin)) {
                     return _this.handleAPIReturnMessage(message, origin);
                 }
-                else {
+                else if (creator_1.ServServiceMessageCreator.isGetVersionReturnMessage(message, origin)) {
                     return _this.handleCommonMessageReturn(message, origin);
                 }
             }

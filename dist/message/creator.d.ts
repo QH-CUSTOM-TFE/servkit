@@ -18,7 +18,7 @@ export declare class ServServiceMessageCreator {
     static isEventMessage(message: ServServiceMessage): boolean;
     static isAPIReturnMessage(message: ServServiceReturnMessage, origin?: ServServiceMessage): boolean;
     static isGetVersionMessage(message: ServServiceMessage): boolean;
-    static isGetVersionReturnMessage(message: ServServiceMessage): boolean;
+    static isGetVersionReturnMessage(message: ServServiceMessage, origin?: ServServiceMessage): boolean;
 }
 export declare class ServSessionCallMessageCreator {
     static create(type: string, args: any): ServSessionCallMessage;

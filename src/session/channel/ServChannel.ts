@@ -1,5 +1,6 @@
 import { asyncThrow } from '../../common/index';
 import { ServSession, ServSessionPackage } from '../ServSession';
+import { EServTerminal } from '../../terminal';
 
 export enum EServChannel {
     WINDOW = 1,
@@ -32,19 +33,20 @@ export abstract class ServChannel {
     init(session: ServSession, config?: ServChannelConfig) {
         this.session = session;
         this.config = config || {};
-        const sessionMark = `$${session.getID()}$`;
+        const sessionMark = `$$${session.getID()}$$`;
 
         if (this.config.ignoreSenderType) {
             this.sendMark = '';
             this.recvMark = '';
         } else {
             if (session.isMaster()) {
-                this.sendMark = `$m$`;
-                this.recvMark = `$s$`;
+                this.sendMark = `$$${EServTerminal.MASTER}$$`;
+                this.recvMark = `$$${EServTerminal.SLAVE}$$`;
             } else {
-                this.sendMark = `$s$`;
-                this.recvMark = `$m$`;
+                this.sendMark = `$$${EServTerminal.SLAVE}$$`;
+                this.recvMark = `$$${EServTerminal.MASTER}$$`;
             }
+
         }
 
         this.sendStringMark = sessionMark + this.sendMark;

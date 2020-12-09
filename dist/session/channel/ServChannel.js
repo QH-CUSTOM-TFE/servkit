@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServChannel = exports.EServChannel = void 0;
 var index_1 = require("../../common/index");
+var terminal_1 = require("../../terminal");
 var EServChannel;
 (function (EServChannel) {
     EServChannel[EServChannel["WINDOW"] = 1] = "WINDOW";
@@ -14,19 +15,19 @@ var ServChannel = /** @class */ (function () {
     ServChannel.prototype.init = function (session, config) {
         this.session = session;
         this.config = config || {};
-        var sessionMark = "$" + session.getID() + "$";
+        var sessionMark = "$$" + session.getID() + "$$";
         if (this.config.ignoreSenderType) {
             this.sendMark = '';
             this.recvMark = '';
         }
         else {
             if (session.isMaster()) {
-                this.sendMark = "$m$";
-                this.recvMark = "$s$";
+                this.sendMark = "$$" + terminal_1.EServTerminal.MASTER + "$$";
+                this.recvMark = "$$" + terminal_1.EServTerminal.SLAVE + "$$";
             }
             else {
-                this.sendMark = "$s$";
-                this.recvMark = "$m$";
+                this.sendMark = "$$" + terminal_1.EServTerminal.SLAVE + "$$";
+                this.recvMark = "$$" + terminal_1.EServTerminal.MASTER + "$$";
             }
         }
         this.sendStringMark = sessionMark + this.sendMark;
