@@ -31,7 +31,7 @@ var ServSession = /** @class */ (function () {
             var options = config.checkOptions || {};
             this.sessionCheckOptions = options;
             this.sessionChecker = new ServSessionChecker_1.ServSessionChecker(this);
-            if (options.onBroken) {
+            if (!options.onBroken) {
                 options.onBroken = function (session) {
                     session.close();
                 };

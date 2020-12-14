@@ -81,7 +81,7 @@ export class ServSession {
             this.sessionCheckOptions = options;
             this.sessionChecker = new ServSessionChecker(this);
 
-            if (options.onBroken) {
+            if (!options.onBroken) {
                 options.onBroken = (session) => {
                     session.close();
                 };

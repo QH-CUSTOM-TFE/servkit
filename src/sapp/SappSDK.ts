@@ -425,6 +425,7 @@ export class SappSDK {
 
         // Rewrite type
         terminalConfig.type = EServTerminal.SLAVE;
+        terminalConfig.session.checkSession = true;
 
         // Check config validation
         if (!terminalConfig.id || !terminalConfig.session) {

@@ -343,6 +343,7 @@ var SappSDK = /** @class */ (function () {
                     case 9:
                         // Rewrite type
                         terminalConfig.type = ServTerminal_1.EServTerminal.SLAVE;
+                        terminalConfig.session.checkSession = true;
                         // Check config validation
                         if (!terminalConfig.id || !terminalConfig.session) {
                             throw new Error('[SAPPSDK] Invalid terminal config');
