@@ -22,6 +22,7 @@ export declare function aspect<O = any>(obj: O, fn: string, beforeImpl?: () => v
 export declare function aspectBefore<O = any>(obj: O, fn: string, impl: () => void): void;
 export declare function aspectAfter<O = any>(obj: O, fn: string, impl: (result: any) => any): void;
 export declare function nextUUID(): string;
+export declare function safeExec<T extends (...args: any) => any>(func: T): ReturnType<T>;
 export declare const EServConstant: {
     SERV_APP_SHOW_HIDE_TIMEOUT: number;
     SERV_SAPP_ON_START_TIMEOUT: number;

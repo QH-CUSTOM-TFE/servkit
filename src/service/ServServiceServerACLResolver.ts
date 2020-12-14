@@ -3,12 +3,12 @@ import { ServTerminal } from '../terminal/ServTerminal';
 import { ServServiceServer } from './ServServiceServer';
 export class ServServiceServerACLResolver {
     canAccessService(server: ServServiceServer, service: ServServiceMeta)
-    : boolean {
+        : boolean {
         return true;
     }
-    
+
     canAccessAPI(server: ServServiceServer, service: ServServiceMeta, api: ServAPIMeta)
-    : boolean {
+        : boolean {
         return true;
     }
 
@@ -16,7 +16,7 @@ export class ServServiceServerACLResolver {
         server: ServServiceServer,
         service: ServServiceMeta,
         event: ServEventerMeta)
-    : boolean {
+        : boolean {
         return true;
-    } 
+    }
 }

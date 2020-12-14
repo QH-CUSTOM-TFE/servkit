@@ -1,5 +1,5 @@
 import { Sapp, SappConfig } from './Sapp';
-import { SappCreateOptions, ESappLifePolicy } from './SappMGR';
+import { SappCreateOptions, SappLayoutOptions, ESappLifePolicy } from './SappMGR';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
@@ -10,6 +10,7 @@ export abstract class SappController {
     app: Sapp;
 
     protected cleanHideLifeChecker?: () => void;
+    protected layoutOptions?: SappLayoutOptions;
 
     constructor(app: Sapp) {
         app.attachController(this);
@@ -19,9 +20,23 @@ export abstract class SappController {
         aspectAfter(this, 'doClose', this.doCloseAfterAspect);
     }
 
+    setLayoutOptions(options: SappLayoutOptions) {
+        this.layoutOptions = options;
+    }
+
+    getLayoutOptions() {
+        return this.layoutOptions;
+    }
+
     doConfig(options: SappCreateOptions) {
         const app = this.app;
         const config: SappConfig = {
+            beforeStart: async () => {
+                return this.beforeStart();
+            },
+            afterStart: async () => {
+                return this.afterStart();
+            },
             resolveServiceServerConfig: () => {
                 return this.resolveServiceServerConfig(options);
             },
@@ -61,6 +76,14 @@ export abstract class SappController {
         //
     }
 
+    protected beforeStart() {
+        //
+    }
+
+    protected afterStart() {
+        //
+    }
+
     protected doHideAfterAspect() {
         const life = this.app.info.options.life;
         if (life === ESappLifePolicy.MANUAL) {
@@ -76,7 +99,7 @@ export abstract class SappController {
             maxHideTime = Math.max(this.app.info.options.lifeMaxHideTime!, EServConstant.SAPP_HIDE_MAX_TIME * 0.5);
         }
         
-        let timer = setTimeout(() => {
+        let timer: any = setTimeout(() => {
             timer = 0;
             if (this.app) {
                 this.app.close({

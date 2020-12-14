@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setServConstant = exports.EServConstant = exports.nextUUID = exports.aspectAfter = exports.aspectBefore = exports.aspect = exports.parseServQueryParams = exports.generateServQueryParams = exports.wrapServQueryParams = exports.setEnv = exports.logACL = exports.logSession = exports.noop = exports.asyncThrowMessage = exports.asyncThrow = exports.Env = void 0;
+exports.setServConstant = exports.EServConstant = exports.safeExec = exports.nextUUID = exports.aspectAfter = exports.aspectBefore = exports.aspect = exports.parseServQueryParams = exports.generateServQueryParams = exports.wrapServQueryParams = exports.setEnv = exports.logACL = exports.logSession = exports.noop = exports.asyncThrowMessage = exports.asyncThrow = exports.Env = void 0;
 exports.Env = {
     DEV: false,
     JEST: false,
@@ -127,7 +127,7 @@ function wrapServQueryParams(url, params) {
     else {
         url += '?' + query;
     }
-    return query;
+    return url;
 }
 exports.wrapServQueryParams = wrapServQueryParams;
 function generateServQueryParams(params) {
@@ -180,7 +180,7 @@ function aspect(obj, fn, beforeImpl, afterImpl) {
         // Do before aspect
         if (beforeImpl) {
             try {
-                beforeImpl();
+                beforeImpl.call(this);
             }
             catch (e) {
                 asyncThrow(e);
@@ -190,7 +190,7 @@ function aspect(obj, fn, beforeImpl, afterImpl) {
         // Do after aspect
         if (afterImpl) {
             try {
-                afterImpl(ret);
+                afterImpl.call(this, ret);
             }
             catch (e) {
                 asyncThrow(e);
@@ -217,6 +217,16 @@ function nextUUID() {
     return startTimestamp + "-" + Date.now() + "-" + nextId;
 }
 exports.nextUUID = nextUUID;
+function safeExec(func) {
+    try {
+        return func();
+    }
+    catch (e) {
+        asyncThrow(e);
+    }
+    return undefined;
+}
+exports.safeExec = safeExec;
 //////////////////////////////////////
 // Constant
 exports.EServConstant = {

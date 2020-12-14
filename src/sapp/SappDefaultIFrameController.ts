@@ -80,7 +80,7 @@ export class SappDefaultIFrameController extends SappController {
     }
 
     protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'] {
-        let layout = options.layout || {};
+        let layout = this.layoutOptions || options.layout || {};
         if (typeof layout === 'function') {
             layout = layout(this.app);
         }

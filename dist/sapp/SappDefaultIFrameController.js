@@ -79,7 +79,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
     };
     SappDefaultIFrameController.prototype.resolveSessionChannelConfig = function (options) {
         var _this = this;
-        var layout = options.layout || {};
+        var layout = this.layoutOptions || options.layout || {};
         if (typeof layout === 'function') {
             layout = layout(this.app);
         }

@@ -51,7 +51,7 @@ var DeferredImpl = /** @class */ (function () {
         this.clearTimeout();
         this._timeoutTimer = setTimeout(function () {
             _this.timeout();
-        });
+        }, timeout);
     };
     DeferredImpl.prototype.clearTimeout = function () {
         if (this._timeoutTimer) {

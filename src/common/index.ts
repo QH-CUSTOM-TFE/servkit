@@ -127,7 +127,7 @@ export function wrapServQueryParams(url: string, params: any) {
         url += '?' + query;
     }
 
-    return query;
+    return url;
 }
 
 export function generateServQueryParams(params: any) {
@@ -185,7 +185,7 @@ export function aspect<O = any>(obj: O, fn: string, beforeImpl?: () => void, aft
         // Do before aspect
         if (beforeImpl) {
             try {
-                beforeImpl();
+                beforeImpl.call(this);
             } catch (e) {
                 asyncThrow(e);
             }
@@ -196,7 +196,7 @@ export function aspect<O = any>(obj: O, fn: string, beforeImpl?: () => void, aft
         // Do after aspect
         if (afterImpl) {
             try {
-                afterImpl(ret);
+                afterImpl.call(this, ret);
             } catch (e) {
                 asyncThrow(e);
             }
@@ -221,6 +221,16 @@ const startTimestamp = Date.now();
 export function nextUUID() {
     ++nextId;
     return `${startTimestamp}-${Date.now()}-${nextId}`;
+}
+
+export function safeExec<T extends (...args: any) => any>(func: T): ReturnType<T> {
+    try {
+        return func();
+    } catch (e) {
+        asyncThrow(e);
+    }
+
+    return undefined as any;
 }
 
 //////////////////////////////////////

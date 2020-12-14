@@ -1,5 +1,5 @@
 import { Sapp } from './Sapp';
-import { SappCreateOptions } from './SappMGR';
+import { SappCreateOptions, SappLayoutOptions } from './SappMGR';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
@@ -7,12 +7,17 @@ import { SappCloseResult } from './service/m/SappLifecycle';
 export declare abstract class SappController {
     app: Sapp;
     protected cleanHideLifeChecker?: () => void;
+    protected layoutOptions?: SappLayoutOptions;
     constructor(app: Sapp);
+    setLayoutOptions(options: SappLayoutOptions): void;
+    getLayoutOptions(): SappLayoutOptions | undefined;
     doConfig(options: SappCreateOptions): void;
     doCreate(): void;
     doShow(): void;
     doHide(): void;
     doClose(result?: SappCloseResult): void;
+    protected beforeStart(): void;
+    protected afterStart(): void;
     protected doHideAfterAspect(): void;
     protected doShowBeforeAspect(): void;
     protected doCloseAfterAspect(): void;

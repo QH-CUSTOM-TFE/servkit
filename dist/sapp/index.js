@@ -11,6 +11,9 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Sapp"), exports);
+__exportStar(require("./SappPlainPage"), exports);
 __exportStar(require("./SappSDK"), exports);
 __exportStar(require("./SappMGR"), exports);
+__exportStar(require("./SappController"), exports);
+__exportStar(require("./SappDefaultIFrameController"), exports);
 //# sourceMappingURL=index.js.map

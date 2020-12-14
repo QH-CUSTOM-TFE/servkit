@@ -17,4 +17,5 @@ __exportStar(require("./message"), exports);
 __exportStar(require("./session"), exports);
 __exportStar(require("./window"), exports);
 __exportStar(require("./sapp"), exports);
+__exportStar(require("./common/Deferred"), exports);
 //# sourceMappingURL=index.js.map

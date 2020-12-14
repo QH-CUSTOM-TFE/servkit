@@ -38,12 +38,16 @@ var IFrameUtil = /** @class */ (function () {
                     show(element, container);
                 }
                 container.appendChild(element);
-                return {
+                var ret = {
                     container: container,
                     element: element,
                     target: element.contentWindow,
                     origin: config.postOrigin || '*',
                 };
+                if (config.onCreateWindow) {
+                    config.onCreateWindow(ret);
+                }
+                return ret;
             },
             destroyWindow: function (windowInfo) {
                 if (config.onDestroyWindow) {

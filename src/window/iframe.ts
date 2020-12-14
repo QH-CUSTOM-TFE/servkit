@@ -67,12 +67,18 @@ export class IFrameUtil {
 
                 container.appendChild(element);
 
-                return {
+                const ret = {
                     container,
                     element,
                     target: element.contentWindow as Window,
                     origin: config.postOrigin || '*',
                 };
+
+                if (config.onCreateWindow) {
+                    config.onCreateWindow(ret);
+                }
+
+                return ret;
             },
             destroyWindow: (windowInfo: ServChannelWindow) => {
                 if (config.onDestroyWindow) {

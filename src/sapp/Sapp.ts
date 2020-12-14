@@ -3,9 +3,9 @@ import { ServServiceServerConfig } from '../service/ServServiceServer';
 import {
     asyncThrow,
     EServConstant,
+    safeExec,
 } from '../common/index';
 import { EServChannel } from '../session/channel/ServChannel';
-import { servkit, Servkit } from '../servkit/Servkit';
 import { ServService, anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
@@ -264,9 +264,11 @@ export class Sapp {
                     });
 
                 if (!ret.error && ((params && params.force) || !ret.dontShow)) {
-                    if (this.controller) {
-                        this.controller.doShow();
-                    }
+                    safeExec(() => {
+                        if (this.controller) {
+                            this.controller.doShow();
+                        }
+                    });
                     this.showDone = DeferredUtil.create();
                 } else {
                     if (ret.error) {
@@ -314,9 +316,11 @@ export class Sapp {
                     if (this.showDone) {
                         this.showDone.resolve(params && params.data);
                     }
-                    if (this.controller) {
-                        this.controller.doHide();
-                    }
+                    safeExec(() => {
+                        if (this.controller) {
+                            this.controller.doHide();
+                        }
+                    });
                 } else {
                     if (ret.error) {
                         throw ret.error;
@@ -342,9 +346,11 @@ export class Sapp {
                     });
                 }
 
-                if (this.controller) {
-                    this.controller.doClose(result);
-                }
+                safeExec(() => {
+                    if (this.controller) {
+                        this.controller.doClose(result);
+                    }
+                });
 
                 if (result) {
                     if (result.error) {
@@ -363,8 +369,9 @@ export class Sapp {
 
                 this.detachController();
                 this.isStarted = false;
-                this.started = DeferredUtil.create();
-                this.started.reject(new Error('[SAPP] Closed'));
+                this.started = DeferredUtil.reject(new Error('[SAPP] Closed'));
+                this.started.catch(() => undefined);
+                
                 this.waitOnStart = undefined;
                 this.manager = undefined!;
             }));

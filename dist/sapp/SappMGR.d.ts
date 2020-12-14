@@ -28,6 +28,7 @@ export declare class SappInfo {
         lifeMaxHideTime?: number;
         dontStartOnCreate?: boolean;
         layout?: string;
+        isPlainPage?: boolean;
     };
 }
 export declare class SappLayoutOptions {

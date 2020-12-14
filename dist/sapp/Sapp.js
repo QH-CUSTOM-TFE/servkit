@@ -154,6 +154,7 @@ var Sapp = /** @class */ (function () {
         }); }));
         this._show = Deferred_1.DeferredUtil.reEntryGuard(this.showHideMutex.lockGuard(function (params, byCreate) { return __awaiter(_this, void 0, void 0, function () {
             var ret;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
@@ -181,9 +182,11 @@ var Sapp = /** @class */ (function () {
                     case 1:
                         ret = _a.sent();
                         if (!ret.error && ((params && params.force) || !ret.dontShow)) {
-                            if (this.controller) {
-                                this.controller.doShow();
-                            }
+                            index_1.safeExec(function () {
+                                if (_this.controller) {
+                                    _this.controller.doShow();
+                                }
+                            });
                             this.showDone = Deferred_1.DeferredUtil.create();
                         }
                         else {
@@ -201,6 +204,7 @@ var Sapp = /** @class */ (function () {
         }); }));
         this._hide = Deferred_1.DeferredUtil.reEntryGuard(this.showHideMutex.lockGuard(function (params, byClose) { return __awaiter(_this, void 0, void 0, function () {
             var ret;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
@@ -231,9 +235,11 @@ var Sapp = /** @class */ (function () {
                             if (this.showDone) {
                                 this.showDone.resolve(params && params.data);
                             }
-                            if (this.controller) {
-                                this.controller.doHide();
-                            }
+                            index_1.safeExec(function () {
+                                if (_this.controller) {
+                                    _this.controller.doHide();
+                                }
+                            });
                         }
                         else {
                             if (ret.error) {
@@ -249,6 +255,7 @@ var Sapp = /** @class */ (function () {
             });
         }); }));
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -265,9 +272,11 @@ var Sapp = /** @class */ (function () {
                         _a.sent();
                         _a.label = 3;
                     case 3:
-                        if (this.controller) {
-                            this.controller.doClose(result);
-                        }
+                        index_1.safeExec(function () {
+                            if (_this.controller) {
+                                _this.controller.doClose(result);
+                            }
+                        });
                         if (result) {
                             if (result.error) {
                                 this.closed.reject(result.error);
@@ -285,8 +294,8 @@ var Sapp = /** @class */ (function () {
                         }
                         this.detachController();
                         this.isStarted = false;
-                        this.started = Deferred_1.DeferredUtil.create();
-                        this.started.reject(new Error('[SAPP] Closed'));
+                        this.started = Deferred_1.DeferredUtil.reject(new Error('[SAPP] Closed'));
+                        this.started.catch(function () { return undefined; });
                         this.waitOnStart = undefined;
                         this.manager = undefined;
                         return [2 /*return*/];

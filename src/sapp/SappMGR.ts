@@ -4,6 +4,7 @@ import { Servkit, servkit } from '../servkit/Servkit';
 import { SappDefaultIFrameController } from './SappDefaultIFrameController';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { nextUUID } from '../common';
+import { SappPlainPage } from './SappPlainPage';
 
 export enum ESappCreatePolicy {
     NONE = 0,
@@ -34,6 +35,7 @@ export class SappInfo {
         lifeMaxHideTime?: number;
         dontStartOnCreate?: boolean;
         layout?: string;
+        isPlainPage?: boolean;
     };
 }
 
@@ -233,7 +235,7 @@ export class SappMGR {
 
         const i = apps.indexOf(app);
         if (i >= 0) {
-            this.apps[app.info.id] = apps.splice(i, 1);
+            apps.splice(i, 1);
             return true;
         }
 
@@ -245,7 +247,7 @@ export class SappMGR {
     }
 
     protected createApp(uuid: string, info: SappInfo, options: SappCreateOptions): Sapp {
-        const app = new Sapp(uuid, info, this);
+        const app = info.options.isPlainPage ? new SappPlainPage(uuid, info, this) : new Sapp(uuid, info, this);
         this.createAppController(app, options);
 
         return app;

@@ -41,6 +41,7 @@ var Sapp_1 = require("./Sapp");
 var Servkit_1 = require("../servkit/Servkit");
 var SappDefaultIFrameController_1 = require("./SappDefaultIFrameController");
 var common_1 = require("../common");
+var SappPlainPage_1 = require("./SappPlainPage");
 var ESappCreatePolicy;
 (function (ESappCreatePolicy) {
     ESappCreatePolicy[ESappCreatePolicy["NONE"] = 0] = "NONE";
@@ -262,7 +263,7 @@ var SappMGR = /** @class */ (function () {
         }
         var i = apps.indexOf(app);
         if (i >= 0) {
-            this.apps[app.info.id] = apps.splice(i, 1);
+            apps.splice(i, 1);
             return true;
         }
         return false;
@@ -271,7 +272,7 @@ var SappMGR = /** @class */ (function () {
         return info.id + "-" + common_1.nextUUID();
     };
     SappMGR.prototype.createApp = function (uuid, info, options) {
-        var app = new Sapp_1.Sapp(uuid, info, this);
+        var app = info.options.isPlainPage ? new SappPlainPage_1.SappPlainPage(uuid, info, this) : new Sapp_1.Sapp(uuid, info, this);
         this.createAppController(app, options);
         return app;
     };

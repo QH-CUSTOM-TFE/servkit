@@ -77,7 +77,7 @@ class DeferredImpl<T> {
 
         this._timeoutTimer = setTimeout(() => {
             this.timeout();
-        });
+        }, timeout);
     }
 
     protected clearTimeout() {
