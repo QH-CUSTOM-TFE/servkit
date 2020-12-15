@@ -294,9 +294,9 @@ var SappSDK = /** @class */ (function () {
     };
     SappSDK.prototype.initTerminal = function (options, params) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl, authInfo, _d, service, e_2;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         config = this.config;
                         terminalConfig = {
@@ -308,21 +308,21 @@ var SappSDK = /** @class */ (function () {
                         _a = terminalConfig;
                         return [4 /*yield*/, config.resolveServiceClientConfig(this)];
                     case 1:
-                        _a.client = _d.sent();
-                        _d.label = 2;
+                        _a.client = _e.sent();
+                        _e.label = 2;
                     case 2:
                         if (!config.resolveServiceServerConfig) return [3 /*break*/, 4];
                         _b = terminalConfig;
                         return [4 /*yield*/, config.resolveServiceServerConfig(this)];
                     case 3:
-                        _b.server = _d.sent();
-                        _d.label = 4;
+                        _b.server = _e.sent();
+                        _e.label = 4;
                     case 4:
                         if (!config.resolveSessionConfig) return [3 /*break*/, 6];
                         _c = terminalConfig;
                         return [4 /*yield*/, config.resolveSessionConfig(this)];
                     case 5:
-                        _c.session = _d.sent();
+                        _c.session = _e.sent();
                         return [3 /*break*/, 7];
                     case 6:
                         terminalConfig.session = {
@@ -330,16 +330,16 @@ var SappSDK = /** @class */ (function () {
                                 type: ServChannel_1.EServChannel.WINDOW,
                             },
                         };
-                        _d.label = 7;
+                        _e.label = 7;
                     case 7:
                         if (!config.resolveTerminalConfig) return [3 /*break*/, 9];
                         return [4 /*yield*/, config.resolveTerminalConfig(this, terminalConfig)];
                     case 8:
-                        newTerminalConfig = _d.sent();
+                        newTerminalConfig = _e.sent();
                         if (newTerminalConfig) {
                             terminalConfig = newTerminalConfig;
                         }
-                        _d.label = 9;
+                        _e.label = 9;
                     case 9:
                         // Rewrite type
                         terminalConfig.type = ServTerminal_1.EServTerminal.SLAVE;
@@ -376,8 +376,40 @@ var SappSDK = /** @class */ (function () {
                         });
                         return [4 /*yield*/, this.terminal.openSession()];
                     case 10:
-                        _d.sent();
-                        return [2 /*return*/];
+                        _e.sent();
+                        _e.label = 11;
+                    case 11:
+                        _e.trys.push([11, 19, , 20]);
+                        authInfo = void 0;
+                        if (!this.config.authInfo) return [3 /*break*/, 15];
+                        if (!(typeof this.config.authInfo === 'function')) return [3 /*break*/, 13];
+                        return [4 /*yield*/, this.config.authInfo(this)];
+                    case 12:
+                        _d = (_e.sent());
+                        return [3 /*break*/, 14];
+                    case 13:
+                        _d = this.config.authInfo;
+                        _e.label = 14;
+                    case 14:
+                        authInfo = _d;
+                        return [3 /*break*/, 16];
+                    case 15:
+                        authInfo = {
+                            token: '',
+                        };
+                        _e.label = 16;
+                    case 16: return [4 /*yield*/, this.terminal.client.service(SappLifecycle_2.SappLifecycle)];
+                    case 17:
+                        service = _e.sent();
+                        return [4 /*yield*/, service.auth(authInfo)];
+                    case 18:
+                        _e.sent();
+                        return [3 /*break*/, 20];
+                    case 19:
+                        e_2 = _e.sent();
+                        index_1.asyncThrowMessage('[SappSDK] Auth failed');
+                        throw e_2;
+                    case 20: return [2 /*return*/];
                 }
             });
         });

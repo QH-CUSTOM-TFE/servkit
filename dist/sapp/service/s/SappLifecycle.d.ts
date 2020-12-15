@@ -7,7 +7,7 @@ export interface SappHideParams extends HideParams {
     byClose?: boolean;
 }
 export declare class SappLifecycle extends ServService {
-    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean>;
-    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean>;
+    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean | void>;
+    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean | void>;
     onClose(): ServAPIRetn;
 }

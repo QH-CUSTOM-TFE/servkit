@@ -69,16 +69,13 @@ var SappLifecycle_1 = require("./service/m/SappLifecycle");
 var SappLifecycle_2 = require("./service/s/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
 var AsyncMutex_1 = require("../common/AsyncMutex");
-/**
- * SappSDK是为Servkit应用提供的一个SDK
- */
 var Sapp = /** @class */ (function () {
     function Sapp(uuid, info, manager) {
         var _this = this;
         this.mutex = new AsyncMutex_1.AsyncMutex();
         this.showHideMutex = new AsyncMutex_1.AsyncMutex();
         this.start = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
-            var config, waitOnStart, showParams, _a, e_1;
+            var config, waitOnAuth, waitOnStart, showParams, _a, e_1;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -91,12 +88,17 @@ var Sapp = /** @class */ (function () {
                         }
                         _b.label = 1;
                     case 1:
-                        _b.trys.push([1, 12, , 13]);
+                        _b.trys.push([1, 15, , 16]);
                         config = this.config;
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
                         }
-                        waitOnStart = Deferred_1.DeferredUtil.create({ timeout: index_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT });
+                        waitOnAuth = Deferred_1.DeferredUtil.create({ timeout: index_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT });
+                        this.waitOnAuth = waitOnAuth;
+                        waitOnStart = Deferred_1.DeferredUtil.create({
+                            timeout: index_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT,
+                            rejectIf: waitOnAuth,
+                        });
                         this.waitOnStart = waitOnStart;
                         options = options || {};
                         return [4 /*yield*/, this.beforeStart(options)];
@@ -111,50 +113,61 @@ var Sapp = /** @class */ (function () {
                         return [4 /*yield*/, this.afterInitTerminal()];
                     case 5:
                         _b.sent();
+                        return [4 /*yield*/, waitOnAuth.catch(function (error) {
+                                if (_this.waitOnAuth) {
+                                    index_1.asyncThrow(new Error('[SAPP] App auth failed'));
+                                }
+                                throw error;
+                            })];
+                    case 6:
+                        _b.sent();
+                        this.waitOnAuth = undefined;
                         return [4 /*yield*/, waitOnStart.catch(function (error) {
                                 if (_this.waitOnStart) {
                                     index_1.asyncThrow(new Error('[SAPP] App start timeout'));
                                 }
                                 throw error;
                             })];
-                    case 6:
+                    case 7:
                         _b.sent();
                         this.waitOnStart = undefined;
                         this.isStarted = true;
-                        if (this.controller) {
-                            this.controller.doCreate();
-                        }
-                        if (!!this.config.hideOnStart) return [3 /*break*/, 10];
+                        if (!this.controller) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.controller.doCreate()];
+                    case 8:
+                        _b.sent();
+                        _b.label = 9;
+                    case 9:
+                        if (!!this.config.hideOnStart) return [3 /*break*/, 13];
                         showParams = {
                             force: true,
                         };
-                        if (!this.config.resolveStartShowData) return [3 /*break*/, 8];
+                        if (!this.config.resolveStartShowData) return [3 /*break*/, 11];
                         _a = showParams;
                         return [4 /*yield*/, this.config.resolveStartShowData(this)];
-                    case 7:
+                    case 10:
                         _a.data = _b.sent();
-                        _b.label = 8;
-                    case 8: return [4 /*yield*/, this._show(showParams, true)];
-                    case 9:
+                        _b.label = 11;
+                    case 11: return [4 /*yield*/, this._show(showParams, true)];
+                    case 12:
                         _b.sent();
-                        _b.label = 10;
-                    case 10: return [4 /*yield*/, this.afterStart()];
-                    case 11:
+                        _b.label = 13;
+                    case 13: return [4 /*yield*/, this.afterStart()];
+                    case 14:
                         _b.sent();
                         this.started.resolve();
-                        return [3 /*break*/, 13];
-                    case 12:
+                        return [3 /*break*/, 16];
+                    case 15:
                         e_1 = _b.sent();
                         this.started.reject(e_1);
                         this.close();
                         throw e_1;
-                    case 13: return [2 /*return*/];
+                    case 16: return [2 /*return*/];
                 }
             });
         }); }));
         this._show = Deferred_1.DeferredUtil.reEntryGuard(this.showHideMutex.lockGuard(function (params, byCreate) { return __awaiter(_this, void 0, void 0, function () {
-            var ret;
-            var _this = this;
+            var ret, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
@@ -163,7 +176,7 @@ var Sapp = /** @class */ (function () {
                                     index_1.asyncThrow(new Error("[SAPP] Can't show app because rejection"));
                                 }
                                 return {
-                                    dontShow: dontShow,
+                                    dontShow: !!dontShow,
                                 };
                             }, function (error) {
                                 index_1.asyncThrow(error);
@@ -181,30 +194,36 @@ var Sapp = /** @class */ (function () {
                         })];
                     case 1:
                         ret = _a.sent();
-                        if (!ret.error && ((params && params.force) || !ret.dontShow)) {
-                            index_1.safeExec(function () {
-                                if (_this.controller) {
-                                    _this.controller.doShow();
-                                }
-                            });
-                            this.showDone = Deferred_1.DeferredUtil.create();
+                        if (!(!ret.error && ((params && params.force) || !ret.dontShow))) return [3 /*break*/, 6];
+                        if (!this.controller) return [3 /*break*/, 5];
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, this.controller.doShow()];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_2 = _a.sent();
+                        index_1.asyncThrow(e_2);
+                        return [3 /*break*/, 5];
+                    case 5:
+                        this.showDone = Deferred_1.DeferredUtil.create();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        if (ret.error) {
+                            throw ret.error;
                         }
-                        else {
-                            if (ret.error) {
-                                throw ret.error;
-                            }
-                            if (ret.dontShow) {
-                                throw new Error('reject');
-                            }
-                            throw new Error('unknow');
+                        if (ret.dontShow) {
+                            throw new Error('reject');
                         }
-                        return [2 /*return*/];
+                        throw new Error('unknow');
+                    case 7: return [2 /*return*/];
                 }
             });
         }); }));
         this._hide = Deferred_1.DeferredUtil.reEntryGuard(this.showHideMutex.lockGuard(function (params, byClose) { return __awaiter(_this, void 0, void 0, function () {
-            var ret;
-            var _this = this;
+            var ret, e_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
@@ -213,7 +232,7 @@ var Sapp = /** @class */ (function () {
                                     index_1.asyncThrow(new Error("[SAPP] Can't hide app because rejection"));
                                 }
                                 return {
-                                    dontHide: dontHide,
+                                    dontHide: !!dontHide,
                                 };
                             }, function (error) {
                                 index_1.asyncThrow(error);
@@ -231,31 +250,37 @@ var Sapp = /** @class */ (function () {
                         })];
                     case 1:
                         ret = _a.sent();
-                        if (!ret.error && ((params && params.force) || !ret.dontHide)) {
-                            if (this.showDone) {
-                                this.showDone.resolve(params && params.data);
-                            }
-                            index_1.safeExec(function () {
-                                if (_this.controller) {
-                                    _this.controller.doHide();
-                                }
-                            });
+                        if (!(!ret.error && ((params && params.force) || !ret.dontHide))) return [3 /*break*/, 6];
+                        if (this.showDone) {
+                            this.showDone.resolve(params && params.data);
                         }
-                        else {
-                            if (ret.error) {
-                                throw ret.error;
-                            }
-                            if (ret.dontHide) {
-                                throw new Error('reject');
-                            }
-                            throw new Error('unknow');
+                        if (!this.controller) return [3 /*break*/, 5];
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, this.controller.doHide()];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_3 = _a.sent();
+                        index_1.asyncThrow(e_3);
+                        return [3 /*break*/, 5];
+                    case 5: return [3 /*break*/, 7];
+                    case 6:
+                        if (ret.error) {
+                            throw ret.error;
                         }
-                        return [2 /*return*/];
+                        if (ret.dontHide) {
+                            throw new Error('reject');
+                        }
+                        throw new Error('unknow');
+                    case 7: return [2 /*return*/];
                 }
             });
         }); }));
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
+            var e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -272,11 +297,20 @@ var Sapp = /** @class */ (function () {
                         _a.sent();
                         _a.label = 3;
                     case 3:
-                        index_1.safeExec(function () {
-                            if (_this.controller) {
-                                _this.controller.doClose(result);
-                            }
-                        });
+                        if (!this.controller) return [3 /*break*/, 7];
+                        _a.label = 4;
+                    case 4:
+                        _a.trys.push([4, 6, , 7]);
+                        return [4 /*yield*/, this.controller.doClose(result)];
+                    case 5:
+                        _a.sent();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        e_4 = _a.sent();
+                        index_1.asyncThrow(e_4);
+                        return [3 /*break*/, 7];
+                    case 7:
+                        this.isClosed = true;
                         if (result) {
                             if (result.error) {
                                 this.closed.reject(result.error);
@@ -297,6 +331,7 @@ var Sapp = /** @class */ (function () {
                         this.started = Deferred_1.DeferredUtil.reject(new Error('[SAPP] Closed'));
                         this.started.catch(function () { return undefined; });
                         this.waitOnStart = undefined;
+                        this.waitOnAuth = undefined;
                         this.manager = undefined;
                         return [2 /*return*/];
                 }
@@ -360,9 +395,6 @@ var Sapp = /** @class */ (function () {
         }
         return this.terminal.client.getService(arguments[0]);
     };
-    Sapp.prototype.getServiceUnsafe = function () {
-        return this.getService.apply(this, arguments);
-    };
     Sapp.prototype.service = function () {
         if (!this.isStarted) {
             return Promise.reject(new Error('[SAPP] Sapp is not started'));
@@ -374,6 +406,16 @@ var Sapp = /** @class */ (function () {
             return null;
         }
         return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
+    };
+    Sapp.prototype.auth = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                if (!this.controller) {
+                    return [2 /*return*/];
+                }
+                return [2 /*return*/, this.controller.doAuth(params)];
+            });
+        });
     };
     Sapp.prototype.beforeStart = function (options) {
         return __awaiter(this, void 0, void 0, function () {
@@ -507,6 +549,19 @@ var Sapp = /** @class */ (function () {
                                     self.waitOnStart.resolve();
                                 }
                                 return ServService_1.API_SUCCEED();
+                            };
+                            class_1.prototype.auth = function (params) {
+                                var p = self.auth(params);
+                                p.then(function () {
+                                    if (self.waitOnAuth) {
+                                        self.waitOnAuth.resolve();
+                                    }
+                                }, function (e) {
+                                    if (self.waitOnAuth) {
+                                        self.waitOnAuth.reject(e);
+                                    }
+                                });
+                                return p;
                             };
                             class_1.prototype.getStartData = function () {
                                 return self.resolveStartData(options);

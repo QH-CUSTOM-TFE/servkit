@@ -5,7 +5,7 @@ import { ServService } from '../service/ServService';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
-import { SappShowParams as ShowParams, SappHideParams as HideParams } from './service/m/SappLifecycle';
+import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthParams as AuthParams } from './service/m/SappLifecycle';
 import { Deferred } from '../common/Deferred';
 /**
  * SappSDK启动参数
@@ -21,6 +21,7 @@ export interface SappSDKConfig {
      * SappSDK底层Servkit，默认使用全局的servkit
      */
     servkit?: Servkit;
+    authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
     /**
      * SappSDK.start() 前置回调
      * @param sdk
@@ -74,7 +75,7 @@ export interface SappSDKConfig {
      * @returns {Promise<void>}
      * @memberof SappSDKConfig
      */
-    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean>;
+    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean | void>;
     /**
      * 生命周期回调，应用隐藏时回调
      *
@@ -82,7 +83,7 @@ export interface SappSDKConfig {
      * @returns {Promise<void>}
      * @memberof SappSDKConfig
      */
-    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean>;
+    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean | void>;
     /**
      * 生命周期回调，应用关闭时回调
      *
@@ -223,8 +224,8 @@ export declare class SappSDK {
     protected afterInitTerminal(): Promise<void>;
     protected initSDK(): Promise<void>;
     protected onCreate(params: SappSDKStartParams, data: any): Promise<void>;
-    protected onShow(params: SappShowParams): Promise<boolean>;
-    protected onHide(params: SappHideParams): Promise<boolean>;
+    protected onShow(params: SappShowParams): Promise<boolean | void>;
+    protected onHide(params: SappHideParams): Promise<boolean | void>;
     protected onClose(): Promise<void>;
 }
 export declare const sappSDK: SappSDK;

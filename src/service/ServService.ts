@@ -17,6 +17,7 @@ export interface ServImplOptions {
 
 export interface ServAPIOptions {
     timeout?: number;
+    dontRetn?: boolean;
     onCallTransform?: {
         send: (args: any) => any;
         recv: (rawArgs: any) => any;
@@ -29,12 +30,22 @@ export interface ServAPIOptions {
     EXT?: ServEXT;
 }
 
+export interface ServNotifyOptions {
+    onCallTransform?: {
+        send: (args: any) => any;
+        recv: (rawArgs: any) => any;
+    };
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+
 export interface ServEventerOptions {
     ACL?: ServACL;
     EXT?: ServEXT;
 }
 
 const DEFAULT_SERV_API_OPTIONS: ServAPIOptions = {};
+const DEFAULT_NOTIFY_API_OPTIONS: ServAPIOptions = { dontRetn: true };
 const DEFAULT_SERV_EVENTER_OPTIONS: ServEventerOptions = {};
 
 export interface ServAPICallOptions {
@@ -103,6 +114,7 @@ const META = '__serv_service_meta';
 export interface ServAnnoDecl {
     (options: ServDeclOptions): ((cls: typeof ServService) => void);
     api: typeof api;
+    notify: typeof notify;
     event: typeof event;
 }
 
@@ -192,6 +204,40 @@ function api(options?: ServAPIOptions) {
 
             if (options) {
                 item.options = options;
+            }
+    
+            apis.push(item);
+        } catch (e) {
+            asyncThrow(e);
+        }
+    };
+}
+
+function notify(options?: ServNotifyOptions) {
+    return function(proto: any, propKey: string) {
+        try {
+            const metas = meta(proto, true);
+            if (!metas) {
+                asyncThrowMessage(`Can't get meta in api [${propKey}].`);
+                return;
+            }
+    
+            const apis = metas.apis;
+            for (let i = 0, iz = apis.length; i < iz; ++i) {
+                if (apis[i].name === propKey) {
+                    asyncThrowMessage(`Api conflicts [${propKey}].`);
+                    return;
+                }
+            }
+
+            const item: ServAPIMeta = {
+                name: propKey,
+                options: DEFAULT_NOTIFY_API_OPTIONS,
+            };
+
+            if (options) {
+                item.options = options;
+                item.options.dontRetn = true;
             }
     
             apis.push(item);
@@ -349,6 +395,7 @@ function implInject(type: EServImplInject) {
 
 decl.api = api;
 decl.event = event;
+decl.notify = notify;
 
 impl.inject = implInject;
 

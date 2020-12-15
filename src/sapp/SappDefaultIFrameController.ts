@@ -21,7 +21,7 @@ export class SappDefaultIFrameController extends SappController {
     protected windowInfo: ServIFrameWindowInfo;
     protected layout: LayoutShowHide = {};
 
-    doShow() {
+    async doShow() {
         const element = this.windowInfo.element;
         const layout = this.layout;
         if (layout.doShow) {
@@ -47,7 +47,7 @@ export class SappDefaultIFrameController extends SappController {
         }
     }
 
-    doHide() {
+    async doHide() {
         const element = this.windowInfo.element;
         const layout = this.layout;
         if (layout.doHide) {

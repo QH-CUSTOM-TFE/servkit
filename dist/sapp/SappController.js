@@ -53,49 +53,78 @@ var SappController = /** @class */ (function () {
         return this.layoutOptions;
     };
     SappController.prototype.doConfig = function (options) {
-        var _this = this;
-        var app = this.app;
-        var config = {
-            beforeStart: function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    return [2 /*return*/, this.beforeStart()];
-                });
-            }); },
-            afterStart: function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    return [2 /*return*/, this.afterStart()];
-                });
-            }); },
-            resolveServiceServerConfig: function () {
-                return _this.resolveServiceServerConfig(options);
-            },
-            resolveSessionConfig: function () {
-                return _this.resolveSessionConfig(options);
-            },
-        };
-        if (options.startData !== undefined) {
-            config.resolveStartData = typeof options.startData === 'function'
-                ? options.startData
-                : (function () { return options.startData; });
-        }
-        if (options.startShowData !== undefined) {
-            config.resolveStartShowData = typeof options.startShowData === 'function'
-                ? options.startShowData
-                : (function () { return options.startShowData; });
-        }
-        app.setConfig(config);
+        return __awaiter(this, void 0, void 0, function () {
+            var app, config;
+            var _this = this;
+            return __generator(this, function (_a) {
+                app = this.app;
+                config = {
+                    beforeStart: function () { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            return [2 /*return*/, this.beforeStart()];
+                        });
+                    }); },
+                    afterStart: function () { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            return [2 /*return*/, this.afterStart()];
+                        });
+                    }); },
+                    resolveServiceServerConfig: function () {
+                        return _this.resolveServiceServerConfig(options);
+                    },
+                    resolveSessionConfig: function () {
+                        return _this.resolveSessionConfig(options);
+                    },
+                };
+                if (options.startData !== undefined) {
+                    config.resolveStartData = typeof options.startData === 'function'
+                        ? options.startData
+                        : (function () { return options.startData; });
+                }
+                if (options.startShowData !== undefined) {
+                    config.resolveStartShowData = typeof options.startShowData === 'function'
+                        ? options.startShowData
+                        : (function () { return options.startShowData; });
+                }
+                app.setConfig(config);
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.doCreate = function () {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.doShow = function () {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.doHide = function () {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.doClose = function (result) {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
+    };
+    SappController.prototype.doAuth = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.beforeStart = function () {
         //

@@ -200,6 +200,10 @@ export class ServServiceClient {
             }
 
             const message = ServServiceMessageCreator.createAPI(service, meta.name, args);
+            if (meta.options && meta.options.dontRetn) {
+                return self.sendMessage(message);
+            }
+            
             const addOptions = {
                 timeout,
                 prewait: self.sendMessage(message),

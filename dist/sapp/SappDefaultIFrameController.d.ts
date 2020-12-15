@@ -14,8 +14,8 @@ interface LayoutShowHide {
 export declare class SappDefaultIFrameController extends SappController {
     protected windowInfo: ServIFrameWindowInfo;
     protected layout: LayoutShowHide;
-    doShow(): void;
-    doHide(): void;
+    doShow(): Promise<void>;
+    doHide(): Promise<void>;
     protected doCloseAfterAspect(): void;
     protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'];
     protected resolveQueryParams(options: SappCreateOptions): {

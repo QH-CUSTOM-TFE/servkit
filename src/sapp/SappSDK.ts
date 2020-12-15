@@ -1,13 +1,18 @@
 import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
-import { parseServQueryParams, asyncThrow } from '../common/index';
+import { parseServQueryParams, asyncThrow, asyncThrowMessage } from '../common/index';
 import { EServChannel } from '../session/channel/ServChannel';
 import { servkit, Servkit } from '../servkit/Servkit';
 import { ServService, anno, ServAPIArgs, ServAPIRetn } from '../service/ServService';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams } from './service/s/SappLifecycle';
-import { SappLifecycle as Lifecycle, SappShowParams as ShowParams, SappHideParams as HideParams } from './service/m/SappLifecycle';
+import { 
+    SappLifecycle as Lifecycle,
+    SappShowParams as ShowParams,
+    SappHideParams as HideParams,
+    SappAuthParams as AuthParams,
+} from './service/m/SappLifecycle';
 import { Deferred, DeferredUtil } from '../common/Deferred';
 
 /**
@@ -25,6 +30,8 @@ export interface SappSDKConfig {
      * SappSDK底层Servkit，默认使用全局的servkit
      */
     servkit?: Servkit;
+
+    authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
 
     /**
      * SappSDK.start() 前置回调
@@ -88,7 +95,7 @@ export interface SappSDKConfig {
      * @returns {Promise<void>}
      * @memberof SappSDKConfig
      */
-    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean>;
+    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean | void>;
     
     /**
      * 生命周期回调，应用隐藏时回调
@@ -97,7 +104,7 @@ export interface SappSDKConfig {
      * @returns {Promise<void>}
      * @memberof SappSDKConfig
      */
-    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean>;
+    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean | void>;
 
     /**
      * 生命周期回调，应用关闭时回调
@@ -438,11 +445,11 @@ export class SappSDK {
         // Setup lifecycle
         const self = this;
         const SappLifecycleImpl = class extends SappLifecycle {
-            onShow(p: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
+            onShow(p: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean | void> {
                 return self.onShow(p);
             }
             
-            onHide(p: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
+            onHide(p: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean | void> {
                 return self.onHide(p);
             }
 
@@ -461,8 +468,24 @@ export class SappSDK {
 
         await this.terminal.openSession();
 
-        // TODO
-        // App validation check
+        // Do auth check
+        try {
+            let authInfo: AuthParams;
+            if (this.config.authInfo) {
+                authInfo = typeof this.config.authInfo === 'function'
+                            ? (await this.config.authInfo(this))
+                            : this.config.authInfo;
+            } else {
+                authInfo = {
+                    token: '',
+                };
+            }
+            const service = await this.terminal.client.service(Lifecycle);
+            await service.auth(authInfo);
+        } catch (e) {
+            asyncThrowMessage('[SappSDK] Auth failed');
+            throw e;
+        }
     }
 
     protected async afterInitTerminal(): Promise<void> {
@@ -481,7 +504,7 @@ export class SappSDK {
     }
 
     protected async onShow(params: SappShowParams) {
-        let dontShow = false;
+        let dontShow: boolean | void = false;
         if (this.config.onShow) {
             dontShow = await this.config.onShow(this, params);
         }
@@ -490,7 +513,7 @@ export class SappSDK {
     }
 
     protected async onHide(params: SappHideParams) {
-        let dontHide = false;
+        let dontHide: boolean | void = false;
         if (this.config.onHide) {
             dontHide = await this.config.onHide(this, params);
         }

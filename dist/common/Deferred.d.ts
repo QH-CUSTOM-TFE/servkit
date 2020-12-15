@@ -6,6 +6,8 @@ export declare enum EDeferredResult {
 }
 export interface DeferredOptions {
     timeout?: number;
+    rejectIf?: Promise<void>;
+    resolveIf?: Promise<void>;
 }
 export interface Deferred<T = void> extends Promise<T> {
     reject(error?: any): void;

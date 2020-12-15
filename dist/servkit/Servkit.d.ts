@@ -7,10 +7,12 @@ export interface ServkitConfig {
     client?: ServServiceClientConfig;
 }
 export declare class Servkit {
+    namespace: string;
     service: ServGlobalServiceManager;
     server: ServServiceServer;
     client: ServServiceClient;
     protected terminals: ServTerminal[];
+    constructor(namespace?: string);
     init(config?: ServkitConfig): void;
     release(): void;
     createTerminal(config: ServTerminalConfig): ServTerminal;

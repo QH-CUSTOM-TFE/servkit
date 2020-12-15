@@ -121,7 +121,9 @@ export class ServSession {
     }
 
     getID() {
-        return this.terminal.id;
+        return this.terminal.servkit.namespace
+                ? this.terminal.servkit.namespace + '-' + this.terminal.id
+                : this.terminal.id;
     }
 
     isOpened() {

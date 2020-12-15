@@ -163,10 +163,10 @@ export class ServServiceManager {
             return undefined!;
         }
 
-        return this.getService(info.decl) as T;
+        return this._getService(info.decl) as T;
     }
 
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
+    protected _getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
         const metas = decl.meta();
         if (!metas) {
             return;
@@ -186,17 +186,92 @@ export class ServServiceManager {
         return service as InstanceType<T>;
     }
 
-    serviceExecByID<T extends ServService, R>(id: string, exec: ((service: T) => R)): R | null {
-        const service = this.getServiceByID<T>(id);
-        if (!service) {
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
+    getService<M extends { [key: string]: typeof ServService }>(decls: M)
+        : { [key in keyof M]: InstanceType<M[key]> | undefined };
+    getService() {
+        if (arguments.length === 0) {
+            return;
+        }
+
+        const decls = arguments[0];
+        if (typeof decls === 'function') {
+            return this._getService(decls);
+        } else {
+            const keys = Object.keys(decls);
+            const services = {};
+            for (let i = 0, iz = keys.length; i < iz; ++i) {
+                services[keys[i]] = this._getService(decls[keys[i]]);
+            }
+            
+            return services;
+        }
+    }
+
+    getServiceUnsafe<T extends typeof ServService>(decl: T): InstanceType<T>;
+    getServiceUnsafe<M extends { [key: string]: typeof ServService }>(decls: M)
+        : { [key in keyof M]: InstanceType<M[key]> };
+    getServiceUnsafe() {
+        return this.getService.apply(this, arguments);
+    }
+
+    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
+    service<M extends { [key: string]: typeof ServService }>(decls: M)
+        : Promise<{ [key in keyof M]: InstanceType<M[key]> }>;
+    service() {
+        if (arguments.length === 0) {
+            return Promise.reject(new Error('[SERVKIT] Decl is empty'));
+        }
+
+        const services = this.serviceExec(arguments[0], (v) => {
+            return v;
+        });
+
+        return services ? Promise.resolve(services) : Promise.reject(new Error('[SAPPSDK] Get a undefined service'));
+    }
+
+    serviceExec<
+        T extends typeof ServService,
+        R>(
+        decl: T,
+        exec: ((service: InstanceType<T>) => R));
+    serviceExec<
+        M extends { [key: string]: typeof ServService },
+        R>(
+        decls: M,
+        exec: ((services: { [key in keyof M]: InstanceType<M[key]> }) => R));
+    serviceExec() {
+        if (arguments.length < 2) {
             return null;
         }
 
-        return exec(service);
+        const decls = arguments[0];
+        const exec = arguments[1];
+
+        if (typeof decls === 'function') {
+            const service = this._getService(decls);
+            if (!service) {
+                return null;
+            }
+    
+            return exec(service);
+        } else {
+            const keys = Object.keys(decls);
+            const services = {};
+            for (let i = 0, iz = keys.length; i < iz; ++i) {
+                const service = this._getService(decls[keys[i]]);
+                if (!service) {
+                    return null;
+                }
+                services[keys[i]] = service;
+            }
+            
+            return exec.apply(window, services);
+        }
     }
 
-    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)): R | null {
-        const service = this.getService(decl);
+    serviceExecByID<T extends ServService, R>(id: string, exec: ((service: T) => R)): R | null {
+        const service = this.getServiceByID<T>(id);
         if (!service) {
             return null;
         }
@@ -310,7 +385,7 @@ export class ServServiceManager {
     }
 
     private injGetService = (decl: typeof ServService): ServService | undefined => {
-        return this.getService(decl);
+        return this._getService(decl);
     }
 
     private generateServiceEvent(service: string, event: string) {

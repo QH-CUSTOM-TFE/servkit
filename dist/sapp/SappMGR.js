@@ -72,6 +72,30 @@ var SappLayoutOptions = /** @class */ (function () {
 exports.SappLayoutOptions = SappLayoutOptions;
 var SappMGR = /** @class */ (function () {
     function SappMGR() {
+        this.getService = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.getService.apply(serviceManager, arguments);
+        };
+        this.getServiceUnsafe = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.getServiceUnsafe.apply(serviceManager, arguments);
+        };
+        this.service = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.service.apply(serviceManager, arguments);
+        };
+        this.serviceExec = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.serviceExec.apply(serviceManager, arguments);
+        };
+        this.addServices = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.addServices.apply(serviceManager, arguments);
+        };
+        this.remServices = function () {
+            var serviceManager = this.getServkit().service;
+            return serviceManager.remServices.apply(serviceManager, arguments);
+        };
         this.infos = {};
         this.apps = {};
         this.nextId = Date.now();
@@ -130,12 +154,7 @@ var SappMGR = /** @class */ (function () {
                         app = this.getApp(id);
                         if (app) {
                             if (!app.info.options.create || app.info.options.create === ESappCreatePolicy.SINGLETON) {
-                                if (options.dontReturnExistedApp) {
-                                    throw new Error("[SAPPMGR] App " + id + " is singleton and has created");
-                                }
-                                else {
-                                    return [2 /*return*/, app];
-                                }
+                                throw new Error('singleton');
                             }
                         }
                         return [4 /*yield*/, this.loadAppInfo(id)];

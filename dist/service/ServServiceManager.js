@@ -88,7 +88,7 @@ var ServServiceManager = /** @class */ (function () {
     function ServServiceManager() {
         var _this = this;
         this.injGetService = function (decl) {
-            return _this.getService(decl);
+            return _this._getService(decl);
         };
         this._onEventerEmit = function (eventer, args) {
             if (_this.onEvnterEmit) {
@@ -140,9 +140,9 @@ var ServServiceManager = /** @class */ (function () {
         if (!info) {
             return undefined;
         }
-        return this.getService(info.decl);
+        return this._getService(info.decl);
     };
-    ServServiceManager.prototype.getService = function (decl) {
+    ServServiceManager.prototype._getService = function (decl) {
         var metas = decl.meta();
         if (!metas) {
             return;
@@ -159,15 +159,63 @@ var ServServiceManager = /** @class */ (function () {
         }
         return service;
     };
-    ServServiceManager.prototype.serviceExecByID = function (id, exec) {
-        var service = this.getServiceByID(id);
-        if (!service) {
+    ServServiceManager.prototype.getService = function () {
+        if (arguments.length === 0) {
+            return;
+        }
+        var decls = arguments[0];
+        if (typeof decls === 'function') {
+            return this._getService(decls);
+        }
+        else {
+            var keys = Object.keys(decls);
+            var services = {};
+            for (var i = 0, iz = keys.length; i < iz; ++i) {
+                services[keys[i]] = this._getService(decls[keys[i]]);
+            }
+            return services;
+        }
+    };
+    ServServiceManager.prototype.getServiceUnsafe = function () {
+        return this.getService.apply(this, arguments);
+    };
+    ServServiceManager.prototype.service = function () {
+        if (arguments.length === 0) {
+            return Promise.reject(new Error('[SERVKIT] Decl is empty'));
+        }
+        var services = this.serviceExec(arguments[0], function (v) {
+            return v;
+        });
+        return services ? Promise.resolve(services) : Promise.reject(new Error('[SAPPSDK] Get a undefined service'));
+    };
+    ServServiceManager.prototype.serviceExec = function () {
+        if (arguments.length < 2) {
             return null;
         }
-        return exec(service);
+        var decls = arguments[0];
+        var exec = arguments[1];
+        if (typeof decls === 'function') {
+            var service = this._getService(decls);
+            if (!service) {
+                return null;
+            }
+            return exec(service);
+        }
+        else {
+            var keys = Object.keys(decls);
+            var services = {};
+            for (var i = 0, iz = keys.length; i < iz; ++i) {
+                var service = this._getService(decls[keys[i]]);
+                if (!service) {
+                    return null;
+                }
+                services[keys[i]] = service;
+            }
+            return exec.apply(window, services);
+        }
     };
-    ServServiceManager.prototype.serviceExec = function (decl, exec) {
-        var service = this.getService(decl);
+    ServServiceManager.prototype.serviceExecByID = function (id, exec) {
+        var service = this.getServiceByID(id);
         if (!service) {
             return null;
         }

@@ -31,7 +31,7 @@ export interface ServServiceServerConfig {
 export class ServServiceServer {
     terminal: ServTerminal;
 
-    protected service: ServServiceManager;
+    protected serviceManager: ServServiceManager;
     protected serviceRefer?: ServServiceRefer;
     protected ACLResolver?: ServServiceServerACLResolver;
     protected sessionUnlisten?: (() => void);
@@ -43,9 +43,9 @@ export class ServServiceServer {
     init(config?: ServServiceServerConfig) {
         config = config || {};
 
-        this.service = new ServServiceManager();
-        this.service.init(config.service);
-        this.service.onEvnterEmit = this.onEventerEmit;
+        this.serviceManager = new ServServiceManager();
+        this.serviceManager.init(config.service);
+        this.serviceManager.onEvnterEmit = this.onEventerEmit;
         this.ACLResolver = config.ACLResolver;
 
         if (config.serviceRefer) {
@@ -66,18 +66,93 @@ export class ServServiceServer {
             this.serviceRefer.detach();
             this.serviceRefer = undefined;
         }
-        this.service.release();
+        this.serviceManager.release();
 
         delete this.ACLResolver;
     }
 
-    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)) {
-        const service = this.getService(decl);
-        if (!service) {
+    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
+    getService<M extends { [key: string]: typeof ServService }>(decls: M)
+        : { [key in keyof M]: InstanceType<M[key]> | undefined };
+    getService() {
+        if (arguments.length === 0) {
+            return;
+        }
+
+        const decls = arguments[0];
+        if (typeof decls === 'function') {
+            return this._getService(decls);
+        } else {
+            const keys = Object.keys(decls);
+            const services = {};
+            for (let i = 0, iz = keys.length; i < iz; ++i) {
+                services[keys[i]] = this._getService(decls[keys[i]]);
+            }
+            
+            return services;
+        }
+    }
+
+    getServiceUnsafe<T extends typeof ServService>(decl: T): InstanceType<T>;
+    getServiceUnsafe<M extends { [key: string]: typeof ServService }>(decls: M)
+        : { [key in keyof M]: InstanceType<M[key]> };
+    getServiceUnsafe() {
+        return this.getService.apply(this, arguments);
+    }
+
+    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
+    service<M extends { [key: string]: typeof ServService }>(decls: M)
+        : Promise<{ [key in keyof M]: InstanceType<M[key]> }>;
+    service() {
+        if (arguments.length === 0) {
+            return Promise.reject(new Error('[SERVKIT] Decl is empty'));
+        }
+
+        const services = this.serviceExec(arguments[0], (v) => {
+            return v;
+        });
+
+        return services ? Promise.resolve(services) : Promise.reject(new Error('[SAPPSDK] Get a undefined service'));
+    }
+
+    serviceExec<
+        T extends typeof ServService,
+        R>(
+        decl: T,
+        exec: ((service: InstanceType<T>) => R));
+    serviceExec<
+        M extends { [key: string]: typeof ServService },
+        R>(
+        decls: M,
+        exec: ((services: { [key in keyof M]: InstanceType<M[key]> }) => R));
+    serviceExec() {
+        if (arguments.length < 2) {
             return null;
         }
 
-        return exec(service);
+        const decls = arguments[0];
+        const exec = arguments[1];
+
+        if (typeof decls === 'function') {
+            const service = this._getService(decls);
+            if (!service) {
+                return null;
+            }
+    
+            return exec(service);
+        } else {
+            const keys = Object.keys(decls);
+            const services = {};
+            for (let i = 0, iz = keys.length; i < iz; ++i) {
+                const service = this._getService(decls[keys[i]]);
+                if (!service) {
+                    return null;
+                }
+                services[keys[i]] = service;
+            }
+            
+            return exec.apply(window, services);
+        }
     }
 
     serviceExecByID<T extends ServService, R>(id: string, exec: ((service: T) => R)): R | null {
@@ -90,7 +165,7 @@ export class ServServiceServer {
     }
 
     getServiceByID<T extends ServService>(id: string): T | undefined {
-        let service = this.service.getServiceByID<T>(id);
+        let service = this.serviceManager.getServiceByID<T>(id);
         if (!service) {
             service = this.serviceRefer ? this.serviceRefer.getServiceByID(id) : undefined;
         }
@@ -98,7 +173,7 @@ export class ServServiceServer {
         return service as T;
     }
 
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
+    protected _getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined {
         const meta = decl.meta();
         if (!meta) {
             return;
@@ -108,14 +183,14 @@ export class ServServiceServer {
     }
 
     addService<D extends typeof ServService, I extends D>(decl: D, impl: I, options?: ServServiceOptions): boolean {
-        return this.service.addService(decl, impl, options);
+        return this.serviceManager.addService(decl, impl, options);
     }
 
     addServices(
         items: Array<{ decl: typeof ServService, impl: typeof ServService, options?: ServServiceOptions }>,
         options?: ServServiceOptions,
     ): void {
-        this.service.addServices(items, options);
+        this.serviceManager.addServices(items, options);
     }
 
     protected onRecvMessage = (message: ServMessage): boolean => {
@@ -180,8 +255,12 @@ export class ServServiceServer {
                     retnPromise = Promise.reject(e);
                 }
             }
+
+            if (apiMeta && apiMeta.options && apiMeta.options.dontRetn) {
+                return true;
+            }
         }
-            
+
         this.sendReturnMessage(retnPromise, message, ServServiceMessageCreator.createAPIReturn);
 
         return true;

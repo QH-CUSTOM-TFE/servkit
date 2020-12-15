@@ -5,6 +5,7 @@ import { SappDefaultIFrameController } from './SappDefaultIFrameController';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { nextUUID } from '../common';
 import { SappPlainPage } from './SappPlainPage';
+import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 
 export enum ESappCreatePolicy {
     NONE = 0,
@@ -53,7 +54,6 @@ export class SappLayoutOptions {
 
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
-    dontReturnExistedApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
@@ -88,6 +88,36 @@ export class SappMGR {
     getServkit() {
         return this.config.servkit || servkit;
     }
+
+    getService: ServGlobalServiceManager['getService'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.getService.apply(serviceManager, arguments);
+    };
+
+    getServiceUnsafe: ServGlobalServiceManager['getServiceUnsafe'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.getServiceUnsafe.apply(serviceManager, arguments);
+    };
+
+    service: ServGlobalServiceManager['service'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.service.apply(serviceManager, arguments);
+    };
+
+    serviceExec: ServGlobalServiceManager['serviceExec'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.serviceExec.apply(serviceManager, arguments);
+    };
+
+    addServices: ServGlobalServiceManager['addServices'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.addServices.apply(serviceManager, arguments);
+    };
+
+    remServices: ServGlobalServiceManager['remServices'] = function() {
+        const serviceManager = this.getServkit().service;
+        return serviceManager.remServices.apply(serviceManager, arguments);
+    };
 
     getConfig() {
         return this.config;
@@ -127,11 +157,7 @@ export class SappMGR {
         let app = this.getApp(id);
         if (app) {
             if (!app.info.options.create || app.info.options.create === ESappCreatePolicy.SINGLETON) {
-                if (options.dontReturnExistedApp) {
-                    throw new Error(`[SAPPMGR] App ${id} is singleton and has created`); 
-                } else {
-                    return app;
-                }
+                throw new Error('singleton'); 
             }
         }
 

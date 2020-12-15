@@ -72,7 +72,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         }
                         _b.label = 1;
                     case 1:
-                        _b.trys.push([1, 11, , 12]);
+                        _b.trys.push([1, 13, , 14]);
                         config = this.config;
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
@@ -91,65 +91,89 @@ var SappPlainPage = /** @class */ (function (_super) {
                     case 5:
                         _b.sent();
                         this.isStarted = true;
-                        if (this.controller) {
-                            this.controller.doCreate();
-                        }
-                        if (!!this.config.hideOnStart) return [3 /*break*/, 9];
+                        if (!this.controller) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.controller.doCreate()];
+                    case 6:
+                        _b.sent();
+                        _b.label = 7;
+                    case 7:
+                        if (!!this.config.hideOnStart) return [3 /*break*/, 11];
                         showParams = {
                             force: true,
                         };
-                        if (!this.config.resolveStartShowData) return [3 /*break*/, 7];
+                        if (!this.config.resolveStartShowData) return [3 /*break*/, 9];
                         _a = showParams;
                         return [4 /*yield*/, this.config.resolveStartShowData(this)];
-                    case 6:
-                        _a.data = _b.sent();
-                        _b.label = 7;
-                    case 7: return [4 /*yield*/, this._show(showParams, true)];
                     case 8:
-                        _b.sent();
+                        _a.data = _b.sent();
                         _b.label = 9;
-                    case 9: return [4 /*yield*/, this.afterStart()];
+                    case 9: return [4 /*yield*/, this._show(showParams, true)];
                     case 10:
                         _b.sent();
+                        _b.label = 11;
+                    case 11: return [4 /*yield*/, this.afterStart()];
+                    case 12:
+                        _b.sent();
                         this.started.resolve();
-                        return [3 /*break*/, 12];
-                    case 11:
+                        return [3 /*break*/, 14];
+                    case 13:
                         e_1 = _b.sent();
                         this.started.reject(e_1);
                         this.close();
                         throw e_1;
-                    case 12: return [2 /*return*/];
+                    case 14: return [2 /*return*/];
                 }
             });
         }); }));
         _this._show = Deferred_1.DeferredUtil.reEntryGuard(_this.showHideMutex.lockGuard(function (params, byCreate) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
+            var e_2;
             return __generator(this, function (_a) {
-                common_1.safeExec(function () {
-                    if (_this.controller) {
-                        _this.controller.doShow();
-                    }
-                });
-                this.showDone = Deferred_1.DeferredUtil.create();
-                return [2 /*return*/];
+                switch (_a.label) {
+                    case 0:
+                        if (!this.controller) return [3 /*break*/, 4];
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.controller.doShow()];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        e_2 = _a.sent();
+                        common_1.asyncThrow(e_2);
+                        return [3 /*break*/, 4];
+                    case 4:
+                        this.showDone = Deferred_1.DeferredUtil.create();
+                        return [2 /*return*/];
+                }
             });
         }); }));
         _this._hide = Deferred_1.DeferredUtil.reEntryGuard(_this.showHideMutex.lockGuard(function (params, byClose) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
+            var e_3;
             return __generator(this, function (_a) {
-                if (this.showDone) {
-                    this.showDone.resolve(params && params.data);
+                switch (_a.label) {
+                    case 0:
+                        if (this.showDone) {
+                            this.showDone.resolve(params && params.data);
+                        }
+                        if (!this.controller) return [3 /*break*/, 4];
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.controller.doHide()];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        e_3 = _a.sent();
+                        common_1.asyncThrow(e_3);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                common_1.safeExec(function () {
-                    if (_this.controller) {
-                        _this.controller.doHide();
-                    }
-                });
-                return [2 /*return*/];
             });
         }); }));
         _this.close = Deferred_1.DeferredUtil.reEntryGuard(_this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
+            var e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -159,11 +183,20 @@ var SappPlainPage = /** @class */ (function (_super) {
                         _a.sent();
                         _a.label = 2;
                     case 2:
-                        common_1.safeExec(function () {
-                            if (_this.controller) {
-                                _this.controller.doClose(result);
-                            }
-                        });
+                        if (!this.controller) return [3 /*break*/, 6];
+                        _a.label = 3;
+                    case 3:
+                        _a.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, this.controller.doClose(result)];
+                    case 4:
+                        _a.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        e_4 = _a.sent();
+                        common_1.asyncThrow(e_4);
+                        return [3 /*break*/, 6];
+                    case 6:
+                        this.isClosed = true;
                         if (result) {
                             if (result.error) {
                                 this.closed.reject(result.error);
@@ -247,6 +280,8 @@ var SappPlainPage = /** @class */ (function (_super) {
                         terminalConfig.type = ServTerminal_1.EServTerminal.MASTER;
                         terminalConfig.session.checkSession = false;
                         terminalConfig.session.checkOptions = undefined;
+                        terminalConfig.client = undefined;
+                        terminalConfig.server = undefined;
                         channelConfig = terminalConfig.session.channel.config;
                         if (channelConfig && channelConfig.master) {
                             channelConfig.master.dontWaitEcho = true;

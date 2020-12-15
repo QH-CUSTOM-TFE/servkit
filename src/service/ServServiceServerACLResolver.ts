@@ -1,5 +1,4 @@
 import { ServServiceMeta, ServAPIMeta, ServEventerMeta } from './ServService';
-import { ServTerminal } from '../terminal/ServTerminal';
 import { ServServiceServer } from './ServServiceServer';
 export class ServServiceServerACLResolver {
     canAccessService(server: ServServiceServer, service: ServServiceMeta)

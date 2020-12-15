@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.util = exports.anno = exports.EServImplInject = exports.ServService = exports.API_SUCCEED = exports.API_ERROR = exports.API_UNSUPPORT = void 0;
 var index_1 = require("../common/index");
 var DEFAULT_SERV_API_OPTIONS = {};
+var DEFAULT_NOTIFY_API_OPTIONS = { dontRetn: true };
 var DEFAULT_SERV_EVENTER_OPTIONS = {};
 exports.API_UNSUPPORT = function () { return Promise.reject(new Error('unsupport')); };
 exports.API_ERROR = function (error) { return Promise.reject(error || new Error('unknown')); };
@@ -98,6 +99,36 @@ function api(options) {
             };
             if (options) {
                 item.options = options;
+            }
+            apis.push(item);
+        }
+        catch (e) {
+            index_1.asyncThrow(e);
+        }
+    };
+}
+function notify(options) {
+    return function (proto, propKey) {
+        try {
+            var metas = meta(proto, true);
+            if (!metas) {
+                index_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
+                return;
+            }
+            var apis = metas.apis;
+            for (var i = 0, iz = apis.length; i < iz; ++i) {
+                if (apis[i].name === propKey) {
+                    index_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
+                    return;
+                }
+            }
+            var item = {
+                name: propKey,
+                options: DEFAULT_NOTIFY_API_OPTIONS,
+            };
+            if (options) {
+                item.options = options;
+                item.options.dontRetn = true;
             }
             apis.push(item);
         }
@@ -227,6 +258,7 @@ function implInject(type) {
 }
 decl.api = api;
 decl.event = event;
+decl.notify = notify;
 impl.inject = implInject;
 exports.anno = {
     decl: decl,

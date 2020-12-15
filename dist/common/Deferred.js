@@ -45,6 +45,18 @@ var DeferredImpl = /** @class */ (function () {
         if (options && options.timeout && options.timeout > 0) {
             this.startTimeout(options.timeout);
         }
+        if (options && options.rejectIf) {
+            options.rejectIf.catch(function (error) {
+                _this.reject(error);
+            });
+        }
+        if (options && options.resolveIf) {
+            options.resolveIf.then(function () {
+                _this.resolve();
+            }, function (error) {
+                _this.reject(error);
+            });
+        }
     }
     DeferredImpl.prototype.startTimeout = function (timeout) {
         var _this = this;

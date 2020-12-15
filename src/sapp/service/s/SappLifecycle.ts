@@ -15,12 +15,12 @@ export interface SappHideParams extends HideParams {
 })
 export class SappLifecycle extends ServService {
     @anno.decl.api()
-    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
+    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean | void> {
         return API_UNSUPPORT();
     }
     
     @anno.decl.api()
-    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
+    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean | void> {
         return API_UNSUPPORT();
     }
 

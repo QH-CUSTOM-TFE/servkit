@@ -163,6 +163,9 @@ var ServServiceClient = /** @class */ (function () {
                 timeout = index_1.EServConstant.SERV_API_TIMEOUT;
             }
             var message = creator_1.ServServiceMessageCreator.createAPI(service, meta.name, args);
+            if (meta.options && meta.options.dontRetn) {
+                return self.sendMessage(message);
+            }
             var addOptions = {
                 timeout: timeout,
                 prewait: self.sendMessage(message),

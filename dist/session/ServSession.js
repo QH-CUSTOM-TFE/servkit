@@ -66,7 +66,9 @@ var ServSession = /** @class */ (function () {
         return this.terminal.isMaster();
     };
     ServSession.prototype.getID = function () {
-        return this.terminal.id;
+        return this.terminal.servkit.namespace
+            ? this.terminal.servkit.namespace + '-' + this.terminal.id
+            : this.terminal.id;
     };
     ServSession.prototype.isOpened = function () {
         return this.status === EServSessionStatus.OPENED;

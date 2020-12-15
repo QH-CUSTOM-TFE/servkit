@@ -10,6 +10,11 @@ export interface SappHideParams {
     data?: any;
 }
 
+export interface SappAuthParams {
+    token: string;
+    [property: string]: any;
+}
+
 export interface SappCloseResult {
     data?: any;
     error?: any;
@@ -20,6 +25,11 @@ export interface SappCloseResult {
     version: '1.0.0',
 })
 export class SappLifecycle extends ServService {
+    @anno.decl.api()
+    auth(params: SappAuthParams): ServAPIRetn {
+        return API_UNSUPPORT();
+    }
+
     @anno.decl.api()
     onStart(): ServAPIRetn {
         return API_UNSUPPORT();

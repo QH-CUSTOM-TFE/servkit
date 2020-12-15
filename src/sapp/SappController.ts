@@ -3,7 +3,7 @@ import { SappCreateOptions, SappLayoutOptions, ESappLifePolicy } from './SappMGR
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
-import { SappCloseResult } from './service/m/SappLifecycle';
+import { SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
 import { aspectAfter, aspectBefore, EServConstant } from '../common/index';
 
 export abstract class SappController {
@@ -28,7 +28,7 @@ export abstract class SappController {
         return this.layoutOptions;
     }
 
-    doConfig(options: SappCreateOptions) {
+    async doConfig(options: SappCreateOptions) {
         const app = this.app;
         const config: SappConfig = {
             beforeStart: async () => {
@@ -60,19 +60,23 @@ export abstract class SappController {
         app.setConfig(config);
     }
 
-    doCreate() {
+    async doCreate() {
         //
     }
 
-    doShow() {
+    async doShow() {
         //
     }
 
-    doHide() {
+    async doHide() {
         //
     }
 
-    doClose(result?: SappCloseResult) {
+    async doClose(result?: SappCloseResult) {
+        //
+    }
+
+    async doAuth(params: SappAuthParams) {
         //
     }
 

@@ -6,7 +6,7 @@ import { ServTerminal } from '../src/terminal/ServTerminal';
 import * as tEvent from './terminal/event';
 import * as tMessage from './terminal/message';
 import * as tWindow from './terminal/window';
-import * as tSappSDK from './terminal/sapp';
+// import * as tSappSDK from './terminal/sapp';
 import { STRING_VALUE, STRING_VALUE1, OBJECT_VALUE1, delay, OBJECT_VALUE } from './util';
 import { servkit } from '../src/servkit/Servkit';
 
@@ -285,6 +285,6 @@ test('Terminal Service', async () => {
     await testTerminal(tEvent);
     await testTerminal(tMessage);
     await testTerminal(tWindow);
-    await testTerminal(tSappSDK);
+    // await testTerminal(tSappSDK);
     servkit.service.remServices([Test1]);
 }, 60000);

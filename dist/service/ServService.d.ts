@@ -10,6 +10,7 @@ export interface ServImplOptions {
 }
 export interface ServAPIOptions {
     timeout?: number;
+    dontRetn?: boolean;
     onCallTransform?: {
         send: (args: any) => any;
         recv: (rawArgs: any) => any;
@@ -17,6 +18,14 @@ export interface ServAPIOptions {
     onRetnTransform?: {
         send: (data: any) => any;
         recv: (rawData: any) => any;
+    };
+    ACL?: ServACL;
+    EXT?: ServEXT;
+}
+export interface ServNotifyOptions {
+    onCallTransform?: {
+        send: (args: any) => any;
+        recv: (rawArgs: any) => any;
     };
     ACL?: ServACL;
     EXT?: ServEXT;
@@ -68,6 +77,7 @@ export declare class ServService {
 export interface ServAnnoDecl {
     (options: ServDeclOptions): ((cls: typeof ServService) => void);
     api: typeof api;
+    notify: typeof notify;
     event: typeof event;
 }
 export interface ServAnnoImpl {
@@ -75,6 +85,7 @@ export interface ServAnnoImpl {
     inject: typeof implInject;
 }
 declare function api(options?: ServAPIOptions): (proto: any, propKey: string) => void;
+declare function notify(options?: ServNotifyOptions): (proto: any, propKey: string) => void;
 declare function event(options?: ServEventerOptions): (proto: any, propKey: string) => void;
 declare function implMeta(obj: typeof ServService | ServService, create?: boolean): ServServiceImplMeta | undefined;
 export declare enum EServImplInject {

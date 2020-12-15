@@ -5,7 +5,7 @@ import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/Sap
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';
 import { ServWindowChannelConfig } from '../session/channel/ServWindowChannel';
-import { safeExec } from '../common';
+import { asyncThrow } from '../common';
 
 export class SappPlainPage extends Sapp {
     start = DeferredUtil.reEntryGuard(this.mutex.lockGuard(async (options?: SappStartOptions): Promise<void> => {
@@ -34,7 +34,7 @@ export class SappPlainPage extends Sapp {
             this.isStarted = true;
 
             if (this.controller) {
-                this.controller.doCreate();
+                await this.controller.doCreate();
             }
 
             if (!this.config.hideOnStart) {
@@ -70,11 +70,14 @@ export class SappPlainPage extends Sapp {
     protected _show = DeferredUtil.reEntryGuard(
         this.showHideMutex.lockGuard(
             async (params?: SappShowParams, byCreate?: boolean) => {
-                safeExec(() => {
-                    if (this.controller) {
-                        this.controller.doShow();
+                if (this.controller) {
+                    try {
+                        await this.controller.doShow();
+                    } catch (e) {
+                        asyncThrow(e);
                     }
-                });
+                    
+                }
                 
                 this.showDone = DeferredUtil.create();
             }));
@@ -85,11 +88,14 @@ export class SappPlainPage extends Sapp {
                 if (this.showDone) {
                     this.showDone.resolve(params && params.data);
                 }
-                safeExec(() => {
-                    if (this.controller) {
-                        this.controller.doHide();
+                if (this.controller) {
+                    try {
+                        await this.controller.doHide();
+                    } catch (e) {
+                        asyncThrow(e);
                     }
-                });
+                    
+                }
             }));
 
     close = DeferredUtil.reEntryGuard(
@@ -99,11 +105,15 @@ export class SappPlainPage extends Sapp {
                     await this._hide({ force: true }, true).catch(() => undefined);
                 }
 
-                safeExec(() => {
-                    if (this.controller) {
-                        this.controller.doClose(result);
+                if (this.controller) {
+                    try {
+                        await this.controller.doClose(result);
+                    } catch (e) {
+                        asyncThrow(e);
                     }
-                });
+                    
+                }
+                this.isClosed = true;
                 
                 if (result) {
                     if (result.error) {
@@ -161,6 +171,9 @@ export class SappPlainPage extends Sapp {
         terminalConfig.type = EServTerminal.MASTER;
         terminalConfig.session.checkSession = false;
         terminalConfig.session.checkOptions = undefined;
+        terminalConfig.client = undefined;
+        terminalConfig.server = undefined;
+
         const channelConfig = terminalConfig.session.channel.config as ServWindowChannelConfig;
         if (channelConfig && channelConfig.master) {
             channelConfig.master.dontWaitEcho = true;

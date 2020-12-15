@@ -2,6 +2,7 @@ import { Sapp } from './Sapp';
 import { SappController } from './SappController';
 import { Servkit } from '../servkit/Servkit';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
+import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 export declare enum ESappCreatePolicy {
     NONE = 0,
     SINGLETON = 1,
@@ -44,7 +45,6 @@ export declare class SappLayoutOptions {
 }
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
-    dontReturnExistedApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
@@ -67,6 +67,12 @@ export declare class SappMGR {
     constructor();
     setConfig(config: SappMGRConfig): this;
     getServkit(): Servkit;
+    getService: ServGlobalServiceManager['getService'];
+    getServiceUnsafe: ServGlobalServiceManager['getServiceUnsafe'];
+    service: ServGlobalServiceManager['service'];
+    serviceExec: ServGlobalServiceManager['serviceExec'];
+    addServices: ServGlobalServiceManager['addServices'];
+    remServices: ServGlobalServiceManager['remServices'];
     getConfig(): SappMGRConfig;
     getApp(id: string): Sapp;
     getApps(id: string): Sapp[];

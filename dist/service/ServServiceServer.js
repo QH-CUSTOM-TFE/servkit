@@ -49,9 +49,9 @@ var ServServiceServer = /** @class */ (function () {
     }
     ServServiceServer.prototype.init = function (config) {
         config = config || {};
-        this.service = new ServServiceManager_1.ServServiceManager();
-        this.service.init(config.service);
-        this.service.onEvnterEmit = this.onEventerEmit;
+        this.serviceManager = new ServServiceManager_1.ServServiceManager();
+        this.serviceManager.init(config.service);
+        this.serviceManager.onEvnterEmit = this.onEventerEmit;
         this.ACLResolver = config.ACLResolver;
         if (config.serviceRefer) {
             this.serviceRefer = this.terminal.servkit.service.referServices(config.serviceRefer);
@@ -68,15 +68,63 @@ var ServServiceServer = /** @class */ (function () {
             this.serviceRefer.detach();
             this.serviceRefer = undefined;
         }
-        this.service.release();
+        this.serviceManager.release();
         delete this.ACLResolver;
     };
-    ServServiceServer.prototype.serviceExec = function (decl, exec) {
-        var service = this.getService(decl);
-        if (!service) {
+    ServServiceServer.prototype.getService = function () {
+        if (arguments.length === 0) {
+            return;
+        }
+        var decls = arguments[0];
+        if (typeof decls === 'function') {
+            return this._getService(decls);
+        }
+        else {
+            var keys = Object.keys(decls);
+            var services = {};
+            for (var i = 0, iz = keys.length; i < iz; ++i) {
+                services[keys[i]] = this._getService(decls[keys[i]]);
+            }
+            return services;
+        }
+    };
+    ServServiceServer.prototype.getServiceUnsafe = function () {
+        return this.getService.apply(this, arguments);
+    };
+    ServServiceServer.prototype.service = function () {
+        if (arguments.length === 0) {
+            return Promise.reject(new Error('[SERVKIT] Decl is empty'));
+        }
+        var services = this.serviceExec(arguments[0], function (v) {
+            return v;
+        });
+        return services ? Promise.resolve(services) : Promise.reject(new Error('[SAPPSDK] Get a undefined service'));
+    };
+    ServServiceServer.prototype.serviceExec = function () {
+        if (arguments.length < 2) {
             return null;
         }
-        return exec(service);
+        var decls = arguments[0];
+        var exec = arguments[1];
+        if (typeof decls === 'function') {
+            var service = this._getService(decls);
+            if (!service) {
+                return null;
+            }
+            return exec(service);
+        }
+        else {
+            var keys = Object.keys(decls);
+            var services = {};
+            for (var i = 0, iz = keys.length; i < iz; ++i) {
+                var service = this._getService(decls[keys[i]]);
+                if (!service) {
+                    return null;
+                }
+                services[keys[i]] = service;
+            }
+            return exec.apply(window, services);
+        }
     };
     ServServiceServer.prototype.serviceExecByID = function (id, exec) {
         var service = this.getServiceByID(id);
@@ -86,13 +134,13 @@ var ServServiceServer = /** @class */ (function () {
         return exec(service);
     };
     ServServiceServer.prototype.getServiceByID = function (id) {
-        var service = this.service.getServiceByID(id);
+        var service = this.serviceManager.getServiceByID(id);
         if (!service) {
             service = this.serviceRefer ? this.serviceRefer.getServiceByID(id) : undefined;
         }
         return service;
     };
-    ServServiceServer.prototype.getService = function (decl) {
+    ServServiceServer.prototype._getService = function (decl) {
         var meta = decl.meta();
         if (!meta) {
             return;
@@ -100,10 +148,10 @@ var ServServiceServer = /** @class */ (function () {
         return this.getServiceByID(meta.id);
     };
     ServServiceServer.prototype.addService = function (decl, impl, options) {
-        return this.service.addService(decl, impl, options);
+        return this.serviceManager.addService(decl, impl, options);
     };
     ServServiceServer.prototype.addServices = function (items, options) {
-        this.service.addServices(items, options);
+        this.serviceManager.addServices(items, options);
     };
     ServServiceServer.prototype.handleAPIMessage = function (message) {
         var id = message.service;
@@ -148,6 +196,9 @@ var ServServiceServer = /** @class */ (function () {
                 catch (e) {
                     retnPromise = Promise.reject(e);
                 }
+            }
+            if (apiMeta_1 && apiMeta_1.options && apiMeta_1.options.dontRetn) {
+                return true;
             }
         }
         this.sendReturnMessage(retnPromise, message, creator_1.ServServiceMessageCreator.createAPIReturn);

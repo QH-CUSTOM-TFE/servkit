@@ -17,7 +17,8 @@ var session_1 = require("../session");
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var ServGlobalServiceManager_1 = require("./ServGlobalServiceManager");
 var Servkit = /** @class */ (function () {
-    function Servkit() {
+    function Servkit(namespace) {
+        this.namespace = namespace || '';
     }
     Servkit.prototype.init = function (config) {
         config = config || {};

@@ -26,6 +26,9 @@ var SappLifecycle = /** @class */ (function (_super) {
     function SappLifecycle() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    SappLifecycle.prototype.auth = function (params) {
+        return ServService_1.API_UNSUPPORT();
+    };
     SappLifecycle.prototype.onStart = function () {
         return ServService_1.API_UNSUPPORT();
     };
@@ -41,6 +44,9 @@ var SappLifecycle = /** @class */ (function (_super) {
     SappLifecycle.prototype.close = function (result) {
         return ServService_1.API_UNSUPPORT();
     };
+    __decorate([
+        ServService_1.anno.decl.api()
+    ], SappLifecycle.prototype, "auth", null);
     __decorate([
         ServService_1.anno.decl.api()
     ], SappLifecycle.prototype, "onStart", null);

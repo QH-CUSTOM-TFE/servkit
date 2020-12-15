@@ -11,12 +11,18 @@ export interface ServkitConfig {
 }
 
 export class Servkit  {
+    namespace: string;
+
     service: ServGlobalServiceManager;
 
     server: ServServiceServer;
     client: ServServiceClient;
 
     protected terminals: ServTerminal[];
+
+    constructor(namespace?: string) {
+        this.namespace = namespace || '';
+    }
 
     init(config?: ServkitConfig) {
         config = config || {};

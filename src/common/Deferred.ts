@@ -7,6 +7,8 @@ export enum EDeferredResult {
 
 export interface DeferredOptions {
     timeout?: number;
+    rejectIf?: Promise<void>;
+    resolveIf?: Promise<void>;
 }
 
 export interface Deferred<T = void> extends Promise<T> {
@@ -32,6 +34,20 @@ class DeferredImpl<T> {
 
         if (options && options.timeout && options.timeout > 0) {
             this.startTimeout(options.timeout);
+        }
+
+        if (options && options.rejectIf) {
+            options.rejectIf.catch((error) => {
+                this.reject(error);
+            });
+        }
+
+        if (options && options.resolveIf) {
+            options.resolveIf.then(() => {
+                this.resolve();
+            }, (error) => {
+                this.reject(error);
+            });
         }
     }
 
