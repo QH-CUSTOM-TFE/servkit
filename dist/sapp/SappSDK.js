@@ -138,6 +138,60 @@ var SappSDK = /** @class */ (function () {
                 }
             });
         }); });
+        /**
+         * 根据服务声明获取服务对象
+         *
+         * @template T
+         * @param {T} decl
+         * @returns {(InstanceType<T> | undefined)}
+         * @memberof SappSDK
+         */
+        this.getService = function () {
+            if (!this.isStarted) {
+                return;
+            }
+            return this.terminal.client.getService(arguments[0]);
+        };
+        /**
+         * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
+         *
+         * @template T
+         * @param {T} decl
+         * @returns {InstanceType<T>}
+         * @memberof SappSDK
+         */
+        this.getServiceUnsafe = function () {
+            return this.getService.apply(this, arguments);
+        };
+        /**
+         * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
+         *
+         * @template T
+         * @param {T} decl
+         * @returns {Promise<InstanceType<T>>}
+         * @memberof SappSDK
+         */
+        this.service = function () {
+            if (!this.isStarted) {
+                return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
+            }
+            return this.terminal.client.service.apply(this.terminal.client, arguments);
+        };
+        /**
+         * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
+         *
+         * @template T
+         * @template R
+         * @param {T} decl
+         * @param {((service: InstanceType<T>) => R)} exec
+         * @memberof SappSDK
+         */
+        this.serviceExec = function () {
+            if (!this.isStarted) {
+                return null;
+            }
+            return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
+        };
         this.started = Deferred_1.DeferredUtil.create();
         this.setConfig({
         // Default Config
@@ -203,27 +257,6 @@ var SappSDK = /** @class */ (function () {
             this.terminal.servkit.destroyTerminal(this.terminal);
             this.terminal = undefined;
         }
-    };
-    SappSDK.prototype.getService = function () {
-        if (!this.isStarted) {
-            return;
-        }
-        return this.terminal.client.getService(arguments[0]);
-    };
-    SappSDK.prototype.getServiceUnsafe = function () {
-        return this.getService.apply(this, arguments);
-    };
-    SappSDK.prototype.service = function () {
-        if (!this.isStarted) {
-            return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
-        }
-        return this.terminal.client.service.apply(this.terminal.client, arguments);
-    };
-    SappSDK.prototype.serviceExec = function () {
-        if (!this.isStarted) {
-            return null;
-        }
-        return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
     };
     SappSDK.prototype.beforeStart = function (options) {
         return __awaiter(this, void 0, void 0, function () {

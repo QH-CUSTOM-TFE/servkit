@@ -1,7 +1,6 @@
 import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
-import { ServService } from '../service/ServService';
-import { ServServiceClientConfig } from '../service/ServServiceClient';
+import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
 import { SappInfo, SappMGR } from './SappMGR';
@@ -60,24 +59,10 @@ export declare class Sapp {
     close: ((result?: SappCloseResult | undefined) => Promise<void>) & {
         deferred: Deferred<void> | undefined;
     };
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
-    getService<M extends {
-        [key: string]: typeof ServService;
-    }>(decls: M): {
-        [key in keyof M]: InstanceType<M[key]> | undefined;
-    };
-    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
-    service<M extends {
-        [key: string]: typeof ServService;
-    }>(decls: M): Promise<{
-        [key in keyof M]: InstanceType<M[key]>;
-    }>;
-    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)): any;
-    serviceExec<M extends {
-        [key: string]: typeof ServService;
-    }, R>(decls: M, exec: ((services: {
-        [key in keyof M]: InstanceType<M[key]>;
-    }) => R)): any;
+    getService: ServServiceClient['getService'];
+    getServiceUnsafe: ServServiceClient['getServiceUnsafe'];
+    service: ServServiceClient['service'];
+    serviceExec: ServServiceClient['serviceExec'];
     protected auth(params: SappAuthParams): Promise<void>;
     protected beforeStart(options: SappStartOptions): Promise<void>;
     protected afterStart(): Promise<void>;

@@ -266,7 +266,7 @@ export class ServServiceManager {
                 services[keys[i]] = service;
             }
             
-            return exec.apply(window, services);
+            return exec.call(window, services);
         }
     }
 

@@ -211,7 +211,7 @@ var ServServiceManager = /** @class */ (function () {
                 }
                 services[keys[i]] = service;
             }
-            return exec.apply(window, services);
+            return exec.call(window, services);
         }
     };
     ServServiceManager.prototype.serviceExecByID = function (id, exec) {

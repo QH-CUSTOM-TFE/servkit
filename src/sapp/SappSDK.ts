@@ -4,7 +4,7 @@ import { parseServQueryParams, asyncThrow, asyncThrowMessage } from '../common/i
 import { EServChannel } from '../session/channel/ServChannel';
 import { servkit, Servkit } from '../servkit/Servkit';
 import { ServService, anno, ServAPIArgs, ServAPIRetn } from '../service/ServService';
-import { ServServiceClientConfig } from '../service/ServServiceClient';
+import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams } from './service/s/SappLifecycle';
 import { 
@@ -286,16 +286,13 @@ export class SappSDK {
      * @returns {(InstanceType<T> | undefined)}
      * @memberof SappSDK
      */
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
-    getService<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> | undefined };
-    getService() {
+    getService: ServServiceClient['getService'] = function(this: SappSDK) {
         if (!this.isStarted) {
             return;
         }
 
         return this.terminal.client.getService(arguments[0]);
-    }
+    };
 
     /**
      * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
@@ -305,12 +302,9 @@ export class SappSDK {
      * @returns {InstanceType<T>}
      * @memberof SappSDK
      */
-    getServiceUnsafe<T extends typeof ServService>(decl: T): InstanceType<T>;
-    getServiceUnsafe<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> };
-    getServiceUnsafe() {
+    getServiceUnsafe: ServServiceClient['getServiceUnsafe'] = function(this: SappSDK) {
         return this.getService.apply(this, arguments);
-    }
+    };
 
     /**
      * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
@@ -320,16 +314,13 @@ export class SappSDK {
      * @returns {Promise<InstanceType<T>>}
      * @memberof SappSDK
      */
-    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
-    service<M extends { [key: string]: typeof ServService }>(decls: M)
-        : Promise<{ [key in keyof M]: InstanceType<M[key]> }>;
-    service() {
+    service: ServServiceClient['service'] = function(this: SappSDK) {
         if (!this.isStarted) {
             return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
         }
 
         return this.terminal.client.service.apply(this.terminal.client, arguments);
-    }
+    };
 
     /**
      * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
@@ -340,23 +331,13 @@ export class SappSDK {
      * @param {((service: InstanceType<T>) => R)} exec
      * @memberof SappSDK
      */
-    serviceExec<
-        T extends typeof ServService,
-        R>(
-        decl: T,
-        exec: ((service: InstanceType<T>) => R));
-    serviceExec<
-        M extends { [key: string]: typeof ServService },
-        R>(
-        decls: M,
-        exec: ((services: { [key in keyof M]: InstanceType<M[key]> }) => R));
-    serviceExec() {
+    serviceExec: ServServiceClient['serviceExec'] = function(this: SappSDK) {
         if (!this.isStarted) {
             return null;
         }
 
         return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
-    }
+    };
 
     protected async beforeStart(options: SappSDKStartOptions): Promise<void> {
         if (this.config.beforeStart) {

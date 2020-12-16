@@ -6,7 +6,7 @@ import {
 } from '../common/index';
 import { EServChannel } from '../session/channel/ServChannel';
 import { ServService, anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
-import { ServServiceClientConfig } from '../service/ServServiceClient';
+import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
 import { SappLifecycle as Lifecycle } from './service/s/SappLifecycle';
@@ -352,45 +352,33 @@ export class Sapp {
                 
             }));
 
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
-    getService<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> | undefined };
-    getService() {
+    getService: ServServiceClient['getService'] = function(this: Sapp) {
         if (!this.isStarted) {
             return;
         }
 
         return this.terminal.client.getService(arguments[0]);
-    }
+    };
 
-    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
-    service<M extends { [key: string]: typeof ServService }>(decls: M)
-        : Promise<{ [key in keyof M]: InstanceType<M[key]> }>;
-    service() {
+    getServiceUnsafe: ServServiceClient['getServiceUnsafe'] = function(this: Sapp) {
+        return this.getService.apply(this, arguments);
+    };
+
+    service: ServServiceClient['service'] = function(this: Sapp) {
         if (!this.isStarted) {
             return Promise.reject(new Error('[SAPP] Sapp is not started'));
         }
 
         return this.terminal.client.service.apply(this.terminal.client, arguments);
-    }
+    };
 
-    serviceExec<
-        T extends typeof ServService,
-        R>(
-            decl: T,
-            exec: ((service: InstanceType<T>) => R));
-    serviceExec<
-        M extends { [key: string]: typeof ServService },
-        R>(
-            decls: M,
-            exec: ((services: { [key in keyof M]: InstanceType<M[key]> }) => R));
-    serviceExec() {
+    serviceExec: ServServiceClient['serviceExec'] = function(this: Sapp) {
         if (!this.isStarted) {
             return null;
         }
 
         return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
-    }
+    };
 
     protected async auth(params: SappAuthParams): Promise<void> {
         if (!this.controller) {

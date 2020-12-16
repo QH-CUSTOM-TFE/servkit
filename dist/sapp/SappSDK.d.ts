@@ -1,8 +1,7 @@
 import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { Servkit } from '../servkit/Servkit';
-import { ServService } from '../service/ServService';
-import { ServServiceClientConfig } from '../service/ServServiceClient';
+import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
 import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthParams as AuthParams } from './service/m/SappLifecycle';
@@ -166,12 +165,7 @@ export declare class SappSDK {
      * @returns {(InstanceType<T> | undefined)}
      * @memberof SappSDK
      */
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
-    getService<M extends {
-        [key: string]: typeof ServService;
-    }>(decls: M): {
-        [key in keyof M]: InstanceType<M[key]> | undefined;
-    };
+    getService: ServServiceClient['getService'];
     /**
      * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
      *
@@ -180,12 +174,7 @@ export declare class SappSDK {
      * @returns {InstanceType<T>}
      * @memberof SappSDK
      */
-    getServiceUnsafe<T extends typeof ServService>(decl: T): InstanceType<T>;
-    getServiceUnsafe<M extends {
-        [key: string]: typeof ServService;
-    }>(decls: M): {
-        [key in keyof M]: InstanceType<M[key]>;
-    };
+    getServiceUnsafe: ServServiceClient['getServiceUnsafe'];
     /**
      * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
      *
@@ -194,12 +183,7 @@ export declare class SappSDK {
      * @returns {Promise<InstanceType<T>>}
      * @memberof SappSDK
      */
-    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
-    service<M extends {
-        [key: string]: typeof ServService;
-    }>(decls: M): Promise<{
-        [key in keyof M]: InstanceType<M[key]>;
-    }>;
+    service: ServServiceClient['service'];
     /**
      * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
      *
@@ -209,12 +193,7 @@ export declare class SappSDK {
      * @param {((service: InstanceType<T>) => R)} exec
      * @memberof SappSDK
      */
-    serviceExec<T extends typeof ServService, R>(decl: T, exec: ((service: InstanceType<T>) => R)): any;
-    serviceExec<M extends {
-        [key: string]: typeof ServService;
-    }, R>(decls: M, exec: ((services: {
-        [key in keyof M]: InstanceType<M[key]>;
-    }) => R)): any;
+    serviceExec: ServServiceClient['serviceExec'];
     protected beforeStart(options: SappSDKStartOptions): Promise<void>;
     protected afterStart(): Promise<void>;
     protected onStartFailed(): void;

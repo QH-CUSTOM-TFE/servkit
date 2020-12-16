@@ -123,7 +123,7 @@ var ServServiceServer = /** @class */ (function () {
                 }
                 services[keys[i]] = service;
             }
-            return exec.apply(window, services);
+            return exec.call(window, services);
         }
     };
     ServServiceServer.prototype.serviceExecByID = function (id, exec) {

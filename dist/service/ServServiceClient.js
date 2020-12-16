@@ -116,7 +116,7 @@ var ServServiceClient = /** @class */ (function () {
                 }
                 services[keys[i]] = service;
             }
-            return exec.apply(window, services);
+            return exec.call(window, services);
         }
     };
     ServServiceClient.prototype.checkServiceVersion = function (service) {

@@ -147,7 +147,7 @@ export class ServServiceClient {
                 services[keys[i]] = service;
             }
             
-            return exec.apply(window, services);
+            return exec.call(window, services);
         }
     }
 
@@ -203,7 +203,7 @@ export class ServServiceClient {
             if (meta.options && meta.options.dontRetn) {
                 return self.sendMessage(message);
             }
-            
+
             const addOptions = {
                 timeout,
                 prewait: self.sendMessage(message),

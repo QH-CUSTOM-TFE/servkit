@@ -89,32 +89,32 @@ export class SappMGR {
         return this.config.servkit || servkit;
     }
 
-    getService: ServGlobalServiceManager['getService'] = function() {
+    getService: ServGlobalServiceManager['getService'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.getService.apply(serviceManager, arguments);
     };
 
-    getServiceUnsafe: ServGlobalServiceManager['getServiceUnsafe'] = function() {
+    getServiceUnsafe: ServGlobalServiceManager['getServiceUnsafe'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.getServiceUnsafe.apply(serviceManager, arguments);
     };
 
-    service: ServGlobalServiceManager['service'] = function() {
+    service: ServGlobalServiceManager['service'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.service.apply(serviceManager, arguments);
     };
 
-    serviceExec: ServGlobalServiceManager['serviceExec'] = function() {
+    serviceExec: ServGlobalServiceManager['serviceExec'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.serviceExec.apply(serviceManager, arguments);
     };
 
-    addServices: ServGlobalServiceManager['addServices'] = function() {
+    addServices: ServGlobalServiceManager['addServices'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.addServices.apply(serviceManager, arguments);
     };
 
-    remServices: ServGlobalServiceManager['remServices'] = function() {
+    remServices: ServGlobalServiceManager['remServices'] = function(this: SappMGR) {
         const serviceManager = this.getServkit().service;
         return serviceManager.remServices.apply(serviceManager, arguments);
     };

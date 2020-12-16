@@ -337,6 +337,27 @@ var Sapp = /** @class */ (function () {
                 }
             });
         }); }));
+        this.getService = function () {
+            if (!this.isStarted) {
+                return;
+            }
+            return this.terminal.client.getService(arguments[0]);
+        };
+        this.getServiceUnsafe = function () {
+            return this.getService.apply(this, arguments);
+        };
+        this.service = function () {
+            if (!this.isStarted) {
+                return Promise.reject(new Error('[SAPP] Sapp is not started'));
+            }
+            return this.terminal.client.service.apply(this.terminal.client, arguments);
+        };
+        this.serviceExec = function () {
+            if (!this.isStarted) {
+                return null;
+            }
+            return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
+        };
         this.uuid = uuid;
         this.info = info;
         this.manager = manager;
@@ -388,24 +409,6 @@ var Sapp = /** @class */ (function () {
                 return [2 /*return*/, this._hide(params)];
             });
         });
-    };
-    Sapp.prototype.getService = function () {
-        if (!this.isStarted) {
-            return;
-        }
-        return this.terminal.client.getService(arguments[0]);
-    };
-    Sapp.prototype.service = function () {
-        if (!this.isStarted) {
-            return Promise.reject(new Error('[SAPP] Sapp is not started'));
-        }
-        return this.terminal.client.service.apply(this.terminal.client, arguments);
-    };
-    Sapp.prototype.serviceExec = function () {
-        if (!this.isStarted) {
-            return null;
-        }
-        return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
     };
     Sapp.prototype.auth = function (params) {
         return __awaiter(this, void 0, void 0, function () {
