@@ -120,6 +120,20 @@ var SappMGR = /** @class */ (function () {
     SappMGR.prototype.getAppInfo = function (id) {
         return this.infos[id];
     };
+    SappMGR.prototype.addAppInfo = function (info) {
+        if (!info.id) {
+            return false;
+        }
+        this.infos[info.id] = info;
+        return true;
+    };
+    SappMGR.prototype.remAppInfo = function (id) {
+        if (!this.infos[id]) {
+            return false;
+        }
+        delete this.infos[id];
+        return true;
+    };
     SappMGR.prototype.loadAppInfo = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var info;
@@ -151,6 +165,12 @@ var SappMGR = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         options = options || {};
+                        if (typeof id === 'object') {
+                            if (!this.addAppInfo(id)) {
+                                throw new Error("[SAPPMGR] App info is invalid");
+                            }
+                            id = id.id;
+                        }
                         app = this.getApp(id);
                         if (app) {
                             if (!app.info.options.create || app.info.options.create === ESappCreatePolicy.SINGLETON) {

@@ -21,7 +21,7 @@ export declare class SappInfo {
     version: string;
     name: string;
     desc?: string;
-    type: ESappType;
+    type?: ESappType;
     url: string;
     options: {
         create?: ESappCreatePolicy;
@@ -77,8 +77,10 @@ export declare class SappMGR {
     getApp(id: string): Sapp;
     getApps(id: string): Sapp[];
     getAppInfo(id: string): SappInfo;
+    addAppInfo(info: SappInfo): boolean;
+    remAppInfo(id: string): boolean;
     loadAppInfo(id: string): Promise<SappInfo | undefined>;
-    create(id: string, options?: SappCreateOptions): Promise<Sapp>;
+    create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp>;
     show(id: string, params?: SappShowParams): Promise<Sapp>;
     hide(id: string, params?: SappHideParams): Promise<Sapp>;
     close(id: string, result?: SappCloseResult): Promise<Sapp>;

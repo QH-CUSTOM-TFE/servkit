@@ -28,7 +28,7 @@ export class SappInfo {
     version: string;
     name: string;
     desc?: string;
-    type: ESappType;
+    type?: ESappType;
     url: string;
     options: {
         create?: ESappCreatePolicy;
@@ -135,6 +135,26 @@ export class SappMGR {
         return this.infos[id];
     }
 
+    addAppInfo(info: SappInfo) {
+        if (!info.id) {
+            return false;
+        }
+
+        this.infos[info.id] = info;
+
+        return true;
+    }
+
+    remAppInfo(id: string) {
+        if (!this.infos[id]) {
+            return false;
+        }
+
+        delete this.infos[id];
+
+        return true;
+    }
+
     async loadAppInfo(id: string): Promise<SappInfo | undefined> {
         let info: SappInfo | undefined = this.getAppInfo(id);
         if (info) {
@@ -151,8 +171,14 @@ export class SappMGR {
         return info;
     }
 
-    async create(id: string, options?: SappCreateOptions): Promise<Sapp> {
+    async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {
         options = options || {};
+        if (typeof id === 'object') {
+            if (!this.addAppInfo(id)) {
+                throw new Error(`[SAPPMGR] App info is invalid`);
+            }
+            id = id.id;
+        }
 
         let app = this.getApp(id);
         if (app) {
