@@ -62,7 +62,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sapp = void 0;
 var ServTerminal_1 = require("../terminal/ServTerminal");
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var ServService_1 = require("../service/ServService");
 var SappLifecycle_1 = require("./service/m/SappLifecycle");
@@ -93,10 +93,10 @@ var Sapp = /** @class */ (function () {
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
                         }
-                        waitOnAuth = Deferred_1.DeferredUtil.create({ timeout: index_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT });
+                        waitOnAuth = Deferred_1.DeferredUtil.create({ timeout: common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT });
                         this.waitOnAuth = waitOnAuth;
                         waitOnStart = Deferred_1.DeferredUtil.create({
-                            timeout: index_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT,
+                            timeout: common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT,
                             rejectIf: waitOnAuth,
                         });
                         this.waitOnStart = waitOnStart;
@@ -115,7 +115,7 @@ var Sapp = /** @class */ (function () {
                         _b.sent();
                         return [4 /*yield*/, waitOnAuth.catch(function (error) {
                                 if (_this.waitOnAuth) {
-                                    index_1.asyncThrow(new Error('[SAPP] App auth failed'));
+                                    common_1.asyncThrow(new Error('[SAPP] App auth failed'));
                                 }
                                 throw error;
                             })];
@@ -124,7 +124,7 @@ var Sapp = /** @class */ (function () {
                         this.waitOnAuth = undefined;
                         return [4 /*yield*/, waitOnStart.catch(function (error) {
                                 if (_this.waitOnStart) {
-                                    index_1.asyncThrow(new Error('[SAPP] App start timeout'));
+                                    common_1.asyncThrow(new Error('[SAPP] App start timeout'));
                                 }
                                 throw error;
                             })];
@@ -173,21 +173,21 @@ var Sapp = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                             return service.onShow(__assign(__assign({}, params), { byCreate: byCreate })).then(function (dontShow) {
                                 if (dontShow) {
-                                    index_1.asyncThrow(new Error("[SAPP] Can't show app because rejection"));
+                                    common_1.asyncThrow(new Error("[SAPP] Can't show app because rejection"));
                                 }
                                 return {
                                     dontShow: !!dontShow,
                                 };
                             }, function (error) {
-                                index_1.asyncThrow(error);
-                                index_1.asyncThrow(new Error("[SAPP] Can't show app because error"));
+                                common_1.asyncThrow(error);
+                                common_1.asyncThrow(new Error("[SAPP] Can't show app because error"));
                                 return {
                                     error: error,
                                 };
                             });
                         }, function (error) {
-                            index_1.asyncThrow(error);
-                            index_1.asyncThrow(new Error("[SAPP] Can't show app because lifecycle service not provided"));
+                            common_1.asyncThrow(error);
+                            common_1.asyncThrow(new Error("[SAPP] Can't show app because lifecycle service not provided"));
                             return {
                                 error: error,
                             };
@@ -205,7 +205,7 @@ var Sapp = /** @class */ (function () {
                         return [3 /*break*/, 5];
                     case 4:
                         e_2 = _a.sent();
-                        index_1.asyncThrow(e_2);
+                        common_1.asyncThrow(e_2);
                         return [3 /*break*/, 5];
                     case 5:
                         this.showDone = Deferred_1.DeferredUtil.create();
@@ -229,21 +229,21 @@ var Sapp = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                             return service.onHide(__assign({ byClose: byClose }, params)).then(function (dontHide) {
                                 if (dontHide) {
-                                    index_1.asyncThrow(new Error("[SAPP] Can't hide app because rejection"));
+                                    common_1.asyncThrow(new Error("[SAPP] Can't hide app because rejection"));
                                 }
                                 return {
                                     dontHide: !!dontHide,
                                 };
                             }, function (error) {
-                                index_1.asyncThrow(error);
-                                index_1.asyncThrow(new Error("[SAPP] Can't hide app because error"));
+                                common_1.asyncThrow(error);
+                                common_1.asyncThrow(new Error("[SAPP] Can't hide app because error"));
                                 return {
                                     error: error,
                                 };
                             });
                         }, function (error) {
-                            index_1.asyncThrow(error);
-                            index_1.asyncThrow(new Error("[SAPP] Can't hide app because lifecycle service not provided"));
+                            common_1.asyncThrow(error);
+                            common_1.asyncThrow(new Error("[SAPP] Can't hide app because lifecycle service not provided"));
                             return {
                                 error: error,
                             };
@@ -264,7 +264,7 @@ var Sapp = /** @class */ (function () {
                         return [3 /*break*/, 5];
                     case 4:
                         e_3 = _a.sent();
-                        index_1.asyncThrow(e_3);
+                        common_1.asyncThrow(e_3);
                         return [3 /*break*/, 5];
                     case 5: return [3 /*break*/, 7];
                     case 6:
@@ -291,7 +291,7 @@ var Sapp = /** @class */ (function () {
                         return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.onClose();
                             }).catch(function (error) {
-                                index_1.asyncThrow(error);
+                                common_1.asyncThrow(error);
                             })];
                     case 2:
                         _a.sent();
@@ -307,7 +307,7 @@ var Sapp = /** @class */ (function () {
                         return [3 /*break*/, 7];
                     case 6:
                         e_4 = _a.sent();
-                        index_1.asyncThrow(e_4);
+                        common_1.asyncThrow(e_4);
                         return [3 /*break*/, 7];
                     case 7:
                         this.isClosed = true;

@@ -1,7 +1,7 @@
 import { servkit } from '../../src/servkit/Servkit';
 import { EServChannel } from '../../src/session/channel/ServChannel';
-import { Test, Test1, EACL } from '../service/decl/service';
-import { TestImpl, Test1Impl } from '../service/impl/service';
+import { Test } from '../service/decl/service';
+import { TestImpl } from '../service/impl/service';
 import { EServTerminal } from '../../src/terminal/ServTerminal';
 import { ACLResolver } from '../util';
 

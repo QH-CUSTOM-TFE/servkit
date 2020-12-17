@@ -4,7 +4,8 @@ import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
-import { aspectAfter, aspectBefore, EServConstant } from '../common/index';
+import { EServConstant } from '../common/common';
+import { aspectAfter, aspectBefore } from '../common/aspect';
 
 export abstract class SappController {
     app: Sapp;

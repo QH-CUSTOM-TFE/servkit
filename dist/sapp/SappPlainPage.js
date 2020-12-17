@@ -54,7 +54,7 @@ var Sapp_1 = require("./Sapp");
 var Deferred_1 = require("../common/Deferred");
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var ServChannel_1 = require("../session/channel/ServChannel");
-var common_1 = require("../common");
+var common_1 = require("../common/common");
 var SappPlainPage = /** @class */ (function (_super) {
     __extends(SappPlainPage, _super);
     function SappPlainPage() {

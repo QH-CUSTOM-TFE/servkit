@@ -53,7 +53,8 @@ exports.SappDefaultIFrameController = void 0;
 var SappController_1 = require("./SappController");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var iframe_1 = require("../window/iframe");
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
+var query_1 = require("../common/query");
 var SappDefaultIFrameController = /** @class */ (function (_super) {
     __extends(SappDefaultIFrameController, _super);
     function SappDefaultIFrameController() {
@@ -136,7 +137,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             if (typeof layout.container === 'string') {
                 container = document.querySelector(layout.container);
                 if (!container) {
-                    index_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + layout.container));
+                    common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + layout.container));
                 }
             }
             else {
@@ -146,7 +147,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
         else if (this.app.info.options.layout) {
             container = document.querySelector(this.app.info.options.layout);
             if (!container) {
-                index_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + this.app.info.options.layout));
+                common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + this.app.info.options.layout));
             }
         }
         var className = layout.className;
@@ -184,7 +185,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             type: ServChannel_1.EServChannel.WINDOW,
             config: {
                 master: iframe_1.IFrameUtil.generateCreator({
-                    url: index_1.wrapServQueryParams(this.app.info.url, params),
+                    url: query_1.wrapServQueryParams(this.app.info.url, params),
                     id: this.app.uuid,
                     showPolicy: iframe_1.EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',

@@ -5,7 +5,7 @@ import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/Sap
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';
 import { ServWindowChannelConfig } from '../session/channel/ServWindowChannel';
-import { asyncThrow } from '../common';
+import { asyncThrow } from '../common/common';
 
 export class SappPlainPage extends Sapp {
     start = DeferredUtil.reEntryGuard(this.mutex.lockGuard(async (options?: SappStartOptions): Promise<void> => {

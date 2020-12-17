@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.servkit = exports.Servkit = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var session_1 = require("../session");
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var ServGlobalServiceManager_1 = require("./ServGlobalServiceManager");
@@ -92,6 +92,6 @@ try {
     exports.servkit.init();
 }
 catch (e) {
-    index_1.asyncThrow(e);
+    common_1.asyncThrow(e);
 }
 //# sourceMappingURL=Servkit.js.map

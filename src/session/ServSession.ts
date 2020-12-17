@@ -1,4 +1,4 @@
-import { asyncThrow, EServConstant, logSession } from '../common/index';
+import { asyncThrow, EServConstant, logSession } from '../common/common';
 import { ServSessionCallMessageCreator } from '../message/creator';
 import { ServMessageContextManager } from '../message/ServMessageContextManager';
 import { EServMessage, ServMessage, ServSessionCallMessage, ServSessionCallReturnMessage } from '../message/type';

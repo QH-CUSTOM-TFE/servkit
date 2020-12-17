@@ -1,5 +1,5 @@
 import { ServServiceGetVersionMessage, ServServiceGetVersionReturnMessage } from './type';
-import { nextUUID } from '../common/index';
+import { nextUUID } from '../common/common';
 import {
     EServMessage,
     EServServiceMessage,

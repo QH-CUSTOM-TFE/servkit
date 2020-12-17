@@ -1,4 +1,4 @@
-import { asyncThrow } from '../../common/index';
+import { asyncThrow } from '../../common/common';
 import { ServChannel, ServChannelConfig, ServChannelPackage } from './ServChannel';
 
 export interface ServChannelWindow {

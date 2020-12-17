@@ -1,4 +1,4 @@
-import { asyncThrowMessage, asyncThrow } from '../common/index';
+import { asyncThrowMessage, asyncThrow } from '../common/common';
 
 export type ServACL = any;
 export type ServEXT = any;

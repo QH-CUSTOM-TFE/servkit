@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServServiceClient = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var creator_1 = require("../message/creator");
 var ServMessageContextManager_1 = require("../message/ServMessageContextManager");
 var type_1 = require("../message/type");
@@ -124,10 +124,10 @@ var ServServiceClient = /** @class */ (function () {
             .then(function (curVersion) {
             var version = service.version;
             if (curVersion !== version) {
-                index_1.asyncThrowMessage(service.id + " curren version is " + curVersion + ", but " + version + " is used in your projet now, Please update your service npm package.");
+                common_1.asyncThrowMessage(service.id + " curren version is " + curVersion + ", but " + version + " is used in your projet now, Please update your service npm package.");
             }
         }, function (error) {
-            index_1.asyncThrow(error);
+            common_1.asyncThrow(error);
         });
     };
     ServServiceClient.prototype.generateService = function (decl) {
@@ -160,7 +160,7 @@ var ServServiceClient = /** @class */ (function () {
                 timeout = meta.options.timeout;
             }
             else {
-                timeout = index_1.EServConstant.SERV_API_TIMEOUT;
+                timeout = common_1.EServConstant.SERV_API_TIMEOUT;
             }
             var message = creator_1.ServServiceMessageCreator.createAPI(service, meta.name, args);
             if (meta.options && meta.options.dontRetn) {
@@ -202,7 +202,7 @@ var ServServiceClient = /** @class */ (function () {
         }
     };
     ServServiceClient.prototype.sendCommonMessageForReturn = function (message, timeout) {
-        if (timeout === void 0) { timeout = index_1.EServConstant.SERV_COMMON_RETURN_TIMEOUT; }
+        if (timeout === void 0) { timeout = common_1.EServConstant.SERV_COMMON_RETURN_TIMEOUT; }
         var addOptions = {
             timeout: timeout,
             prewait: this.sendMessage(message),

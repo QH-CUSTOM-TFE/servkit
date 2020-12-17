@@ -14,7 +14,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServWindowChannel = void 0;
-var index_1 = require("../../common/index");
+var common_1 = require("../../common/common");
 var ServChannel_1 = require("./ServChannel");
 var ServWindowChannel = /** @class */ (function (_super) {
     __extends(ServWindowChannel, _super);
@@ -163,7 +163,7 @@ var ServWindowChannel = /** @class */ (function (_super) {
         var _this = this;
         var chnWindow = this.windowInfo.window;
         if (!chnWindow) {
-            index_1.asyncThrow(new Error('[SERVKIT] No window, attachMessageChannel failed.'));
+            common_1.asyncThrow(new Error('[SERVKIT] No window, attachMessageChannel failed.'));
             return;
         }
         chnWindow.addEventListener('message', this.onWindowMessage, false);
@@ -176,7 +176,7 @@ var ServWindowChannel = /** @class */ (function (_super) {
     ServWindowChannel.prototype.sendChannelPackage = function (msg) {
         var targetWindow = this.windowInfo.target;
         if (!targetWindow) {
-            index_1.asyncThrow(new Error('[SERVKIT] No target window, package send failed.'));
+            common_1.asyncThrow(new Error('[SERVKIT] No target window, package send failed.'));
             return false;
         }
         var targetOrigin = this.windowInfo.origin;
@@ -186,7 +186,7 @@ var ServWindowChannel = /** @class */ (function (_super) {
             return true;
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
         return false;
     };

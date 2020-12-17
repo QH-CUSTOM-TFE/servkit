@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServSession = exports.EServSessionStatus = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var creator_1 = require("../message/creator");
 var ServMessageContextManager_1 = require("../message/ServMessageContextManager");
 var type_1 = require("../message/type");
@@ -76,11 +76,11 @@ var ServSession = /** @class */ (function () {
     ServSession.prototype.open = function (options) {
         var _this = this;
         if (this.status > EServSessionStatus.CLOSED) {
-            index_1.logSession(this, 'OPEN WHILE ' + (this.status === EServSessionStatus.OPENNING ? 'OPENNING' : 'OPENED'));
+            common_1.logSession(this, 'OPEN WHILE ' + (this.status === EServSessionStatus.OPENNING ? 'OPENNING' : 'OPENED'));
             return this.openningPromise || Promise.reject(new Error('unknown'));
         }
         this.status = EServSessionStatus.OPENNING;
-        index_1.logSession(this, 'OPENNING');
+        common_1.logSession(this, 'OPENNING');
         var done = false;
         var timer = 0;
         var doSafeWork = function (work) {
@@ -97,21 +97,21 @@ var ServSession = /** @class */ (function () {
         };
         var p = this.channel.open().then(function () {
             doSafeWork(function () {
-                index_1.logSession(_this, 'OPENNED');
+                common_1.logSession(_this, 'OPENNED');
                 _this.status = EServSessionStatus.OPENED;
             });
         }, function (e) {
             doSafeWork(function () {
-                index_1.logSession(_this, 'OPENNING FAILED', e);
+                common_1.logSession(_this, 'OPENNING FAILED', e);
                 _this.status = EServSessionStatus.CLOSED;
             });
             return Promise.reject(e);
         });
-        var timeout = (options && options.timeout) || index_1.EServConstant.SERV_SESSION_OPEN_TIMEOUT;
+        var timeout = (options && options.timeout) || common_1.EServConstant.SERV_SESSION_OPEN_TIMEOUT;
         var pTimeout = new Promise(function (resolve, reject) {
             timer = setTimeout(function () {
                 doSafeWork(function () {
-                    index_1.logSession(_this, 'OPENNING TIMEOUT');
+                    common_1.logSession(_this, 'OPENNING TIMEOUT');
                     reject(new Error('timeout'));
                     _this.close();
                 });
@@ -120,7 +120,7 @@ var ServSession = /** @class */ (function () {
         var pCancel = new Promise(function (resolve, reject) {
             _this.openningCancel = function () {
                 doSafeWork(function () {
-                    index_1.logSession(_this, 'OPENNING CANCELLED');
+                    common_1.logSession(_this, 'OPENNING CANCELLED');
                     reject(new Error('cancel'));
                     _this.close();
                 });
@@ -138,11 +138,11 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.close = function () {
         if (this.status <= EServSessionStatus.CLOSED) {
-            index_1.logSession(this, 'CLOSE WHILE CLOSED');
+            common_1.logSession(this, 'CLOSE WHILE CLOSED');
             return;
         }
         this.channel.close();
-        index_1.logSession(this, 'CLOSED');
+        common_1.logSession(this, 'CLOSED');
         this.status = EServSessionStatus.CLOSED;
         this.openningPromise = undefined;
         if (this.openningCancel) {
@@ -154,11 +154,11 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.sendMessage = function (msg) {
         if (this.status !== EServSessionStatus.OPENED) {
-            index_1.logSession(this, 'Send(NOOPEN)', msg);
+            common_1.logSession(this, 'Send(NOOPEN)', msg);
             return Promise.reject(new Error('Session not opened'));
         }
         if (msg.$type !== type_1.EServMessage.SESSION_HEARTBREAK) {
-            index_1.logSession(this, 'Send', msg);
+            common_1.logSession(this, 'Send', msg);
         }
         // const pkg: ServSessionPackage = {
         //     $msg: msg,
@@ -178,7 +178,7 @@ var ServSession = /** @class */ (function () {
             timeout = options.timeout;
         }
         else {
-            timeout = index_1.EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT;
+            timeout = common_1.EServConstant.SERV_SESSION_CALL_MESSAGE_TIMEOUT;
         }
         var addOptions = {
             timeout: timeout,
@@ -203,11 +203,11 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.recvPackage = function (pkg) {
         if (this.status !== EServSessionStatus.OPENED) {
-            index_1.logSession(this, 'Recv(NOOPEN)', pkg);
+            common_1.logSession(this, 'Recv(NOOPEN)', pkg);
             return;
         }
         if (!pkg || typeof pkg !== 'object') {
-            index_1.logSession(this, 'Recv(INVALID)', pkg);
+            common_1.logSession(this, 'Recv(INVALID)', pkg);
             return;
         }
         // if (pkg.$sid !== this.id) {
@@ -227,7 +227,7 @@ var ServSession = /** @class */ (function () {
             this.sessionChecker.handleEchoMessage(msg);
             return;
         }
-        index_1.logSession(this, 'Recv', msg);
+        common_1.logSession(this, 'Recv', msg);
         if (creator_1.ServSessionCallMessageCreator.isCallReturnMessage(msg)) {
             this.handleReturnMessage(msg);
             return;
@@ -246,7 +246,7 @@ var ServSession = /** @class */ (function () {
                         }
                     }
                     catch (e) {
-                        index_1.asyncThrow(e);
+                        common_1.asyncThrow(e);
                     }
                 }
             }
@@ -260,7 +260,7 @@ var ServSession = /** @class */ (function () {
                     listeners[i](msg, this, this.terminal);
                 }
                 catch (e) {
-                    index_1.asyncThrow(e);
+                    common_1.asyncThrow(e);
                 }
             }
         }

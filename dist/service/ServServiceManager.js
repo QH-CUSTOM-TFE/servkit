@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServServiceManager = exports.ServServiceRefer = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var ServEventerManager_1 = require("./event/ServEventerManager");
 var ServService_1 = require("./ServService");
 var ServServiceRefer = /** @class */ (function () {
@@ -96,7 +96,7 @@ var ServServiceManager = /** @class */ (function () {
                     _this.onEvnterEmit(eventer.service, eventer.event, args);
                 }
                 catch (e) {
-                    index_1.asyncThrow(e);
+                    common_1.asyncThrow(e);
                 }
             }
             var refers = _this.refers;
@@ -105,7 +105,7 @@ var ServServiceManager = /** @class */ (function () {
                     refers[i]._onEventerEmit(eventer.service, eventer.event, args);
                 }
                 catch (e) {
-                    index_1.asyncThrow(e);
+                    common_1.asyncThrow(e);
                 }
             }
             return Promise.resolve();
@@ -248,7 +248,7 @@ var ServServiceManager = /** @class */ (function () {
             return true;
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
             return false;
         }
     };
@@ -264,7 +264,7 @@ var ServServiceManager = /** @class */ (function () {
             });
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
     ServServiceManager.prototype.remService = function (decl) {

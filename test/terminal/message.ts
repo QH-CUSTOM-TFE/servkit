@@ -1,5 +1,5 @@
-import { Test1, Test } from '../service/decl/service';
-import { Test1Impl, TestImpl } from '../service/impl/service';
+import { Test } from '../service/decl/service';
+import { TestImpl } from '../service/impl/service';
 import { servkit } from '../../src/servkit/Servkit';
 import { EServTerminal } from '../../src/terminal/ServTerminal';
 import { EServChannel } from '../../src/session/channel/ServChannel';

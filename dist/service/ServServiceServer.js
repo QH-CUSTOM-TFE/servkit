@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServServiceServer = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var creator_1 = require("../message/creator");
 var type_1 = require("../message/type");
 var ServServiceManager_1 = require("./ServServiceManager");
@@ -26,18 +26,18 @@ var ServServiceServer = /** @class */ (function () {
             if (_this.ACLResolver) {
                 var service = _this.getServiceByID(serviceId);
                 if (!service) {
-                    index_1.logACL(_this, "Event denied because of server ACL, [" + serviceId + "][" + event + "]");
+                    common_1.logACL(_this, "Event denied because of server ACL, [" + serviceId + "][" + event + "]");
                     return;
                 }
                 var meta = service.meta();
                 if (!meta || !_this.ACLResolver.canAccessService(_this, meta)) {
-                    index_1.logACL(_this, "Event denied because of server ACL, [" + serviceId + "][" + event + "]");
+                    common_1.logACL(_this, "Event denied because of server ACL, [" + serviceId + "][" + event + "]");
                     return;
                 }
                 else {
                     var evtMeta = meta.evts.find(function (item) { return item.name === event; });
                     if (!evtMeta || !_this.ACLResolver.canAccessEventer(_this, meta, evtMeta)) {
-                        index_1.logACL(_this, "Event denied because of event ACL, [" + serviceId + "][" + event + "]");
+                        common_1.logACL(_this, "Event denied because of event ACL, [" + serviceId + "][" + event + "]");
                         return;
                     }
                 }
@@ -171,12 +171,12 @@ var ServServiceServer = /** @class */ (function () {
                 try {
                     if (this.ACLResolver) {
                         if (!this.ACLResolver.canAccessService(this, meta)) {
-                            index_1.logACL(this, "API denied because of server ACL, [" + id + "][" + api_1 + "]");
+                            common_1.logACL(this, "API denied because of server ACL, [" + id + "][" + api_1 + "]");
                             // tslint:disable-next-line:no-string-throw
                             throw "Access service " + id + " denied";
                         }
                         else if (!this.ACLResolver.canAccessAPI(this, meta, apiMeta_1)) {
-                            index_1.logACL(this, "API denied because of api ACL, [" + id + "][" + api_1 + "]");
+                            common_1.logACL(this, "API denied because of api ACL, [" + id + "][" + api_1 + "]");
                             // tslint:disable-next-line:no-string-throw
                             throw "Access api " + api_1 + " denied in service " + id;
                         }

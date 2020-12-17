@@ -1,12 +1,11 @@
-import { Sapp, SappConfig } from './Sapp';
+import { Sapp } from './Sapp';
 import { SappController } from './SappController';
 import { SappCreateOptions, SappLayoutOptions } from './SappMGR';
-import { EServChannel, ServChannelConfig } from '../session/channel/ServChannel';
+import { EServChannel } from '../session/channel/ServChannel';
 import { IFrameUtil, EServIFrameShowPolicy, ServIFrameWindowInfo } from '../window/iframe';
-import { asyncThrow, wrapServQueryParams } from '../common/index';
-import { ServServiceClientConfig } from '../service/ServServiceClient';
-import { ServServiceServerConfig } from '../service/ServServiceServer';
+import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
+import { wrapServQueryParams } from '../common/query';
 
 interface LayoutShowHide {
     doShow?: ((app: Sapp) => void);

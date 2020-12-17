@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServChannel = exports.EServChannel = void 0;
-var index_1 = require("../../common/index");
+var common_1 = require("../../common/common");
 var terminal_1 = require("../../terminal");
 var EServChannel;
 (function (EServChannel) {
@@ -66,7 +66,7 @@ var ServChannel = /** @class */ (function () {
             }
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
         // Try send string message
         chnMsg = this.toStringPackage(msg);
@@ -77,7 +77,7 @@ var ServChannel = /** @class */ (function () {
                 }
             }
             catch (e) {
-                index_1.asyncThrow(e);
+                common_1.asyncThrow(e);
             }
         }
         return false;
@@ -124,7 +124,7 @@ var ServChannel = /** @class */ (function () {
             }
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
     ServChannel.prototype.canRecvChannelPackage = function (msg) {

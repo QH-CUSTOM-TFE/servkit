@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.util = exports.anno = exports.EServImplInject = exports.ServService = exports.API_SUCCEED = exports.API_ERROR = exports.API_UNSUPPORT = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var DEFAULT_SERV_API_OPTIONS = {};
 var DEFAULT_NOTIFY_API_OPTIONS = { dontRetn: true };
 var DEFAULT_SERV_EVENTER_OPTIONS = {};
@@ -30,12 +30,12 @@ var decl = (function (options) {
     return function (cls) {
         try {
             if (!cls.IS_SERV_SERVICE) {
-                index_1.asyncThrowMessage("The Service should extends from ServService.");
+                common_1.asyncThrowMessage("The Service should extends from ServService.");
                 return;
             }
             var metas = meta(cls, true);
             if (!metas) {
-                index_1.asyncThrowMessage("Invalid Service class.");
+                common_1.asyncThrowMessage("Invalid Service class.");
                 return;
             }
             if (!options.id) {
@@ -50,7 +50,7 @@ var decl = (function (options) {
             metas.EXT = options.EXT;
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 });
@@ -58,23 +58,23 @@ var impl = (function (options) {
     return function (cls) {
         try {
             if (!cls.IS_SERV_SERVICE) {
-                index_1.asyncThrowMessage("The Service should extends from ServService.");
+                common_1.asyncThrowMessage("The Service should extends from ServService.");
                 return;
             }
             var metas = meta(cls);
             if (!metas) {
-                index_1.asyncThrowMessage("Invalid Service class.");
+                common_1.asyncThrowMessage("Invalid Service class.");
                 return;
             }
             var proto_1 = cls.prototype;
             metas.apis.forEach(function (item) {
                 if (!proto_1.hasOwnProperty(item.name)) {
-                    index_1.asyncThrowMessage("The service impl forget to implement api [" + item.name + "].");
+                    common_1.asyncThrowMessage("The service impl forget to implement api [" + item.name + "].");
                 }
             });
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 });
@@ -83,13 +83,13 @@ function api(options) {
         try {
             var metas = meta(proto, true);
             if (!metas) {
-                index_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
+                common_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
                 return;
             }
             var apis = metas.apis;
             for (var i = 0, iz = apis.length; i < iz; ++i) {
                 if (apis[i].name === propKey) {
-                    index_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
+                    common_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
                     return;
                 }
             }
@@ -103,7 +103,7 @@ function api(options) {
             apis.push(item);
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 }
@@ -112,13 +112,13 @@ function notify(options) {
         try {
             var metas = meta(proto, true);
             if (!metas) {
-                index_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
+                common_1.asyncThrowMessage("Can't get meta in api [" + propKey + "].");
                 return;
             }
             var apis = metas.apis;
             for (var i = 0, iz = apis.length; i < iz; ++i) {
                 if (apis[i].name === propKey) {
-                    index_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
+                    common_1.asyncThrowMessage("Api conflicts [" + propKey + "].");
                     return;
                 }
             }
@@ -133,7 +133,7 @@ function notify(options) {
             apis.push(item);
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 }
@@ -142,13 +142,13 @@ function event(options) {
         try {
             var metas = meta(proto, true);
             if (!metas) {
-                index_1.asyncThrowMessage("Can't get meta in event [" + propKey + "].");
+                common_1.asyncThrowMessage("Can't get meta in event [" + propKey + "].");
                 return;
             }
             var events = metas.evts;
             for (var i = 0, iz = events.length; i < iz; ++i) {
                 if (events[i].name === propKey) {
-                    index_1.asyncThrowMessage("Event conflicts [" + propKey + "].");
+                    common_1.asyncThrowMessage("Event conflicts [" + propKey + "].");
                     return;
                 }
             }
@@ -162,7 +162,7 @@ function event(options) {
             events.push(item);
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 }
@@ -196,10 +196,10 @@ function meta(obj, create) {
             obj[META] = ret;
             return ret;
         }
-        index_1.asyncThrowMessage('Get meta from an invalid serv target!');
+        common_1.asyncThrowMessage('Get meta from an invalid serv target!');
     }
     catch (e) {
-        index_1.asyncThrow(e);
+        common_1.asyncThrow(e);
     }
 }
 var IMPL = '__serv_service_impl_meta';
@@ -227,10 +227,10 @@ function implMeta(obj, create) {
             obj[IMPL] = ret;
             return ret;
         }
-        index_1.asyncThrowMessage('Get meta from an invalid impl target!');
+        common_1.asyncThrowMessage('Get meta from an invalid impl target!');
     }
     catch (e) {
-        index_1.asyncThrow(e);
+        common_1.asyncThrow(e);
     }
 }
 var EServImplInject;
@@ -243,7 +243,7 @@ function implInject(type) {
         try {
             var metas = implMeta(proto, true);
             if (!metas) {
-                index_1.asyncThrowMessage("Can't get impl metas in inject [" + propKey + "].");
+                common_1.asyncThrowMessage("Can't get impl metas in inject [" + propKey + "].");
                 return;
             }
             metas.injects[type] = {
@@ -252,7 +252,7 @@ function implInject(type) {
             };
         }
         catch (e) {
-            index_1.asyncThrow(e);
+            common_1.asyncThrow(e);
         }
     };
 }

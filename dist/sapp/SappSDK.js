@@ -51,7 +51,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sappSDK = exports.SappSDK = void 0;
 var ServTerminal_1 = require("../terminal/ServTerminal");
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
+var query_1 = require("../common/query");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var Servkit_1 = require("../servkit/Servkit");
 var ServService_1 = require("../service/ServService");
@@ -112,8 +113,8 @@ var SappSDK = /** @class */ (function () {
                         return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.getStartData();
                             }).catch(function (error) {
-                                index_1.asyncThrow(error);
-                                index_1.asyncThrow(new Error('[SAPPSDK] Can\'t get start datas from SAPP'));
+                                common_1.asyncThrow(error);
+                                common_1.asyncThrow(new Error('[SAPPSDK] Can\'t get start datas from SAPP'));
                             })];
                     case 9:
                         data = _a.sent();
@@ -124,8 +125,8 @@ var SappSDK = /** @class */ (function () {
                         this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                             return service.onStart();
                         }).catch(function (error) {
-                            index_1.asyncThrow(error);
-                            index_1.asyncThrow(new Error('[SAPPSDK] Can\'t notify onStart to SAPP'));
+                            common_1.asyncThrow(error);
+                            common_1.asyncThrow(new Error('[SAPPSDK] Can\'t notify onStart to SAPP'));
                         });
                         return [3 /*break*/, 12];
                     case 11:
@@ -308,7 +309,7 @@ var SappSDK = /** @class */ (function () {
                                     : (function () { return options.params; });
                         }
                         else {
-                            resolveParams = this.config.resolveStartParams || index_1.parseServQueryParams;
+                            resolveParams = this.config.resolveStartParams || query_1.parseServQueryParams;
                         }
                         return [4 /*yield*/, resolveParams(this)];
                     case 1:
@@ -440,7 +441,7 @@ var SappSDK = /** @class */ (function () {
                         return [3 /*break*/, 20];
                     case 19:
                         e_2 = _e.sent();
-                        index_1.asyncThrowMessage('[SappSDK] Auth failed');
+                        common_1.asyncThrowMessage('[SappSDK] Auth failed');
                         throw e_2;
                     case 20: return [2 /*return*/];
                 }

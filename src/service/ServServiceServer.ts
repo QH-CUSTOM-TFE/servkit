@@ -1,4 +1,4 @@
-import { logACL } from '../common/index';
+import { logACL } from '../common/common';
 import { ServServiceMessageCreator } from '../message/creator';
 import {
     ServMessage,

@@ -1,4 +1,4 @@
-import { asyncThrow, ConstructorOf } from '../common/index';
+import { asyncThrow } from '../common/common';
 import { ServEventerManager, ServEventerOnEmitListener } from './event/ServEventerManager';
 import { EServImplInject, ServService, ServServiceMeta, util } from './ServService';
 

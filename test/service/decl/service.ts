@@ -1,5 +1,5 @@
 import { STRING_VALUE, STRING_VALUE1 } from '../../util';
-import { setEnv, setServConstant } from '../../../src/common/index';
+import { setEnv, setServConstant } from '../../../src/common/common';
 
 setEnv({
     DEV: false,

@@ -1,8 +1,8 @@
 import { servkit } from '../../src/servkit/Servkit';
 import { EServChannel } from '../../src/session/channel/ServChannel';
 import { EServTerminal } from '../../src/terminal/ServTerminal';
-import { Test, Test1 } from '../service/decl/service';
-import { TestImpl, Test1Impl } from '../service/impl/service';
+import { Test } from '../service/decl/service';
+import { TestImpl } from '../service/impl/service';
 import { ACLResolver } from '../util';
 
 export const createTerminal = () => {

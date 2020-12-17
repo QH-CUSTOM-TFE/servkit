@@ -1,4 +1,4 @@
-import { EServConstant, asyncThrow, asyncThrowMessage } from '../common/index';
+import { EServConstant, asyncThrow, asyncThrowMessage } from '../common/common';
 import { ServServiceMessageCreator } from '../message/creator';
 import { ServMessageContextManager } from '../message/ServMessageContextManager';
 import { ServMessage, ServServiceEventMessage, ServServiceMessage, ServServiceReturnMessage, EServServiceMessage } from '../message/type';

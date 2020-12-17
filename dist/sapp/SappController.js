@@ -38,13 +38,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappController = void 0;
 var SappMGR_1 = require("./SappMGR");
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
+var aspect_1 = require("../common/aspect");
 var SappController = /** @class */ (function () {
     function SappController(app) {
         app.attachController(this);
-        index_1.aspectBefore(this, 'doShow', this.doShowBeforeAspect);
-        index_1.aspectAfter(this, 'doHide', this.doHideAfterAspect);
-        index_1.aspectAfter(this, 'doClose', this.doCloseAfterAspect);
+        aspect_1.aspectBefore(this, 'doShow', this.doShowBeforeAspect);
+        aspect_1.aspectAfter(this, 'doHide', this.doHideAfterAspect);
+        aspect_1.aspectAfter(this, 'doClose', this.doCloseAfterAspect);
     }
     SappController.prototype.setLayoutOptions = function (options) {
         this.layoutOptions = options;
@@ -141,9 +142,9 @@ var SappController = /** @class */ (function () {
         if (this.cleanHideLifeChecker) {
             this.cleanHideLifeChecker();
         }
-        var maxHideTime = index_1.EServConstant.SAPP_HIDE_MAX_TIME;
+        var maxHideTime = common_1.EServConstant.SAPP_HIDE_MAX_TIME;
         if (this.app.info.options.lifeMaxHideTime > 0) {
-            maxHideTime = Math.max(this.app.info.options.lifeMaxHideTime, index_1.EServConstant.SAPP_HIDE_MAX_TIME * 0.5);
+            maxHideTime = Math.max(this.app.info.options.lifeMaxHideTime, common_1.EServConstant.SAPP_HIDE_MAX_TIME * 0.5);
         }
         var timer = setTimeout(function () {
             timer = 0;

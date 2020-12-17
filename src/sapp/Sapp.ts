@@ -3,7 +3,7 @@ import { ServServiceServerConfig } from '../service/ServServiceServer';
 import {
     asyncThrow,
     EServConstant,
-} from '../common/index';
+} from '../common/common';
 import { EServChannel } from '../session/channel/ServChannel';
 import { ServService, anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';

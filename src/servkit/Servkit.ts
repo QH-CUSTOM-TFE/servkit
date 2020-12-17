@@ -1,4 +1,4 @@
-import { asyncThrow } from '../common/index';
+import { asyncThrow } from '../common/common';
 import { ServServiceClient, ServServiceClientConfig, ServServiceServer, ServServiceServerConfig } from '../service';
 import { EServChannel } from '../session';
 import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';

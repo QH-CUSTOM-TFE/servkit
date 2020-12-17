@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServSessionCallMessageCreator = exports.ServServiceMessageCreator = exports.ServMessageCreator = void 0;
-var index_1 = require("../common/index");
+var common_1 = require("../common/common");
 var type_1 = require("./type");
 var ServMessageCreator = /** @class */ (function () {
     function ServMessageCreator() {
     }
     ServMessageCreator.create = function (type) {
         return {
-            $id: index_1.nextUUID(),
+            $id: common_1.nextUUID(),
             $type: type,
         };
     };
