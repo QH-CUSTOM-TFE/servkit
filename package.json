@@ -1,6 +1,6 @@
 {
   "name": "servkit",
-  "version": "1.0.10-alpha.4",
+  "version": "1.0.10",
   "description": "RPC服务通信库，用于构建前端多窗口（或者IFrame）页面应用，或者基于微应用架构的页面应用。",
   "main": "./dist/index.js",
   "author": "Yang G",
