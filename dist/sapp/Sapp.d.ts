@@ -1,5 +1,5 @@
 import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
-import { ServServiceServerConfig } from '../service/ServServiceServer';
+import { ServServiceServerConfig, ServServiceServer } from '../service/ServServiceServer';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
@@ -22,6 +22,7 @@ export interface SappConfig {
 }
 export interface SappStartOptions {
     data?: any | SappConfig['resolveStartData'];
+    showData?: any | SappConfig['resolveStartShowData'];
 }
 export declare class Sapp {
     uuid: string;
@@ -63,11 +64,16 @@ export declare class Sapp {
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'];
     service: ServServiceClient['service'];
     serviceExec: ServServiceClient['serviceExec'];
+    getServerService: ServServiceServer['getService'];
+    getServerServiceUnsafe: ServServiceServer['getServiceUnsafe'];
+    serverService: ServServiceServer['service'];
+    serverServiceExec: ServServiceServer['serviceExec'];
     protected auth(params: SappAuthParams): Promise<void>;
     protected beforeStart(options: SappStartOptions): Promise<void>;
     protected afterStart(): Promise<void>;
     protected onStartFailed(): void;
     protected resolveStartData(options: SappStartOptions): Promise<any>;
+    protected resolveStartShowData(options: SappStartOptions): Promise<any>;
     protected beforeInitTerminal(): Promise<void>;
     protected initTerminal(options: SappStartOptions): Promise<void>;
     protected afterInitTerminal(): Promise<void>;

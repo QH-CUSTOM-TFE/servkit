@@ -75,10 +75,10 @@ var Sapp = /** @class */ (function () {
         this.mutex = new AsyncMutex_1.AsyncMutex();
         this.showHideMutex = new AsyncMutex_1.AsyncMutex();
         this.start = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
-            var config, waitOnAuth, waitOnStart, showParams, _a, e_1;
+            var config, waitOnAuth, waitOnStart, showParams, data, e_1;
             var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         if (this.isStarted) {
                             return [2 /*return*/];
@@ -86,9 +86,9 @@ var Sapp = /** @class */ (function () {
                         if (this.closed.isFinished()) {
                             throw new Error("[SAPP] App has closed");
                         }
-                        _b.label = 1;
+                        _a.label = 1;
                     case 1:
-                        _b.trys.push([1, 15, , 16]);
+                        _a.trys.push([1, 14, , 15]);
                         config = this.config;
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
@@ -103,16 +103,16 @@ var Sapp = /** @class */ (function () {
                         options = options || {};
                         return [4 /*yield*/, this.beforeStart(options)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.beforeInitTerminal()];
                     case 3:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.initTerminal(options)];
                     case 4:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.afterInitTerminal()];
                     case 5:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, waitOnAuth.catch(function (error) {
                                 if (_this.waitOnAuth) {
                                     common_1.asyncThrow(new Error('[SAPP] App auth failed'));
@@ -120,7 +120,7 @@ var Sapp = /** @class */ (function () {
                                 throw error;
                             })];
                     case 6:
-                        _b.sent();
+                        _a.sent();
                         this.waitOnAuth = undefined;
                         return [4 /*yield*/, waitOnStart.catch(function (error) {
                                 if (_this.waitOnStart) {
@@ -129,40 +129,40 @@ var Sapp = /** @class */ (function () {
                                 throw error;
                             })];
                     case 7:
-                        _b.sent();
+                        _a.sent();
                         this.waitOnStart = undefined;
                         this.isStarted = true;
                         if (!this.controller) return [3 /*break*/, 9];
                         return [4 /*yield*/, this.controller.doCreate()];
                     case 8:
-                        _b.sent();
-                        _b.label = 9;
+                        _a.sent();
+                        _a.label = 9;
                     case 9:
-                        if (!!this.config.hideOnStart) return [3 /*break*/, 13];
+                        if (!!this.config.hideOnStart) return [3 /*break*/, 12];
                         showParams = {
                             force: true,
                         };
-                        if (!this.config.resolveStartShowData) return [3 /*break*/, 11];
-                        _a = showParams;
-                        return [4 /*yield*/, this.config.resolveStartShowData(this)];
+                        return [4 /*yield*/, this.resolveStartShowData(options)];
                     case 10:
-                        _a.data = _b.sent();
-                        _b.label = 11;
-                    case 11: return [4 /*yield*/, this._show(showParams, true)];
-                    case 12:
-                        _b.sent();
-                        _b.label = 13;
-                    case 13: return [4 /*yield*/, this.afterStart()];
-                    case 14:
-                        _b.sent();
+                        data = _a.sent();
+                        if (data !== undefined) {
+                            showParams.data = data;
+                        }
+                        return [4 /*yield*/, this._show(showParams, true)];
+                    case 11:
+                        _a.sent();
+                        _a.label = 12;
+                    case 12: return [4 /*yield*/, this.afterStart()];
+                    case 13:
+                        _a.sent();
                         this.started.resolve();
-                        return [3 /*break*/, 16];
-                    case 15:
-                        e_1 = _b.sent();
+                        return [3 /*break*/, 15];
+                    case 14:
+                        e_1 = _a.sent();
                         this.started.reject(e_1);
                         this.close();
                         throw e_1;
-                    case 16: return [2 /*return*/];
+                    case 15: return [2 /*return*/];
                 }
             });
         }); }));
@@ -358,6 +358,27 @@ var Sapp = /** @class */ (function () {
             }
             return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
         };
+        this.getServerService = function () {
+            if (!this.isStarted) {
+                return;
+            }
+            return this.terminal.server.getService(arguments[0]);
+        };
+        this.getServerServiceUnsafe = function () {
+            return this.getServerService.apply(this, arguments);
+        };
+        this.serverService = function () {
+            if (!this.isStarted) {
+                return Promise.reject(new Error('[SAPP] Sapp is not started'));
+            }
+            return this.terminal.server.service.apply(this.terminal.server, arguments);
+        };
+        this.serverServiceExec = function () {
+            if (!this.isStarted) {
+                return null;
+            }
+            return this.terminal.server.serviceExec.apply(this.terminal.server, arguments);
+        };
         this.uuid = uuid;
         this.info = info;
         this.manager = manager;
@@ -469,6 +490,27 @@ var Sapp = /** @class */ (function () {
                 }
                 else {
                     resolveData = this.config.resolveStartData;
+                }
+                if (resolveData) {
+                    return [2 /*return*/, resolveData(this)];
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    Sapp.prototype.resolveStartShowData = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var resolveData;
+            return __generator(this, function (_a) {
+                resolveData = undefined;
+                if (options.showData) {
+                    resolveData =
+                        typeof options.showData === 'function'
+                            ? options.showData
+                            : (function () { return options.showData; });
+                }
+                else {
+                    resolveData = this.config.resolveStartShowData;
                 }
                 if (resolveData) {
                     return [2 /*return*/, resolveData(this)];

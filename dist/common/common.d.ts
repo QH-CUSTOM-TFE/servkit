@@ -3,6 +3,7 @@ import { ServServiceServer } from '../service/ServServiceServer';
 export declare const Env: {
     DEV: boolean;
     JEST: boolean;
+    SAPPSDK_MOCK: boolean;
 };
 export declare const EServConstant: {
     SERV_APP_SHOW_HIDE_TIMEOUT: number;

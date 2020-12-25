@@ -1,11 +1,12 @@
 import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
-import { ServServiceServerConfig } from '../service/ServServiceServer';
+import { ServServiceServerConfig, ServServiceServer } from '../service/ServServiceServer';
 import { Servkit } from '../servkit/Servkit';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
 import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthParams as AuthParams } from './service/m/SappLifecycle';
 import { Deferred } from '../common/Deferred';
+import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 /**
  * SappSDK启动参数
  */
@@ -20,6 +21,11 @@ export interface SappSDKConfig {
      * SappSDK底层Servkit，默认使用全局的servkit
      */
     servkit?: Servkit;
+    /**
+     * SappSDK权限认证信息
+     *
+     * @memberof SappSDKConfig
+     */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
     /**
      * SappSDK.start() 前置回调
@@ -91,6 +97,14 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     onClose?(sdk: SappSDK): Promise<void>;
+    /**
+     * SappSDK的mock配置，通过该配置，SappSDK应用可脱离主应用调试开发；
+     * 通过window.__$servkit.enableSappSDKMock()或者链接添加__SAPPSDK_MOCK_ENABLE__打开开关才能生效；
+     *
+     * @type {SappSDKMockConfig}
+     * @memberof SappSDKConfig
+     */
+    mock?: SappSDKMockConfig;
 }
 /**
  * SappSDK start参数项
@@ -123,6 +137,13 @@ export declare class SappSDK {
      * @memberof SappSDK
      */
     terminal: ServTerminal;
+    /**
+     *
+     *
+     * @type {SappSDKMock}
+     * @memberof SappSDK
+     */
+    sdkMock: SappSDKMock;
     protected config: SappSDKConfig;
     constructor();
     /**
@@ -141,6 +162,13 @@ export declare class SappSDK {
      */
     getConfig(): SappSDKConfig;
     /**
+     * 获取SappSDK使用的servkit
+     *
+     * @returns
+     * @memberof SappSDK
+     */
+    getServkit(): Servkit;
+    /**
      * 启动SDK
      *
      * @param {SappSDKStartOptions} [options]
@@ -154,46 +182,61 @@ export declare class SappSDK {
     hide(params?: HideParams): Promise<void>;
     close(): Promise<void>;
     /**
-     * 销毁SDK，该方法主要用于CI测试（建议业务不要使用，因为SappSDK生命周期通常与应用程序的生命周期保一致）
-     */
-    destroy(): void;
-    /**
-     * 根据服务声明获取服务对象
+     * 获取service
      *
-     * @template T
-     * @param {T} decl
-     * @returns {(InstanceType<T> | undefined)}
+     * @type {ServServiceClient['getService']}
      * @memberof SappSDK
      */
     getService: ServServiceClient['getService'];
     /**
-     * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
+     * 获取service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
      *
-     * @template T
-     * @param {T} decl
-     * @returns {InstanceType<T>}
+     * @type {ServServiceClient['getServiceUnsafe']}
      * @memberof SappSDK
      */
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'];
     /**
-     * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
+     * 获取service，promise形式；如果某个service不存在，promise将reject
      *
-     * @template T
-     * @param {T} decl
-     * @returns {Promise<InstanceType<T>>}
+     * @type {ServServiceClient['service']}
      * @memberof SappSDK
      */
     service: ServServiceClient['service'];
     /**
-     * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
+     * 获取service，callback形式；如果某个service不存在，callback将得不到调用
      *
-     * @template T
-     * @template R
-     * @param {T} decl
-     * @param {((service: InstanceType<T>) => R)} exec
+     * @type {ServServiceClient['serviceExec']}
      * @memberof SappSDK
      */
     serviceExec: ServServiceClient['serviceExec'];
+    /**
+     * 获取server提供的service
+     *
+     * @type {ServServiceServer['getService']}
+     * @memberof SappSDK
+     */
+    getServerService: ServServiceServer['getService'];
+    /**
+     * 获取server提供的service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+     *
+     * @type {ServServiceServer['getServiceUnsafe']}
+     * @memberof SappSDK
+     */
+    getServerServiceUnsafe: ServServiceServer['getServiceUnsafe'];
+    /**
+     * 获取server提供的service，promise形式；如果某个service不存在，promise将reject
+     *
+     * @type {ServServiceServer['service']}
+     * @memberof SappSDK
+     */
+    serverService: ServServiceServer['service'];
+    /**
+     * 获取server提供的service，callback形式；如果某个service不存在，callback将得不到调用
+     *
+     * @type {ServServiceServer['serviceExec']}
+     * @memberof SappSDK
+     */
+    serverServiceExec: ServServiceServer['serviceExec'];
     protected beforeStart(options: SappSDKStartOptions): Promise<void>;
     protected afterStart(): Promise<void>;
     protected onStartFailed(): void;
@@ -202,6 +245,7 @@ export declare class SappSDK {
     protected initTerminal(options: SappSDKStartOptions, params: SappSDKStartParams): Promise<void>;
     protected afterInitTerminal(): Promise<void>;
     protected initSDK(): Promise<void>;
+    protected initSDKMock(): Promise<void>;
     protected onCreate(params: SappSDKStartParams, data: any): Promise<void>;
     protected onShow(params: SappShowParams): Promise<boolean | void>;
     protected onHide(params: SappHideParams): Promise<boolean | void>;

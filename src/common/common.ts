@@ -4,15 +4,12 @@ import { ServServiceServer } from '../service/ServServiceServer';
 export const Env = {
     DEV: false,
     JEST: false,
+    SAPPSDK_MOCK: false,
 };
 
 try {
     if ((window as any).__$$servkit) {
-        asyncThrowMessage(`
-        NOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        YOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.
-        PLEASE FIX IT.
-        `);
+        asyncThrowMessage('\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nYOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.\n\nPLEASE FIX IT.\n');
     }
     const LOCAL_ENV = '__$$servkit';
     const __$$servkit = {
@@ -40,6 +37,12 @@ try {
         },
         disableDev: () => {
             __$$servkit.setLocalEnv('DEV', false);
+        },
+        enableSappSDKMock: () => {
+            __$$servkit.setLocalEnv('SAPPSDK_MOCK');
+        },
+        disableSappSDKMock: () => {
+            __$$servkit.setLocalEnv('SAPPSDK_MOCK', false);
         },
         Env,
     };

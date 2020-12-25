@@ -59,6 +59,7 @@ var ServService_1 = require("../service/ServService");
 var SappLifecycle_1 = require("./service/s/SappLifecycle");
 var SappLifecycle_2 = require("./service/m/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
+var SappSDKMock_1 = require("./SappSDKMock");
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
@@ -86,29 +87,37 @@ var SappSDK = /** @class */ (function () {
                         }
                         _a.label = 1;
                     case 1:
-                        _a.trys.push([1, 11, , 12]);
+                        _a.trys.push([1, 13, , 14]);
                         options = options || {};
-                        return [4 /*yield*/, this.beforeStart(options)];
+                        if (!this.sdkMock) return [3 /*break*/, 3];
+                        if (config.mock) {
+                            this.sdkMock.setConfig(config.mock);
+                        }
+                        return [4 /*yield*/, this.sdkMock.start()];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, this.resolveStartParams(options)];
-                    case 3:
-                        params = _a.sent();
-                        return [4 /*yield*/, this.beforeInitTerminal()];
+                        _a.label = 3;
+                    case 3: return [4 /*yield*/, this.beforeStart(options)];
                     case 4:
                         _a.sent();
-                        return [4 /*yield*/, this.initTerminal(options, params)];
+                        return [4 /*yield*/, this.resolveStartParams(options)];
                     case 5:
-                        _a.sent();
-                        return [4 /*yield*/, this.afterInitTerminal()];
+                        params = _a.sent();
+                        return [4 /*yield*/, this.beforeInitTerminal()];
                     case 6:
                         _a.sent();
-                        return [4 /*yield*/, this.initSDK()];
+                        return [4 /*yield*/, this.initTerminal(options, params)];
                     case 7:
+                        _a.sent();
+                        return [4 /*yield*/, this.afterInitTerminal()];
+                    case 8:
+                        _a.sent();
+                        return [4 /*yield*/, this.initSDK()];
+                    case 9:
                         _a.sent();
                         this.isStarted = true;
                         return [4 /*yield*/, this.afterStart()];
-                    case 8:
+                    case 10:
                         _a.sent();
                         return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.getStartData();
@@ -116,10 +125,10 @@ var SappSDK = /** @class */ (function () {
                                 common_1.asyncThrow(error);
                                 common_1.asyncThrow(new Error('[SAPPSDK] Can\'t get start datas from SAPP'));
                             })];
-                    case 9:
+                    case 11:
                         data = _a.sent();
                         return [4 /*yield*/, this.onCreate(params, data)];
-                    case 10:
+                    case 12:
                         _a.sent();
                         this.started.resolve();
                         this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
@@ -128,23 +137,21 @@ var SappSDK = /** @class */ (function () {
                             common_1.asyncThrow(error);
                             common_1.asyncThrow(new Error('[SAPPSDK] Can\'t notify onStart to SAPP'));
                         });
-                        return [3 /*break*/, 12];
-                    case 11:
+                        return [3 /*break*/, 14];
+                    case 13:
                         e_1 = _a.sent();
                         this.onStartFailed();
                         this.isStarted = false;
-                        this.started.reject();
+                        this.started.reject(e_1);
                         throw e_1;
-                    case 12: return [2 /*return*/];
+                    case 14: return [2 /*return*/];
                 }
             });
         }); });
         /**
-         * 根据服务声明获取服务对象
+         * 获取service
          *
-         * @template T
-         * @param {T} decl
-         * @returns {(InstanceType<T> | undefined)}
+         * @type {ServServiceClient['getService']}
          * @memberof SappSDK
          */
         this.getService = function () {
@@ -154,22 +161,18 @@ var SappSDK = /** @class */ (function () {
             return this.terminal.client.getService(arguments[0]);
         };
         /**
-         * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
+         * 获取service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
          *
-         * @template T
-         * @param {T} decl
-         * @returns {InstanceType<T>}
+         * @type {ServServiceClient['getServiceUnsafe']}
          * @memberof SappSDK
          */
         this.getServiceUnsafe = function () {
             return this.getService.apply(this, arguments);
         };
         /**
-         * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
+         * 获取service，promise形式；如果某个service不存在，promise将reject
          *
-         * @template T
-         * @param {T} decl
-         * @returns {Promise<InstanceType<T>>}
+         * @type {ServServiceClient['service']}
          * @memberof SappSDK
          */
         this.service = function () {
@@ -179,12 +182,9 @@ var SappSDK = /** @class */ (function () {
             return this.terminal.client.service.apply(this.terminal.client, arguments);
         };
         /**
-         * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
+         * 获取service，callback形式；如果某个service不存在，callback将得不到调用
          *
-         * @template T
-         * @template R
-         * @param {T} decl
-         * @param {((service: InstanceType<T>) => R)} exec
+         * @type {ServServiceClient['serviceExec']}
          * @memberof SappSDK
          */
         this.serviceExec = function () {
@@ -193,10 +193,60 @@ var SappSDK = /** @class */ (function () {
             }
             return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
         };
+        /**
+         * 获取server提供的service
+         *
+         * @type {ServServiceServer['getService']}
+         * @memberof SappSDK
+         */
+        this.getServerService = function () {
+            if (!this.isStarted) {
+                return;
+            }
+            return this.terminal.server.getService(arguments[0]);
+        };
+        /**
+         * 获取server提供的service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+         *
+         * @type {ServServiceServer['getServiceUnsafe']}
+         * @memberof SappSDK
+         */
+        this.getServerServiceUnsafe = function () {
+            return this.getServerService.apply(this, arguments);
+        };
+        /**
+         * 获取server提供的service，promise形式；如果某个service不存在，promise将reject
+         *
+         * @type {ServServiceServer['service']}
+         * @memberof SappSDK
+         */
+        this.serverService = function () {
+            if (!this.isStarted) {
+                return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
+            }
+            return this.terminal.server.service.apply(this.terminal.server, arguments);
+        };
+        /**
+         * 获取server提供的service，callback形式；如果某个service不存在，callback将得不到调用
+         *
+         * @type {ServServiceServer['serviceExec']}
+         * @memberof SappSDK
+         */
+        this.serverServiceExec = function () {
+            if (!this.isStarted) {
+                return null;
+            }
+            return this.terminal.server.serviceExec.apply(this.terminal.server, arguments);
+        };
         this.started = Deferred_1.DeferredUtil.create();
         this.setConfig({
         // Default Config
         });
+        if (SappSDKMock_1.SappSDKMock.isMockEnabled()) {
+            this.sdkMock = new SappSDKMock_1.SappSDKMock(this);
+            // tslint:disable-next-line:no-console
+            console.warn('[SAPPSDK]\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nSAPPSDK MOCK FEATURE ENABLED.\n');
+        }
     }
     /**
      * SappSDK的全局配置，需要在start之前设定好
@@ -217,6 +267,15 @@ var SappSDK = /** @class */ (function () {
      */
     SappSDK.prototype.getConfig = function () {
         return this.config;
+    };
+    /**
+     * 获取SappSDK使用的servkit
+     *
+     * @returns
+     * @memberof SappSDK
+     */
+    SappSDK.prototype.getServkit = function () {
+        return this.config.servkit || Servkit_1.servkit;
     };
     SappSDK.prototype.show = function (params) {
         return __awaiter(this, void 0, void 0, function () {
@@ -244,20 +303,6 @@ var SappSDK = /** @class */ (function () {
                     })];
             });
         });
-    };
-    /**
-     * 销毁SDK，该方法主要用于CI测试（建议业务不要使用，因为SappSDK生命周期通常与应用程序的生命周期保一致）
-     */
-    SappSDK.prototype.destroy = function () {
-        if (!this.isStarted) {
-            return;
-        }
-        this.isStarted = false;
-        this.started = Deferred_1.DeferredUtil.create();
-        if (this.terminal) {
-            this.terminal.servkit.destroyTerminal(this.terminal);
-            this.terminal = undefined;
-        }
     };
     SappSDK.prototype.beforeStart = function (options) {
         return __awaiter(this, void 0, void 0, function () {
@@ -314,7 +359,7 @@ var SappSDK = /** @class */ (function () {
                         return [4 /*yield*/, resolveParams(this)];
                     case 1:
                         params = _a.sent();
-                        return [2 /*return*/, params];
+                        return [2 /*return*/, params || {}];
                 }
             });
         });
@@ -378,6 +423,9 @@ var SappSDK = /** @class */ (function () {
                         // Rewrite type
                         terminalConfig.type = ServTerminal_1.EServTerminal.SLAVE;
                         terminalConfig.session.checkSession = true;
+                        if (this.sdkMock) {
+                            this.sdkMock.fixSlaveTerminalConfig(terminalConfig);
+                        }
                         // Check config validation
                         if (!terminalConfig.id || !terminalConfig.session) {
                             throw new Error('[SAPPSDK] Invalid terminal config');
@@ -456,6 +504,13 @@ var SappSDK = /** @class */ (function () {
         });
     };
     SappSDK.prototype.initSDK = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
+    };
+    SappSDK.prototype.initSDKMock = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/];

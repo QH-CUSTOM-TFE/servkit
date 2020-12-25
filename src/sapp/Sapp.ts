@@ -1,5 +1,5 @@
 import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
-import { ServServiceServerConfig } from '../service/ServServiceServer';
+import { ServServiceServerConfig, ServServiceServer } from '../service/ServServiceServer';
 import {
     asyncThrow,
     EServConstant,
@@ -43,6 +43,7 @@ export interface SappConfig {
 
 export interface SappStartOptions {
     data?: any | SappConfig['resolveStartData'];
+    showData?: any | SappConfig['resolveStartShowData'];
 }
 
 export class Sapp {
@@ -173,10 +174,12 @@ export class Sapp {
                 const showParams: SappShowParams = {
                     force: true,
                 };
-                
-                if (this.config.resolveStartShowData) {
-                    showParams.data = await this.config.resolveStartShowData(this);
+
+                const data = await this.resolveStartShowData(options);
+                if (data !== undefined) {
+                    showParams.data = data;
                 }
+
                 await this._show(showParams, true);
             }
 
@@ -380,6 +383,34 @@ export class Sapp {
         return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
     };
 
+    getServerService: ServServiceServer['getService'] = function(this: Sapp) {
+        if (!this.isStarted) {
+            return;
+        }
+
+        return this.terminal.server.getService(arguments[0]);
+    };
+
+    getServerServiceUnsafe: ServServiceServer['getServiceUnsafe'] = function(this: Sapp) {
+        return this.getServerService.apply(this, arguments);
+    };
+
+    serverService: ServServiceServer['service'] = function(this: Sapp) {
+        if (!this.isStarted) {
+            return Promise.reject(new Error('[SAPP] Sapp is not started'));
+        }
+
+        return this.terminal.server.service.apply(this.terminal.server, arguments);
+    };
+
+    serverServiceExec: ServServiceServer['serviceExec'] = function(this: Sapp) {
+        if (!this.isStarted) {
+            return null;
+        }
+
+        return this.terminal.server.serviceExec.apply(this.terminal.server, arguments);
+    };
+
     protected async auth(params: SappAuthParams): Promise<void> {
         if (!this.controller) {
             return;
@@ -416,6 +447,22 @@ export class Sapp {
                     : (() => options.data!);
         } else {
             resolveData = this.config.resolveStartData;
+        }
+
+        if (resolveData) {
+            return resolveData(this);
+        }
+    }
+
+    protected async resolveStartShowData(options: SappStartOptions): Promise<any> {
+        let resolveData: SappConfig['resolveStartShowData'] = undefined!;
+        if (options.showData) {
+            resolveData =
+                typeof options.showData === 'function'
+                    ? options.showData as SappConfig['resolveStartShowData']
+                    : (() => options.showData!);
+        } else {
+            resolveData = this.config.resolveStartShowData;
         }
 
         if (resolveData) {

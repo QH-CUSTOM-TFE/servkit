@@ -13,6 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Sapp"), exports);
 __exportStar(require("./SappPlainPage"), exports);
 __exportStar(require("./SappSDK"), exports);
+__exportStar(require("./SappSDKMock"), exports);
 __exportStar(require("./SappMGR"), exports);
 __exportStar(require("./SappController"), exports);
 __exportStar(require("./SappDefaultIFrameController"), exports);

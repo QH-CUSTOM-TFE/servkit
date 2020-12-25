@@ -1,5 +1,5 @@
 import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
-import { ServServiceServerConfig } from '../service/ServServiceServer';
+import { ServServiceServerConfig, ServServiceServer } from '../service/ServServiceServer';
 import { asyncThrow, asyncThrowMessage } from '../common/common';
 import { parseServQueryParams } from '../common/query';
 import { EServChannel } from '../session/channel/ServChannel';
@@ -15,6 +15,7 @@ import {
     SappAuthParams as AuthParams,
 } from './service/m/SappLifecycle';
 import { Deferred, DeferredUtil } from '../common/Deferred';
+import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 
 /**
  * SappSDK启动参数
@@ -32,6 +33,11 @@ export interface SappSDKConfig {
      */
     servkit?: Servkit;
 
+    /**
+     * SappSDK权限认证信息
+     *
+     * @memberof SappSDKConfig
+     */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
 
     /**
@@ -115,6 +121,15 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     onClose?(sdk: SappSDK): Promise<void>;
+
+    /**
+     * SappSDK的mock配置，通过该配置，SappSDK应用可脱离主应用调试开发；
+     * 通过window.__$servkit.enableSappSDKMock()或者链接添加__SAPPSDK_MOCK_ENABLE__打开开关才能生效；
+     *
+     * @type {SappSDKMockConfig}
+     * @memberof SappSDKConfig
+     */
+    mock?: SappSDKMockConfig;
 }
 
 /**
@@ -152,6 +167,14 @@ export class SappSDK {
      */
     terminal: ServTerminal;
 
+    /**
+     *
+     *
+     * @type {SappSDKMock}
+     * @memberof SappSDK
+     */
+    sdkMock: SappSDKMock;
+
     protected config: SappSDKConfig;
 
     constructor() {
@@ -159,6 +182,14 @@ export class SappSDK {
         this.setConfig({
             // Default Config
         });
+
+        if (SappSDKMock.isMockEnabled()) {
+            this.sdkMock = new SappSDKMock(this);
+            // tslint:disable-next-line:no-console
+            console.warn(
+                '[SAPPSDK]\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nSAPPSDK MOCK FEATURE ENABLED.\n',
+            );
+        }
     }
 
     /**
@@ -184,6 +215,16 @@ export class SappSDK {
     }
 
     /**
+     * 获取SappSDK使用的servkit
+     *
+     * @returns
+     * @memberof SappSDK
+     */
+    getServkit() {
+        return this.config.servkit || servkit;
+    }
+
+    /**
      * 启动SDK
      *
      * @param {SappSDKStartOptions} [options]
@@ -202,6 +243,14 @@ export class SappSDK {
         
         try {
             options = options || {};
+
+            if (this.sdkMock) {
+                if (config.mock) {
+                    this.sdkMock.setConfig(config.mock);
+                }
+                
+                await this.sdkMock.start();
+            }
             
             await this.beforeStart(options);
 
@@ -238,7 +287,7 @@ export class SappSDK {
             this.onStartFailed();
 
             this.isStarted = false;
-            this.started.reject();
+            this.started.reject(e);
 
             throw e;
         }
@@ -263,28 +312,9 @@ export class SappSDK {
     }
 
     /**
-     * 销毁SDK，该方法主要用于CI测试（建议业务不要使用，因为SappSDK生命周期通常与应用程序的生命周期保一致）
-     */
-    destroy() {
-        if (!this.isStarted) {
-            return;
-        }
-
-        this.isStarted = false;
-        this.started = DeferredUtil.create();
-
-        if (this.terminal) {
-            this.terminal.servkit.destroyTerminal(this.terminal);
-            this.terminal = undefined!;
-        }
-    }
-
-    /**
-     * 根据服务声明获取服务对象
+     * 获取service
      *
-     * @template T
-     * @param {T} decl
-     * @returns {(InstanceType<T> | undefined)}
+     * @type {ServServiceClient['getService']}
      * @memberof SappSDK
      */
     getService: ServServiceClient['getService'] = function(this: SappSDK) {
@@ -296,11 +326,9 @@ export class SappSDK {
     };
 
     /**
-     * 根据服务声明获取服务对象；非安全版本，在类型上任务返回的所有服务对象都是存在的，但实际可能并不存在（值为undefined）
+     * 获取service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
      *
-     * @template T
-     * @param {T} decl
-     * @returns {InstanceType<T>}
+     * @type {ServServiceClient['getServiceUnsafe']}
      * @memberof SappSDK
      */
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'] = function(this: SappSDK) {
@@ -308,11 +336,9 @@ export class SappSDK {
     };
 
     /**
-     * 根据服务声明获取服务对象，返回一个Promise；如果某个服务不存在，Promise将reject。
+     * 获取service，promise形式；如果某个service不存在，promise将reject
      *
-     * @template T
-     * @param {T} decl
-     * @returns {Promise<InstanceType<T>>}
+     * @type {ServServiceClient['service']}
      * @memberof SappSDK
      */
     service: ServServiceClient['service'] = function(this: SappSDK) {
@@ -324,12 +350,9 @@ export class SappSDK {
     };
 
     /**
-     * 根据服务声明获取服务对象，通过回调方式接收服务对象；如果某个服务不存在，回调得不到调用。
+     * 获取service，callback形式；如果某个service不存在，callback将得不到调用
      *
-     * @template T
-     * @template R
-     * @param {T} decl
-     * @param {((service: InstanceType<T>) => R)} exec
+     * @type {ServServiceClient['serviceExec']}
      * @memberof SappSDK
      */
     serviceExec: ServServiceClient['serviceExec'] = function(this: SappSDK) {
@@ -338,6 +361,58 @@ export class SappSDK {
         }
 
         return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
+    };
+
+    /**
+     * 获取server提供的service
+     *
+     * @type {ServServiceServer['getService']}
+     * @memberof SappSDK
+     */
+    getServerService: ServServiceServer['getService'] = function(this: SappSDK) {
+        if (!this.isStarted) {
+            return;
+        }
+
+        return this.terminal.server.getService(arguments[0]);
+    };
+
+    /**
+     * 获取server提供的service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+     *
+     * @type {ServServiceServer['getServiceUnsafe']}
+     * @memberof SappSDK
+     */
+    getServerServiceUnsafe: ServServiceServer['getServiceUnsafe'] = function(this: SappSDK) {
+        return this.getServerService.apply(this, arguments);
+    };
+
+    /**
+     * 获取server提供的service，promise形式；如果某个service不存在，promise将reject
+     *
+     * @type {ServServiceServer['service']}
+     * @memberof SappSDK
+     */
+    serverService: ServServiceServer['service'] = function(this: SappSDK) {
+        if (!this.isStarted) {
+            return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
+        }
+
+        return this.terminal.server.service.apply(this.terminal.server, arguments);
+    };
+
+    /**
+     * 获取server提供的service，callback形式；如果某个service不存在，callback将得不到调用
+     *
+     * @type {ServServiceServer['serviceExec']}
+     * @memberof SappSDK
+     */
+    serverServiceExec: ServServiceServer['serviceExec'] = function(this: SappSDK) {
+        if (!this.isStarted) {
+            return null;
+        }
+
+        return this.terminal.server.serviceExec.apply(this.terminal.server, arguments);
     };
 
     protected async beforeStart(options: SappSDKStartOptions): Promise<void> {
@@ -371,7 +446,7 @@ export class SappSDK {
         }
         
         const params = await resolveParams(this);
-        return params;
+        return params || {};
     }
 
     protected async beforeInitTerminal(): Promise<void> {
@@ -415,6 +490,10 @@ export class SappSDK {
         // Rewrite type
         terminalConfig.type = EServTerminal.SLAVE;
         terminalConfig.session.checkSession = true;
+
+        if (this.sdkMock) {
+            this.sdkMock.fixSlaveTerminalConfig(terminalConfig);
+        }
 
         // Check config validation
         if (!terminalConfig.id || !terminalConfig.session) {
@@ -477,6 +556,10 @@ export class SappSDK {
     protected async initSDK(): Promise<void> {
         // TODO
         // Setup common service in sdk
+    }
+
+    protected async initSDKMock() {
+        //
     }
 
     protected async onCreate(params: SappSDKStartParams, data: any) {

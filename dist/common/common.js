@@ -4,10 +4,11 @@ exports.safeExec = exports.nextUUID = exports.asyncThrowMessage = exports.asyncT
 exports.Env = {
     DEV: false,
     JEST: false,
+    SAPPSDK_MOCK: false,
 };
 try {
     if (window.__$$servkit) {
-        asyncThrowMessage("\n        NOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n        YOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.\n        PLEASE FIX IT.\n        ");
+        asyncThrowMessage('\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nYOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.\n\nPLEASE FIX IT.\n');
     }
     var LOCAL_ENV_1 = '__$$servkit';
     var __$$servkit_1 = {
@@ -38,6 +39,12 @@ try {
         },
         disableDev: function () {
             __$$servkit_1.setLocalEnv('DEV', false);
+        },
+        enableSappSDKMock: function () {
+            __$$servkit_1.setLocalEnv('SAPPSDK_MOCK');
+        },
+        disableSappSDKMock: function () {
+            __$$servkit_1.setLocalEnv('SAPPSDK_MOCK', false);
         },
         Env: exports.Env,
     };
