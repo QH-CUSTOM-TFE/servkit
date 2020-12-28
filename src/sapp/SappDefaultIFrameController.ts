@@ -6,6 +6,7 @@ import { IFrameUtil, EServIFrameShowPolicy, ServIFrameWindowInfo } from '../wind
 import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
 import { wrapServQueryParams } from '../common/query';
+import { SappSDKStartParams } from './SappSDK';
 
 interface LayoutShowHide {
     doShow?: ((app: Sapp) => void);
@@ -166,7 +167,7 @@ export class SappDefaultIFrameController extends SappController {
     }
 
     protected resolveQueryParams(options: SappCreateOptions) {
-        const params = {
+        const params: SappSDKStartParams = {
             uuid: this.app.uuid,
         };
 

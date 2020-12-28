@@ -60,15 +60,37 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Sapp = void 0;
+exports.Sapp = exports.SappInfo = exports.ESappType = exports.ESappLifePolicy = exports.ESappCreatePolicy = void 0;
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var common_1 = require("../common/common");
-var ServChannel_1 = require("../session/channel/ServChannel");
 var ServService_1 = require("../service/ServService");
 var SappLifecycle_1 = require("./service/m/SappLifecycle");
 var SappLifecycle_2 = require("./service/s/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
 var AsyncMutex_1 = require("../common/AsyncMutex");
+var ESappCreatePolicy;
+(function (ESappCreatePolicy) {
+    ESappCreatePolicy[ESappCreatePolicy["NONE"] = 0] = "NONE";
+    ESappCreatePolicy[ESappCreatePolicy["SINGLETON"] = 1] = "SINGLETON";
+    ESappCreatePolicy[ESappCreatePolicy["INFINITE"] = 2] = "INFINITE";
+})(ESappCreatePolicy = exports.ESappCreatePolicy || (exports.ESappCreatePolicy = {}));
+var ESappLifePolicy;
+(function (ESappLifePolicy) {
+    ESappLifePolicy[ESappLifePolicy["NONE"] = 0] = "NONE";
+    ESappLifePolicy[ESappLifePolicy["MANUAL"] = 1] = "MANUAL";
+    ESappLifePolicy[ESappLifePolicy["AUTO"] = 2] = "AUTO";
+})(ESappLifePolicy = exports.ESappLifePolicy || (exports.ESappLifePolicy = {}));
+var ESappType;
+(function (ESappType) {
+    ESappType["IFRAME"] = "IFRAME";
+    ESappType["ASYNC_LOAD"] = "ASYNC_LOAD";
+})(ESappType = exports.ESappType || (exports.ESappType = {}));
+var SappInfo = /** @class */ (function () {
+    function SappInfo() {
+    }
+    return SappInfo;
+}());
+exports.SappInfo = SappInfo;
 var Sapp = /** @class */ (function () {
     function Sapp(uuid, info, manager) {
         var _this = this;
@@ -417,6 +439,12 @@ var Sapp = /** @class */ (function () {
     Sapp.prototype.getConfig = function () {
         return this.config;
     };
+    Sapp.prototype.getServkit = function () {
+        return this.manager ? this.manager.getServkit() : undefined;
+    };
+    Sapp.prototype.getAppType = function () {
+        return this.info.type || ESappType.IFRAME;
+    };
     Sapp.prototype.show = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -557,24 +585,17 @@ var Sapp = /** @class */ (function () {
                         return [4 /*yield*/, config.resolveSessionConfig(this)];
                     case 5:
                         _c.session = _d.sent();
-                        return [3 /*break*/, 7];
+                        _d.label = 6;
                     case 6:
-                        terminalConfig.session = {
-                            channel: {
-                                type: ServChannel_1.EServChannel.WINDOW,
-                            },
-                        };
-                        _d.label = 7;
-                    case 7:
-                        if (!config.resolveTerminalConfig) return [3 /*break*/, 9];
+                        if (!config.resolveTerminalConfig) return [3 /*break*/, 8];
                         return [4 /*yield*/, config.resolveTerminalConfig(this, terminalConfig)];
-                    case 8:
+                    case 7:
                         newTerminalConfig = _d.sent();
                         if (newTerminalConfig) {
                             terminalConfig = newTerminalConfig;
                         }
-                        _d.label = 9;
-                    case 9:
+                        _d.label = 8;
+                    case 8:
                         // Rewrite type
                         terminalConfig.type = ServTerminal_1.EServTerminal.MASTER;
                         // Check config validation
@@ -582,7 +603,7 @@ var Sapp = /** @class */ (function () {
                             throw new Error('[SAPP] Invalid terminal config');
                         }
                         // Setup terminal
-                        this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
+                        this.terminal = this.getServkit().createTerminal(terminalConfig);
                         self = this;
                         SappLifecycleImpl = /** @class */ (function (_super) {
                             __extends(class_1, _super);
@@ -630,7 +651,7 @@ var Sapp = /** @class */ (function () {
                             lazy: true,
                         });
                         return [4 /*yield*/, this.terminal.openSession()];
-                    case 10:
+                    case 9:
                         _d.sent();
                         return [2 /*return*/];
                 }

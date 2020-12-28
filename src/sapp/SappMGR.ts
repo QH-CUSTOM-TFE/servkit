@@ -1,4 +1,4 @@
-import { Sapp } from './Sapp';
+import { Sapp, SappInfo, ESappCreatePolicy, ESappType, ESappLifePolicy } from './Sapp';
 import { SappController } from './SappController';
 import { Servkit, servkit } from '../servkit/Servkit';
 import { SappDefaultIFrameController } from './SappDefaultIFrameController';
@@ -6,39 +6,21 @@ import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/Sap
 import { nextUUID } from '../common';
 import { SappPlainPage } from './SappPlainPage';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
+import { SappDefaultAsyncLoadController } from './SappDefaultAsyncLoadController';
 
-export enum ESappCreatePolicy {
-    NONE = 0,
-    SINGLETON,  // Default
-    INFINITE,
-}
+const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
+    create: ESappCreatePolicy.SINGLETON,
+    life: ESappLifePolicy.MANUAL,
+};
 
-export enum ESappLifePolicy {
-    NONE = 0,
-    AUTO,   // Default
-    MANUAL,
-}
-
-export enum ESappType {
-    IFRAME = 'iframe',
-}
-
-export class SappInfo {
-    id: string;
-    version: string;
-    name: string;
-    desc?: string;
-    type?: ESappType;
-    url: string;
-    options: {
-        create?: ESappCreatePolicy;
-        life?: ESappLifePolicy;
-        lifeMaxHideTime?: number;
-        dontStartOnCreate?: boolean;
-        layout?: string;
-        isPlainPage?: boolean;
-    };
-}
+const DEFAULT_APP_INFO: SappInfo = {
+    id: '',
+    version: '',
+    name: '',
+    type: ESappType.IFRAME,
+    url: '',
+    options: DEFAULT_APP_INFO_OPTIONS,
+};
 
 export class SappLayoutOptions {
     container?: string | HTMLElement;
@@ -140,6 +122,12 @@ export class SappMGR {
             return false;
         }
 
+        const oldInfo = info;
+        info = Object.assign({}, DEFAULT_APP_INFO, oldInfo);
+        if (oldInfo.options) {
+            info.options = Object.assign({}, DEFAULT_APP_INFO_OPTIONS, oldInfo.options);
+        }
+        
         this.infos[info.id] = info;
 
         return true;
@@ -164,11 +152,11 @@ export class SappMGR {
         if (this.config.loadAppInfo) {
             info = await this.config.loadAppInfo(this, id).catch(() => undefined);
             if (info) {
-                this.infos[id] = info;
+                this.addAppInfo(info);
             }
         }
 
-        return info;
+        return this.getAppInfo(id);
     }
 
     async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {
@@ -318,7 +306,9 @@ export class SappMGR {
     }
 
     protected createDefaultAppController(app: Sapp): SappController {
-        return new SappDefaultIFrameController(app);
+        return app.info.type === ESappType.ASYNC_LOAD
+            ? new SappDefaultAsyncLoadController(app)
+            : new SappDefaultIFrameController(app);
     }
 }
 

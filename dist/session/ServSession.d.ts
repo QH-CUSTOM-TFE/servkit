@@ -6,6 +6,7 @@ import { ServEventChannelConfig } from './channel/ServEventChannel';
 import { ServMessageChannelConfig } from './channel/ServMessageChannel';
 import { ServWindowChannelConfig } from './channel/ServWindowChannel';
 import { ServSessionChecker, ServSessionCheckerStartOptions } from './ServSessionChecker';
+import { Deferred } from '../common/Deferred';
 export declare enum EServSessionStatus {
     CLOSED = 0,
     OPENNING = 1,
@@ -31,6 +32,11 @@ export interface ServSessionListener {
 }
 export declare type ServSessionOnRecvMessageListener = (message: ServMessage, session: ServSession, terminal: ServTerminal) => boolean;
 export declare type ServSessionOnRecvCallMessageListener = (type: string, args: any, doReturn: ((data?: any, error?: any) => void), session: ServSession, terminal: ServTerminal) => boolean;
+interface PendingMessage {
+    isSend?: boolean;
+    sendDeferred?: Deferred;
+    message: ServMessage;
+}
 export declare class ServSession {
     protected terminal: ServTerminal;
     protected status: EServSessionStatus;
@@ -42,6 +48,7 @@ export declare class ServSession {
     protected messageContextManager: ServMessageContextManager;
     protected sessionChecker?: ServSessionChecker;
     protected sessionCheckOptions?: ServSessionCheckerStartOptions;
+    protected pendingQueue: PendingMessage[];
     constructor(terminal: ServTerminal);
     init(config: ServSessionConfig): void;
     release(): void;
@@ -59,4 +66,6 @@ export declare class ServSession {
     protected dispatchMessage(msg: ServMessage): void;
     onRecvMessage(listener: ServSessionOnRecvMessageListener): () => void;
     onRecvCallMessage(listener: ServSessionOnRecvCallMessageListener): () => void;
+    protected flushPendingQueue(): void;
 }
+export {};

@@ -10,6 +10,8 @@ var ServEventChannel_1 = require("./channel/ServEventChannel");
 var ServMessageChannel_1 = require("./channel/ServMessageChannel");
 var ServWindowChannel_1 = require("./channel/ServWindowChannel");
 var ServSessionChecker_1 = require("./ServSessionChecker");
+var ServEventLoaderChannel_1 = require("./channel/ServEventLoaderChannel");
+var Deferred_1 = require("../common/Deferred");
 var EServSessionStatus;
 (function (EServSessionStatus) {
     EServSessionStatus[EServSessionStatus["CLOSED"] = 0] = "CLOSED";
@@ -19,6 +21,7 @@ var EServSessionStatus;
 var ServSession = /** @class */ (function () {
     function ServSession(terminal) {
         this.terminal = terminal;
+        this.pendingQueue = [];
     }
     ServSession.prototype.init = function (config) {
         this.status = EServSessionStatus.CLOSED;
@@ -51,6 +54,7 @@ var ServSession = /** @class */ (function () {
             _a[ServChannel_1.EServChannel.WINDOW] = ServWindowChannel_1.ServWindowChannel,
             _a[ServChannel_1.EServChannel.EVENT] = ServEventChannel_1.ServEventChannel,
             _a[ServChannel_1.EServChannel.MESSAGE] = ServMessageChannel_1.ServMessageChannel,
+            _a[ServChannel_1.EServChannel.EVENT_LOADER] = ServEventLoaderChannel_1.ServEventLoaderChannel,
             _a);
         var cls = typeof config.type === 'function' ? config.type : type2cls[config.type];
         if (!cls) {
@@ -131,6 +135,7 @@ var ServSession = /** @class */ (function () {
             this.sessionChecker.start(this.sessionCheckOptions);
         }
         return this.openningPromise.then(function () {
+            _this.flushPendingQueue();
             if (_this.sessionChecker) {
                 _this.sessionChecker.startChecking();
             }
@@ -144,6 +149,7 @@ var ServSession = /** @class */ (function () {
         this.channel.close();
         common_1.logSession(this, 'CLOSED');
         this.status = EServSessionStatus.CLOSED;
+        this.flushPendingQueue();
         this.openningPromise = undefined;
         if (this.openningCancel) {
             this.openningCancel();
@@ -154,6 +160,15 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.sendMessage = function (msg) {
         if (this.status !== EServSessionStatus.OPENED) {
+            if (this.status === EServSessionStatus.OPENNING) {
+                var pending_1 = {
+                    isSend: true,
+                    message: msg,
+                    sendDeferred: Deferred_1.DeferredUtil.create(),
+                };
+                this.pendingQueue.push(pending_1);
+                return pending_1.sendDeferred;
+            }
             common_1.logSession(this, 'Send(NOOPEN)', msg);
             return Promise.reject(new Error('Session not opened'));
         }
@@ -203,6 +218,13 @@ var ServSession = /** @class */ (function () {
     };
     ServSession.prototype.recvPackage = function (pkg) {
         if (this.status !== EServSessionStatus.OPENED) {
+            if (this.status === EServSessionStatus.OPENNING) {
+                var pending_2 = {
+                    message: pkg,
+                };
+                this.pendingQueue.push(pending_2);
+                return;
+            }
             common_1.logSession(this, 'Recv(NOOPEN)', pkg);
             return;
         }
@@ -290,6 +312,32 @@ var ServSession = /** @class */ (function () {
             this.onRecvCallListeners.push(listener);
         }
         return ret;
+    };
+    ServSession.prototype.flushPendingQueue = function () {
+        var _this = this;
+        var pendingQueue = this.pendingQueue;
+        this.pendingQueue = [];
+        if (this.status === EServSessionStatus.CLOSED) {
+            pendingQueue.forEach(function (item) {
+                if (item.isSend) {
+                    item.sendDeferred.reject(new Error('Session not opened'));
+                }
+            });
+        }
+        else if (this.status === EServSessionStatus.OPENED) {
+            pendingQueue.forEach(function (item) {
+                if (item.isSend) {
+                    _this.sendMessage(item.message).then(function (data) {
+                        item.sendDeferred.resolve(data);
+                    }, function (error) {
+                        item.sendDeferred.reject(error);
+                    });
+                }
+                else {
+                    _this.recvPackage(item.message);
+                }
+            });
+        }
     };
     return ServSession;
 }());

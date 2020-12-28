@@ -2,7 +2,8 @@ import { ServSession, ServSessionPackage } from '../ServSession';
 export declare enum EServChannel {
     WINDOW = 1,
     MESSAGE = 2,
-    EVENT = 3
+    EVENT = 3,
+    EVENT_LOADER = 4
 }
 export interface ServChannelConfig {
     ignoreSenderType?: boolean;

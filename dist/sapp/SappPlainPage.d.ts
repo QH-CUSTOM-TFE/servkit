@@ -1,5 +1,4 @@
-import { Sapp } from './Sapp';
-import { SappStartOptions } from './Sapp';
+import { Sapp, SappStartOptions } from './Sapp';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 export declare class SappPlainPage extends Sapp {
     start: ((options?: SappStartOptions | undefined) => Promise<void>) & {

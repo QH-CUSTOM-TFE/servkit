@@ -1,11 +1,12 @@
 import { asyncThrow } from '../../common/common';
 import { ServSession, ServSessionPackage } from '../ServSession';
-import { EServTerminal } from '../../terminal';
+import { EServTerminal } from '../../terminal/ServTerminal';
 
 export enum EServChannel {
     WINDOW = 1,
     MESSAGE,
     EVENT,
+    EVENT_LOADER,
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -181,6 +182,7 @@ export abstract class ServChannel {
         if (data === undefined) {
             return;
         }
+
         this.session.recvPackage(data);
     }
 }

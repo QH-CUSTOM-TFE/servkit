@@ -2,12 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServChannel = exports.EServChannel = void 0;
 var common_1 = require("../../common/common");
-var terminal_1 = require("../../terminal");
+var ServTerminal_1 = require("../../terminal/ServTerminal");
 var EServChannel;
 (function (EServChannel) {
     EServChannel[EServChannel["WINDOW"] = 1] = "WINDOW";
     EServChannel[EServChannel["MESSAGE"] = 2] = "MESSAGE";
     EServChannel[EServChannel["EVENT"] = 3] = "EVENT";
+    EServChannel[EServChannel["EVENT_LOADER"] = 4] = "EVENT_LOADER";
 })(EServChannel = exports.EServChannel || (exports.EServChannel = {}));
 var ServChannel = /** @class */ (function () {
     function ServChannel() {
@@ -22,12 +23,12 @@ var ServChannel = /** @class */ (function () {
         }
         else {
             if (session.isMaster()) {
-                this.sendMark = "$$" + terminal_1.EServTerminal.MASTER + "$$";
-                this.recvMark = "$$" + terminal_1.EServTerminal.SLAVE + "$$";
+                this.sendMark = "$$" + ServTerminal_1.EServTerminal.MASTER + "$$";
+                this.recvMark = "$$" + ServTerminal_1.EServTerminal.SLAVE + "$$";
             }
             else {
-                this.sendMark = "$$" + terminal_1.EServTerminal.SLAVE + "$$";
-                this.recvMark = "$$" + terminal_1.EServTerminal.MASTER + "$$";
+                this.sendMark = "$$" + ServTerminal_1.EServTerminal.SLAVE + "$$";
+                this.recvMark = "$$" + ServTerminal_1.EServTerminal.MASTER + "$$";
             }
         }
         this.sendStringMark = sessionMark + this.sendMark;

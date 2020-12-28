@@ -69,6 +69,7 @@ var ServService_1 = require("../service/ServService");
 var AsyncMutex_1 = require("../common/AsyncMutex");
 var Deferred_1 = require("../common/Deferred");
 var SappLifecycle_2 = require("./service/s/SappLifecycle");
+var Sapp_1 = require("./Sapp");
 var SappSDKMock = /** @class */ (function () {
     function SappSDKMock(sdk) {
         var _this = this;
@@ -288,11 +289,12 @@ var SappSDKMock = /** @class */ (function () {
     };
     SappSDKMock.prototype.initTerminal = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var terminalConfig, config, _a, _b, terminal, self, SappLifecycleImpl;
+            var isAsyncLoadApp, terminalConfig, config, _a, _b, terminal, self, SappLifecycleImpl;
             var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
+                        isAsyncLoadApp = this.sdk.getConfig() === Sapp_1.ESappType.ASYNC_LOAD;
                         terminalConfig = {
                             id: common_1.nextUUID(),
                             type: ServTerminal_1.EServTerminal.MASTER,
@@ -304,7 +306,7 @@ var SappSDKMock = /** @class */ (function () {
                                     },
                                 },
                                 channel: {
-                                    type: ServChannel_1.EServChannel.MESSAGE,
+                                    type: isAsyncLoadApp ? ServChannel_1.EServChannel.EVENT : ServChannel_1.EServChannel.MESSAGE,
                                 },
                             },
                         };
@@ -370,10 +372,11 @@ var SappSDKMock = /** @class */ (function () {
         });
     };
     SappSDKMock.prototype.fixSlaveTerminalConfig = function (config) {
+        var isAsyncLoadApp = this.sdk.getConfig() === Sapp_1.ESappType.ASYNC_LOAD;
         config.id = this.terminal.id;
         config.session.checkSession = true;
         config.session.channel = {
-            type: ServChannel_1.EServChannel.MESSAGE,
+            type: isAsyncLoadApp ? ServChannel_1.EServChannel.EVENT : ServChannel_1.EServChannel.MESSAGE,
         };
     };
     SappSDKMock.prototype.resolveStartData = function () {

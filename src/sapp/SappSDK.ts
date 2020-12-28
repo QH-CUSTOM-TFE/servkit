@@ -16,12 +16,18 @@ import {
 } from './service/m/SappLifecycle';
 import { Deferred, DeferredUtil } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
+import { getSharedParams } from '../common/sharedParams';
+import { ESappType } from './Sapp';
 
 /**
  * SappSDK启动参数
  */
 export interface SappSDKStartParams {
     uuid?: string;
+}
+
+export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
+    container?: HTMLElement;
 }
 
 /**
@@ -130,6 +136,14 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
+
+    /**
+     * ESappType.ASYNC_LOAD类型APP的id，如果指定该属性后，该应用则认定为ESappType.ASYNC_LOAD
+     *
+     * @type {string}
+     * @memberof SappSDKConfig
+     */
+    asyncLoadAppId?: string;
 }
 
 /**
@@ -442,11 +456,15 @@ export class SappSDK {
                 ? options.params 
                 : (() => options.params! as SappSDKStartParams) ;
         } else {
-            resolveParams = this.config.resolveStartParams || parseServQueryParams;
+            resolveParams = this.config.resolveStartParams;
         }
-        
-        const params = await resolveParams(this);
-        return params || {};
+
+        if (resolveParams) {
+            const params = await resolveParams(this);
+            return params || {};
+        } else {
+            return this.getDefaultStartParams() || {};
+        }
     }
 
     protected async beforeInitTerminal(): Promise<void> {
@@ -475,7 +493,7 @@ export class SappSDK {
         } else {
             terminalConfig.session = {
                 channel: {
-                    type: EServChannel.WINDOW,
+                    type: this.getAppType() === ESappType.ASYNC_LOAD ? EServChannel.EVENT_LOADER :  EServChannel.WINDOW,
                 },
             };
         }
@@ -501,7 +519,7 @@ export class SappSDK {
         }
 
         // Setup terminal
-        this.terminal = (config.servkit || servkit).createTerminal(terminalConfig);
+        this.terminal = this.getServkit().createTerminal(terminalConfig);
 
         // Setup lifecycle
         const self = this;
@@ -589,6 +607,32 @@ export class SappSDK {
         if (this.config.onClose) {
             await this.config.onClose(this);
         }
+    }
+
+    getAppType(): ESappType {
+        if (this.config.asyncLoadAppId) {
+            return ESappType.ASYNC_LOAD;
+        }
+
+        return ESappType.IFRAME;
+    }
+
+    getDefaultStartParams<T extends SappSDKStartParams = SappSDKStartParams>(): T | undefined {
+        let resolveParams: () => T | undefined = undefined!;
+        if (this.getAppType() === ESappType.ASYNC_LOAD) {  // For async load app
+            if (!this.config.asyncLoadAppId) {
+                throw new Error('[SAPPSDK] asyncLoadAppId must be provided for ESappType.ASYNC_LOAD app');
+            }
+            resolveParams = () => getSharedParams(this.getServkit(), this.config.asyncLoadAppId!);
+        } else {
+            resolveParams = parseServQueryParams;   // For iframe app
+        }
+
+        if (!resolveParams) {
+            return undefined;
+        }
+
+        return resolveParams();
     }
 }
 

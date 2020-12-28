@@ -2,12 +2,14 @@ import { asyncThrow, EServConstant, logSession } from '../common/common';
 import { ServSessionCallMessageCreator } from '../message/creator';
 import { ServMessageContextManager } from '../message/ServMessageContextManager';
 import { EServMessage, ServMessage, ServSessionCallMessage, ServSessionCallReturnMessage } from '../message/type';
-import { ServTerminal, EServTerminal } from '../terminal/ServTerminal';
+import { ServTerminal } from '../terminal/ServTerminal';
 import { EServChannel, ServChannel, ServChannelConfig } from './channel/ServChannel';
 import { ServEventChannel, ServEventChannelConfig } from './channel/ServEventChannel';
 import { ServMessageChannel, ServMessageChannelConfig } from './channel/ServMessageChannel';
 import { ServWindowChannel, ServWindowChannelConfig } from './channel/ServWindowChannel';
 import { ServSessionChecker, ServSessionCheckerStartOptions } from './ServSessionChecker';
+import { ServEventLoaderChannel } from './channel/ServEventLoaderChannel';
+import { Deferred, DeferredUtil } from '../common/Deferred';
 
 export enum EServSessionStatus {
     CLOSED = 0,
@@ -52,6 +54,12 @@ export type ServSessionOnRecvCallMessageListener = (
     terminal: ServTerminal,
 ) => boolean;
 
+interface PendingMessage {
+    isSend?: boolean;
+    sendDeferred?: Deferred;
+    message: ServMessage;
+}
+
 export class ServSession {
     protected terminal: ServTerminal;
     protected status: EServSessionStatus;
@@ -63,9 +71,11 @@ export class ServSession {
     protected messageContextManager: ServMessageContextManager;
     protected sessionChecker?: ServSessionChecker;
     protected sessionCheckOptions?: ServSessionCheckerStartOptions;
+    protected pendingQueue: PendingMessage[];
 
     constructor(terminal: ServTerminal) {
         this.terminal = terminal;
+        this.pendingQueue = [];
     }
 
     init(config: ServSessionConfig) {
@@ -102,6 +112,7 @@ export class ServSession {
             [EServChannel.WINDOW]: ServWindowChannel,
             [EServChannel.EVENT]: ServEventChannel,
             [EServChannel.MESSAGE]: ServMessageChannel,
+            [EServChannel.EVENT_LOADER]: ServEventLoaderChannel,
         };
         const cls = typeof config.type === 'function' ? config.type : type2cls[config.type] ;
         if (!cls) {
@@ -194,6 +205,8 @@ export class ServSession {
         }
 
         return this.openningPromise.then(() => {
+            this.flushPendingQueue();
+
             if (this.sessionChecker) {
                 this.sessionChecker.startChecking();
             }
@@ -210,6 +223,8 @@ export class ServSession {
         logSession(this, 'CLOSED');
                     
         this.status = EServSessionStatus.CLOSED;
+        
+        this.flushPendingQueue();
         this.openningPromise = undefined;
 
         if (this.openningCancel) {
@@ -223,6 +238,17 @@ export class ServSession {
 
     sendMessage(msg: ServMessage): Promise<void> {
         if (this.status !== EServSessionStatus.OPENED) {
+            if (this.status === EServSessionStatus.OPENNING) {
+                const pending = {
+                    isSend: true,
+                    message: msg,
+                    sendDeferred: DeferredUtil.create(),
+                };
+                this.pendingQueue.push(pending);
+
+                return pending.sendDeferred;
+            }
+
             logSession(this, 'Send(NOOPEN)', msg);
             return Promise.reject(new Error('Session not opened'));
         }
@@ -281,8 +307,15 @@ export class ServSession {
 
     recvPackage(pkg: ServSessionPackage): void {
         if (this.status !== EServSessionStatus.OPENED) {
+            if (this.status === EServSessionStatus.OPENNING) {
+                const pending = {
+                    message: pkg,
+                };
+                this.pendingQueue.push(pending);
+                return;
+            }
+
             logSession(this, 'Recv(NOOPEN)', pkg);
-        
             return;
         }
 
@@ -381,4 +414,27 @@ export class ServSession {
         return ret;
     }
 
+    protected flushPendingQueue() {
+        const pendingQueue = this.pendingQueue;
+        this.pendingQueue = [];
+        if (this.status === EServSessionStatus.CLOSED) {
+            pendingQueue.forEach((item) => {
+                if (item.isSend) {
+                    item.sendDeferred!.reject(new Error('Session not opened'));
+                }
+            });
+        } else if (this.status === EServSessionStatus.OPENED) {
+            pendingQueue.forEach((item) => {
+                if (item.isSend) {
+                    this.sendMessage(item.message).then((data) => {
+                        item.sendDeferred!.resolve(data);
+                    }, (error) => {
+                        item.sendDeferred!.reject(error);
+                    });
+                } else {
+                    this.recvPackage(item.message);
+                }
+            });
+        }
+    }
 }

@@ -31,5 +31,5 @@ export interface ServIFrameCreatorConfig {
     onClosed?(): void;
 }
 export declare class IFrameUtil {
-    static generateCreator(config: ServIFrameCreatorConfig): Partial<ServWindowChannelConfig['master']>;
+    static generateCreator(config: ServIFrameCreatorConfig): ServWindowChannelConfig['master'];
 }

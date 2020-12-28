@@ -4,16 +4,49 @@ import {
     asyncThrow,
     EServConstant,
 } from '../common/common';
-import { EServChannel } from '../session/channel/ServChannel';
-import { ServService, anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
+import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
 import { SappLifecycle as Lifecycle } from './service/s/SappLifecycle';
-import { SappInfo, SappMGR } from './SappMGR';
+import { SappMGR } from './SappMGR';
 import { Deferred, DeferredUtil } from '../common/Deferred';
 import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
+
+export enum ESappCreatePolicy {
+    NONE = 0,
+    SINGLETON,  // Default
+    INFINITE,
+}
+
+export enum ESappLifePolicy {
+    NONE = 0,
+    MANUAL, // Default
+    AUTO,   
+}
+
+export enum ESappType {
+    IFRAME = 'IFRAME',  // Default
+    ASYNC_LOAD = 'ASYNC_LOAD',
+}
+
+export class SappInfo {
+    id: string;
+    version: string;
+    name: string;
+    desc?: string;
+    type?: ESappType;
+    url: string;
+    options: {
+        create?: ESappCreatePolicy;
+        life?: ESappLifePolicy;
+        lifeMaxHideTime?: number;
+        dontStartOnCreate?: boolean;
+        layout?: string;
+        isPlainPage?: boolean;
+    };
+}
 
 // tslint:disable-next-line:no-empty-interface
 export interface SappStartParams {
@@ -116,6 +149,10 @@ export class Sapp {
         return this.config;
     }
 
+    getServkit() {
+        return this.manager ? this.manager.getServkit() : undefined!;
+    }
+
     start = DeferredUtil.reEntryGuard(this.mutex.lockGuard(async (options?: SappStartOptions): Promise<void> => {
         if (this.isStarted) {
             return;
@@ -193,6 +230,10 @@ export class Sapp {
             throw e;
         }
     }));
+
+    getAppType(): ESappType {
+        return this.info.type || ESappType.IFRAME;
+    }
 
     async show(params?: SappShowParams) {
         return this._show(params);
@@ -493,12 +534,6 @@ export class Sapp {
 
         if (config.resolveSessionConfig) {
             terminalConfig.session = await config.resolveSessionConfig(this);
-        } else {
-            terminalConfig.session = {
-                channel: {
-                    type: EServChannel.WINDOW,
-                },
-            };
         }
 
         if (config.resolveTerminalConfig) {
@@ -517,7 +552,7 @@ export class Sapp {
         }
 
         // Setup terminal
-        this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
+        this.terminal = this.getServkit().createTerminal(terminalConfig);
 
         // Setup lifecycle
         const self = this;

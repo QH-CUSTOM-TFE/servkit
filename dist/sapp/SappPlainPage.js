@@ -250,7 +250,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                             type: ServTerminal_1.EServTerminal.MASTER,
                             session: {
                                 channel: {
-                                    type: ServChannel_1.EServChannel.WINDOW,
+                                    type: this.getAppType() === Sapp_1.ESappType.IFRAME ? ServChannel_1.EServChannel.WINDOW : ServChannel_1.EServChannel.EVENT_LOADER,
                                 },
                             },
                         };
@@ -259,24 +259,17 @@ var SappPlainPage = /** @class */ (function (_super) {
                         return [4 /*yield*/, config.resolveSessionConfig(this)];
                     case 1:
                         _a.session = _b.sent();
-                        return [3 /*break*/, 3];
+                        _b.label = 2;
                     case 2:
-                        terminalConfig.session = {
-                            channel: {
-                                type: ServChannel_1.EServChannel.WINDOW,
-                            },
-                        };
-                        _b.label = 3;
-                    case 3:
-                        if (!config.resolveTerminalConfig) return [3 /*break*/, 5];
+                        if (!config.resolveTerminalConfig) return [3 /*break*/, 4];
                         return [4 /*yield*/, config.resolveTerminalConfig(this, terminalConfig)];
-                    case 4:
+                    case 3:
                         newTerminalConfig = _b.sent();
                         if (newTerminalConfig) {
                             terminalConfig = newTerminalConfig;
                         }
-                        _b.label = 5;
-                    case 5:
+                        _b.label = 4;
+                    case 4:
                         terminalConfig.type = ServTerminal_1.EServTerminal.MASTER;
                         terminalConfig.session.checkSession = false;
                         terminalConfig.session.checkOptions = undefined;
@@ -293,7 +286,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         // Setup terminal
                         this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
                         return [4 /*yield*/, this.terminal.openSession()];
-                    case 6:
+                    case 5:
                         _b.sent();
                         return [2 /*return*/];
                 }

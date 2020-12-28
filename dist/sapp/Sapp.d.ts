@@ -3,10 +3,40 @@ import { ServServiceServerConfig, ServServiceServer } from '../service/ServServi
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
-import { SappInfo, SappMGR } from './SappMGR';
+import { SappMGR } from './SappMGR';
 import { Deferred } from '../common/Deferred';
 import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
+export declare enum ESappCreatePolicy {
+    NONE = 0,
+    SINGLETON = 1,
+    INFINITE = 2
+}
+export declare enum ESappLifePolicy {
+    NONE = 0,
+    MANUAL = 1,
+    AUTO = 2
+}
+export declare enum ESappType {
+    IFRAME = "IFRAME",
+    ASYNC_LOAD = "ASYNC_LOAD"
+}
+export declare class SappInfo {
+    id: string;
+    version: string;
+    name: string;
+    desc?: string;
+    type?: ESappType;
+    url: string;
+    options: {
+        create?: ESappCreatePolicy;
+        life?: ESappLifePolicy;
+        lifeMaxHideTime?: number;
+        dontStartOnCreate?: boolean;
+        layout?: string;
+        isPlainPage?: boolean;
+    };
+}
 export interface SappStartParams {
 }
 export interface SappConfig {
@@ -46,9 +76,11 @@ export declare class Sapp {
     getController(): SappController | undefined;
     setConfig(config: SappConfig): this;
     getConfig(): SappConfig;
+    getServkit(): import("..").Servkit;
     start: ((options?: SappStartOptions | undefined) => Promise<void>) & {
         deferred: Deferred<void> | undefined;
     };
+    getAppType(): ESappType;
     show(params?: SappShowParams): Promise<void>;
     hide(params?: SappHideParams): Promise<void>;
     protected _show: ((params?: SappShowParams | undefined, byCreate?: boolean | undefined) => Promise<void>) & {

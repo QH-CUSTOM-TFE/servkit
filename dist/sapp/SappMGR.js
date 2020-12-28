@@ -36,34 +36,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sappMGR = exports.SappMGR = exports.SappLayoutOptions = exports.SappInfo = exports.ESappType = exports.ESappLifePolicy = exports.ESappCreatePolicy = void 0;
+exports.sappMGR = exports.SappMGR = exports.SappLayoutOptions = void 0;
 var Sapp_1 = require("./Sapp");
 var Servkit_1 = require("../servkit/Servkit");
 var SappDefaultIFrameController_1 = require("./SappDefaultIFrameController");
 var common_1 = require("../common");
 var SappPlainPage_1 = require("./SappPlainPage");
-var ESappCreatePolicy;
-(function (ESappCreatePolicy) {
-    ESappCreatePolicy[ESappCreatePolicy["NONE"] = 0] = "NONE";
-    ESappCreatePolicy[ESappCreatePolicy["SINGLETON"] = 1] = "SINGLETON";
-    ESappCreatePolicy[ESappCreatePolicy["INFINITE"] = 2] = "INFINITE";
-})(ESappCreatePolicy = exports.ESappCreatePolicy || (exports.ESappCreatePolicy = {}));
-var ESappLifePolicy;
-(function (ESappLifePolicy) {
-    ESappLifePolicy[ESappLifePolicy["NONE"] = 0] = "NONE";
-    ESappLifePolicy[ESappLifePolicy["AUTO"] = 1] = "AUTO";
-    ESappLifePolicy[ESappLifePolicy["MANUAL"] = 2] = "MANUAL";
-})(ESappLifePolicy = exports.ESappLifePolicy || (exports.ESappLifePolicy = {}));
-var ESappType;
-(function (ESappType) {
-    ESappType["IFRAME"] = "iframe";
-})(ESappType = exports.ESappType || (exports.ESappType = {}));
-var SappInfo = /** @class */ (function () {
-    function SappInfo() {
-    }
-    return SappInfo;
-}());
-exports.SappInfo = SappInfo;
+var SappDefaultAsyncLoadController_1 = require("./SappDefaultAsyncLoadController");
+var DEFAULT_APP_INFO_OPTIONS = {
+    create: Sapp_1.ESappCreatePolicy.SINGLETON,
+    life: Sapp_1.ESappLifePolicy.MANUAL,
+};
+var DEFAULT_APP_INFO = {
+    id: '',
+    version: '',
+    name: '',
+    type: Sapp_1.ESappType.IFRAME,
+    url: '',
+    options: DEFAULT_APP_INFO_OPTIONS,
+};
 var SappLayoutOptions = /** @class */ (function () {
     function SappLayoutOptions() {
     }
@@ -124,6 +115,11 @@ var SappMGR = /** @class */ (function () {
         if (!info.id) {
             return false;
         }
+        var oldInfo = info;
+        info = Object.assign({}, DEFAULT_APP_INFO, oldInfo);
+        if (oldInfo.options) {
+            info.options = Object.assign({}, DEFAULT_APP_INFO_OPTIONS, oldInfo.options);
+        }
         this.infos[info.id] = info;
         return true;
     };
@@ -149,10 +145,10 @@ var SappMGR = /** @class */ (function () {
                     case 1:
                         info = _a.sent();
                         if (info) {
-                            this.infos[id] = info;
+                            this.addAppInfo(info);
                         }
                         _a.label = 2;
-                    case 2: return [2 /*return*/, info];
+                    case 2: return [2 /*return*/, this.getAppInfo(id)];
                 }
             });
         });
@@ -173,7 +169,7 @@ var SappMGR = /** @class */ (function () {
                         }
                         app = this.getApp(id);
                         if (app) {
-                            if (!app.info.options.create || app.info.options.create === ESappCreatePolicy.SINGLETON) {
+                            if (!app.info.options.create || app.info.options.create === Sapp_1.ESappCreatePolicy.SINGLETON) {
                                 throw new Error('singleton');
                             }
                         }
@@ -325,7 +321,9 @@ var SappMGR = /** @class */ (function () {
         return this.createDefaultAppController(app);
     };
     SappMGR.prototype.createDefaultAppController = function (app) {
-        return new SappDefaultIFrameController_1.SappDefaultIFrameController(app);
+        return app.info.type === Sapp_1.ESappType.ASYNC_LOAD
+            ? new SappDefaultAsyncLoadController_1.SappDefaultAsyncLoadController(app)
+            : new SappDefaultIFrameController_1.SappDefaultIFrameController(app);
     };
     return SappMGR;
 }());

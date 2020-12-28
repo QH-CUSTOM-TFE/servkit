@@ -1,6 +1,5 @@
-import { Sapp } from './Sapp';
+import { Sapp, SappStartOptions, ESappType } from './Sapp';
 import { DeferredUtil } from '../common/Deferred';
-import { SappStartOptions } from './Sapp';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';
@@ -146,19 +145,13 @@ export class SappPlainPage extends Sapp {
             type: EServTerminal.MASTER,
             session: {
                 channel: {
-                    type: EServChannel.WINDOW,
+                    type: this.getAppType() === ESappType.IFRAME ? EServChannel.WINDOW : EServChannel.EVENT_LOADER,
                 },
             },
         };
 
         if (config.resolveSessionConfig) {
             terminalConfig.session = await config.resolveSessionConfig(this);
-        } else {
-            terminalConfig.session = {
-                channel: {
-                    type: EServChannel.WINDOW,
-                },
-            };
         }
 
         if (config.resolveTerminalConfig) {
@@ -189,5 +182,4 @@ export class SappPlainPage extends Sapp {
 
         await this.terminal.openSession();
     }
-
 }

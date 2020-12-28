@@ -6,3 +6,4 @@ export * from './message';
 export * from './session';
 export * from './window';
 export * from './sapp';
+export * from './load';

@@ -7,11 +7,15 @@ import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
 import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthParams as AuthParams } from './service/m/SappLifecycle';
 import { Deferred } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
+import { ESappType } from './Sapp';
 /**
  * SappSDK启动参数
  */
 export interface SappSDKStartParams {
     uuid?: string;
+}
+export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
+    container?: HTMLElement;
 }
 /**
  * SappSDK配置
@@ -105,6 +109,13 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
+    /**
+     * ESappType.ASYNC_LOAD类型APP的id，如果指定该属性后，该应用则认定为ESappType.ASYNC_LOAD
+     *
+     * @type {string}
+     * @memberof SappSDKConfig
+     */
+    asyncLoadAppId?: string;
 }
 /**
  * SappSDK start参数项
@@ -250,5 +261,7 @@ export declare class SappSDK {
     protected onShow(params: SappShowParams): Promise<boolean | void>;
     protected onHide(params: SappHideParams): Promise<boolean | void>;
     protected onClose(): Promise<void>;
+    getAppType(): ESappType;
+    getDefaultStartParams<T extends SappSDKStartParams = SappSDKStartParams>(): T | undefined;
 }
 export declare const sappSDK: SappSDK;

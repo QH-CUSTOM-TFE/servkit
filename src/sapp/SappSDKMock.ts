@@ -9,6 +9,7 @@ import { AsyncMutex } from '../common/AsyncMutex';
 import { DeferredUtil, Deferred } from '../common/Deferred';
 import { SappLifecycle as Lifecycle } from './service/s/SappLifecycle';
 import { SappSDK } from './SappSDK';
+import { ESappType } from './Sapp';
 
 export interface SappSDKMockConfig {
     hideOnStart?: boolean;
@@ -104,6 +105,7 @@ export class SappSDKMock {
     }
 
     protected async initTerminal() {
+        const isAsyncLoadApp = this.sdk.getConfig() === ESappType.ASYNC_LOAD;
         const terminalConfig: ServTerminalConfig = {
             id: nextUUID(),
             type: EServTerminal.MASTER,
@@ -115,7 +117,7 @@ export class SappSDKMock {
                     },
                 },
                 channel: {
-                    type: EServChannel.MESSAGE,
+                    type: isAsyncLoadApp ? EServChannel.EVENT : EServChannel.MESSAGE,
                 },
             },
         };
@@ -175,10 +177,12 @@ export class SappSDKMock {
     }
 
     fixSlaveTerminalConfig(config: ServTerminalConfig) {
+        const isAsyncLoadApp = this.sdk.getConfig() === ESappType.ASYNC_LOAD;
+        
         config.id = this.terminal.id;
         config.session.checkSession = true;
         config.session.channel = {
-            type: EServChannel.MESSAGE,
+            type: isAsyncLoadApp ? EServChannel.EVENT : EServChannel.MESSAGE,
         };
     }
 

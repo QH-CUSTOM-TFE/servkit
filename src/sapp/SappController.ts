@@ -1,5 +1,5 @@
-import { Sapp, SappConfig } from './Sapp';
-import { SappCreateOptions, SappLayoutOptions, ESappLifePolicy } from './SappMGR';
+import { Sapp, SappConfig, ESappLifePolicy } from './Sapp';
+import { SappCreateOptions, SappLayoutOptions } from './SappMGR';
 import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
@@ -91,7 +91,7 @@ export abstract class SappController {
 
     protected doHideAfterAspect() {
         const life = this.app.info.options.life;
-        if (life === ESappLifePolicy.MANUAL) {
+        if (life !== ESappLifePolicy.AUTO) {
             return;
         }
 

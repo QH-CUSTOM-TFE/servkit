@@ -35,7 +35,7 @@ export interface ServIFrameCreatorConfig {
 }
 
 export class IFrameUtil {
-    static generateCreator(config: ServIFrameCreatorConfig): Partial<ServWindowChannelConfig['master']> {
+    static generateCreator(config: ServIFrameCreatorConfig): ServWindowChannelConfig['master'] {
         const show = config.show ? config.show : (element: HTMLIFrameElement) => element.style.display = 'block';
         const hide = config.hide ? config.hide : (element: HTMLIFrameElement) => element.style.display = 'none';
         const showPolicy = config.showPolicy || EServIFrameShowPolicy.SHOW;

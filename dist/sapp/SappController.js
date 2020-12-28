@@ -37,7 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappController = void 0;
-var SappMGR_1 = require("./SappMGR");
+var Sapp_1 = require("./Sapp");
 var common_1 = require("../common/common");
 var aspect_1 = require("../common/aspect");
 var SappController = /** @class */ (function () {
@@ -136,7 +136,7 @@ var SappController = /** @class */ (function () {
     SappController.prototype.doHideAfterAspect = function () {
         var _this = this;
         var life = this.app.info.options.life;
-        if (life === SappMGR_1.ESappLifePolicy.MANUAL) {
+        if (life !== Sapp_1.ESappLifePolicy.AUTO) {
             return;
         }
         if (this.cleanHideLifeChecker) {

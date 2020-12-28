@@ -60,6 +60,8 @@ var SappLifecycle_1 = require("./service/s/SappLifecycle");
 var SappLifecycle_2 = require("./service/m/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
 var SappSDKMock_1 = require("./SappSDKMock");
+var sharedParams_1 = require("../common/sharedParams");
+var Sapp_1 = require("./Sapp");
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
@@ -354,12 +356,14 @@ var SappSDK = /** @class */ (function () {
                                     : (function () { return options.params; });
                         }
                         else {
-                            resolveParams = this.config.resolveStartParams || query_1.parseServQueryParams;
+                            resolveParams = this.config.resolveStartParams;
                         }
+                        if (!resolveParams) return [3 /*break*/, 2];
                         return [4 /*yield*/, resolveParams(this)];
                     case 1:
                         params = _a.sent();
                         return [2 /*return*/, params || {}];
+                    case 2: return [2 /*return*/, this.getDefaultStartParams() || {}];
                 }
             });
         });
@@ -406,7 +410,7 @@ var SappSDK = /** @class */ (function () {
                     case 6:
                         terminalConfig.session = {
                             channel: {
-                                type: ServChannel_1.EServChannel.WINDOW,
+                                type: this.getAppType() === Sapp_1.ESappType.ASYNC_LOAD ? ServChannel_1.EServChannel.EVENT_LOADER : ServChannel_1.EServChannel.WINDOW,
                             },
                         };
                         _e.label = 7;
@@ -431,7 +435,7 @@ var SappSDK = /** @class */ (function () {
                             throw new Error('[SAPPSDK] Invalid terminal config');
                         }
                         // Setup terminal
-                        this.terminal = (config.servkit || Servkit_1.servkit).createTerminal(terminalConfig);
+                        this.terminal = this.getServkit().createTerminal(terminalConfig);
                         self = this;
                         SappLifecycleImpl = /** @class */ (function (_super) {
                             __extends(class_1, _super);
@@ -580,6 +584,29 @@ var SappSDK = /** @class */ (function () {
                 }
             });
         });
+    };
+    SappSDK.prototype.getAppType = function () {
+        if (this.config.asyncLoadAppId) {
+            return Sapp_1.ESappType.ASYNC_LOAD;
+        }
+        return Sapp_1.ESappType.IFRAME;
+    };
+    SappSDK.prototype.getDefaultStartParams = function () {
+        var _this = this;
+        var resolveParams = undefined;
+        if (this.getAppType() === Sapp_1.ESappType.ASYNC_LOAD) { // For async load app
+            if (!this.config.asyncLoadAppId) {
+                throw new Error('[SAPPSDK] asyncLoadAppId must be provided for ESappType.ASYNC_LOAD app');
+            }
+            resolveParams = function () { return sharedParams_1.getSharedParams(_this.getServkit(), _this.config.asyncLoadAppId); };
+        }
+        else {
+            resolveParams = query_1.parseServQueryParams; // For iframe app
+        }
+        if (!resolveParams) {
+            return undefined;
+        }
+        return resolveParams();
     };
     return SappSDK;
 }());

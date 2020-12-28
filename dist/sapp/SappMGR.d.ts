@@ -1,37 +1,8 @@
-import { Sapp } from './Sapp';
+import { Sapp, SappInfo } from './Sapp';
 import { SappController } from './SappController';
 import { Servkit } from '../servkit/Servkit';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
-export declare enum ESappCreatePolicy {
-    NONE = 0,
-    SINGLETON = 1,
-    INFINITE = 2
-}
-export declare enum ESappLifePolicy {
-    NONE = 0,
-    AUTO = 1,
-    MANUAL = 2
-}
-export declare enum ESappType {
-    IFRAME = "iframe"
-}
-export declare class SappInfo {
-    id: string;
-    version: string;
-    name: string;
-    desc?: string;
-    type?: ESappType;
-    url: string;
-    options: {
-        create?: ESappCreatePolicy;
-        life?: ESappLifePolicy;
-        lifeMaxHideTime?: number;
-        dontStartOnCreate?: boolean;
-        layout?: string;
-        isPlainPage?: boolean;
-    };
-}
 export declare class SappLayoutOptions {
     container?: string | HTMLElement;
     className?: string;
