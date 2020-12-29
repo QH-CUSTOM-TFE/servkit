@@ -5,7 +5,7 @@ import { EServChannel } from '../session/channel/ServChannel';
 import { IFrameUtil, EServIFrameShowPolicy, ServIFrameWindowInfo } from '../window/iframe';
 import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
-import { wrapServQueryParams } from '../common/query';
+import { wrapServQueryParams, replacePlaceholders } from '../common/query';
 import { SappSDKStartParams } from './SappSDK';
 
 interface LayoutShowHide {
@@ -138,11 +138,14 @@ export class SappDefaultIFrameController extends SappController {
 
         const params = this.resolveQueryParams(options);
 
+        let url = this.app.info.url;
+        url = replacePlaceholders(url, { version: this.app.info.version });
+
         return {
             type: EServChannel.WINDOW,
             config: {
                 master: IFrameUtil.generateCreator({
-                    url: wrapServQueryParams(this.app.info.url, params),
+                    url: wrapServQueryParams(url, params),
                     id: this.app.uuid,
                     showPolicy: EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',

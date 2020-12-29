@@ -16,6 +16,7 @@ export declare class SappLayoutOptions {
 }
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
+    preloadForAsyncLoadApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
@@ -51,6 +52,7 @@ export declare class SappMGR {
     addAppInfo(info: SappInfo): boolean;
     remAppInfo(id: string): boolean;
     loadAppInfo(id: string): Promise<SappInfo | undefined>;
+    preload(id: string | SappInfo): Promise<void>;
     create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp>;
     show(id: string, params?: SappShowParams): Promise<Sapp>;
     hide(id: string, params?: SappHideParams): Promise<Sapp>;

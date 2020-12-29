@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseServQueryParams = exports.generateServQueryParams = exports.wrapServQueryParams = void 0;
+exports.replacePlaceholders = exports.parseServQueryParams = exports.generateServQueryParams = exports.wrapServQueryParams = void 0;
 var common_1 = require("./common");
 var QUERY_PARAMS_KEY = '__SERVKIT_QUERY_PARAMS__';
 function wrapServQueryParams(url, params) {
@@ -58,4 +58,12 @@ function parseServQueryParams() {
     return ret;
 }
 exports.parseServQueryParams = parseServQueryParams;
+function replacePlaceholders(url, params) {
+    Object.keys(params).forEach(function (key) {
+        var val = params[key];
+        url = url.replace(new RegExp("\\$\\{" + key + "\\}", 'g'), val);
+    });
+    return url;
+}
+exports.replacePlaceholders = replacePlaceholders;
 //# sourceMappingURL=query.js.map

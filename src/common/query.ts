@@ -61,3 +61,12 @@ export function parseServQueryParams() {
     }
     return ret;
 }
+
+export function replacePlaceholders(url: string, params: { [key: string]: string }) {
+    Object.keys(params).forEach((key) => {
+        const val = params[key];
+        url = url.replace(new RegExp(`\\$\\{${key}\\}`, 'g') , val);
+    });
+
+    return url;
+}

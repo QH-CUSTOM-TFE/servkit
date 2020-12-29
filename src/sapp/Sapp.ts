@@ -38,6 +38,7 @@ export class SappInfo {
     desc?: string;
     type?: ESappType;
     url: string;
+    html?: string;
     options: {
         create?: ESappCreatePolicy;
         life?: ESappLifePolicy;

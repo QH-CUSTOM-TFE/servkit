@@ -15,7 +15,14 @@ export interface ServScriptLoaderCreatorConfig {
     onDestroy?(loader: ServScriptLoader): void;
     onClosed?(): void;
     onEcho?(loader: ServScriptLoader): void;
+    timeout?: number;
+}
+export interface ServScriptPreloaderCreatorConfig extends ServScriptLoaderCreatorConfig {
+    load?: () => Promise<void> | void;
 }
 export declare class ScriptUtil {
+    static generatePreloadCreator(config: ServScriptPreloaderCreatorConfig): ServEventLoaderChannelConfig['master'] & {
+        preload: () => Promise<void>;
+    };
     static generateCreator(config: ServScriptLoaderCreatorConfig): ServEventLoaderChannelConfig['master'];
 }

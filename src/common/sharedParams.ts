@@ -34,7 +34,7 @@ export function putSharedParams(servkit: Servkit, key: string, params: any) {
     pool[key] = params;
 }
 
-export function getSharedParams(servkit: Servkit, key: string) {
+export function getSharedParams<T = any>(servkit: Servkit, key: string): T | undefined {
     const pool = getParamsPool(servkit);
     return pool ? pool[key] : undefined;
 }
@@ -46,7 +46,7 @@ export function delSharedParams(servkit: Servkit, key: string) {
     }
 }
 
-export function popSharedParams(servkit: Servkit, key: string) {
+export function popSharedParams<T = any>(servkit: Servkit, key: string): T | undefined  {
     const params = getSharedParams(servkit, key);
     if (params !== undefined) {
         delSharedParams(servkit, key);

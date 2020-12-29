@@ -28,6 +28,7 @@ export interface SappSDKStartParams {
 
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
+    bootstrap?: () => Promise<void> | void;
 }
 
 /**

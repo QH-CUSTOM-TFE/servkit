@@ -181,11 +181,13 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             };
         }
         var params = this.resolveQueryParams(options);
+        var url = this.app.info.url;
+        url = query_1.replacePlaceholders(url, { version: this.app.info.version });
         return {
             type: ServChannel_1.EServChannel.WINDOW,
             config: {
                 master: iframe_1.IFrameUtil.generateCreator({
-                    url: query_1.wrapServQueryParams(this.app.info.url, params),
+                    url: query_1.wrapServQueryParams(url, params),
                     id: this.app.uuid,
                     showPolicy: iframe_1.EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',

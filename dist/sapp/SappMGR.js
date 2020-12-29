@@ -120,6 +120,9 @@ var SappMGR = /** @class */ (function () {
         if (oldInfo.options) {
             info.options = Object.assign({}, DEFAULT_APP_INFO_OPTIONS, oldInfo.options);
         }
+        if (info.type === Sapp_1.ESappType.ASYNC_LOAD) {
+            info.options.create = Sapp_1.ESappCreatePolicy.SINGLETON;
+        }
         this.infos[info.id] = info;
         return true;
     };
@@ -149,6 +152,39 @@ var SappMGR = /** @class */ (function () {
                         }
                         _a.label = 2;
                     case 2: return [2 /*return*/, this.getAppInfo(id)];
+                }
+            });
+        });
+    };
+    SappMGR.prototype.preload = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var info, app;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (typeof id === 'object') {
+                            info = id;
+                            id = id.id;
+                        }
+                        app = this.getApp(id);
+                        if (app && app.isStarted) { // Has Create 
+                            return [2 /*return*/];
+                        }
+                        if (info) {
+                            if (!this.addAppInfo(info)) {
+                                throw new Error("[SAPPMGR] App info is invalid");
+                            }
+                        }
+                        return [4 /*yield*/, this.loadAppInfo(id)];
+                    case 1:
+                        info = _a.sent();
+                        if (!info) {
+                            throw new Error("[SAPPMGR] App " + id + " is not exits");
+                        }
+                        if (info.type !== Sapp_1.ESappType.ASYNC_LOAD) {
+                            throw new Error("[SAPPMGR] Only async load app support preload");
+                        }
+                        return [2 /*return*/];
                 }
             });
         });

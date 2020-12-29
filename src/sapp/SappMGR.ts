@@ -36,6 +36,7 @@ export class SappLayoutOptions {
 
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
+    preloadForAsyncLoadApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
@@ -127,6 +128,9 @@ export class SappMGR {
         if (oldInfo.options) {
             info.options = Object.assign({}, DEFAULT_APP_INFO_OPTIONS, oldInfo.options);
         }
+        if (info.type === ESappType.ASYNC_LOAD) {
+            info.options.create = ESappCreatePolicy.SINGLETON;
+        }
         
         this.infos[info.id] = info;
 
@@ -157,6 +161,35 @@ export class SappMGR {
         }
 
         return this.getAppInfo(id);
+    }
+
+    async preload(id: string | SappInfo): Promise<void> {
+        let info: SappInfo | undefined;
+        if (typeof id === 'object') {
+            info = id;
+            id = id.id;
+        }
+
+        const app = this.getApp(id);
+        if (app && app.isStarted) {  // Has Create 
+            return;
+        }
+
+        if (info) {
+            if (!this.addAppInfo(info)) {
+                throw new Error(`[SAPPMGR] App info is invalid`);
+            }
+        }
+
+        info = await this.loadAppInfo(id);
+        if (!info) {
+            throw new Error(`[SAPPMGR] App ${id} is not exits`);
+        }
+
+        if (info.type !== ESappType.ASYNC_LOAD) {
+            throw new Error(`[SAPPMGR] Only async load app support preload`);
+        }
+
     }
 
     async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {

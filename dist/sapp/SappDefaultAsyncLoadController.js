@@ -55,11 +55,35 @@ var ServChannel_1 = require("../session/channel/ServChannel");
 var common_1 = require("../common/common");
 var script_1 = require("../load/script");
 var sharedParams_1 = require("../common/sharedParams");
+var query_1 = require("../common/query");
+var html_1 = require("../load/html");
 var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
     __extends(SappDefaultAsyncLoadController, _super);
     function SappDefaultAsyncLoadController() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    SappDefaultAsyncLoadController.prototype.preload = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var creator;
+            return __generator(this, function (_a) {
+                creator = this.generateLoadCreator(true);
+                this.creator = creator;
+                return [2 /*return*/, creator.preload()];
+            });
+        });
+    };
+    SappDefaultAsyncLoadController.prototype.doConfig = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var ret;
+            return __generator(this, function (_a) {
+                ret = _super.prototype.doConfig.call(this, options);
+                if (options.preloadForAsyncLoadApp) {
+                    this.preload();
+                }
+                return [2 /*return*/, ret];
+            });
+        });
+    };
     SappDefaultAsyncLoadController.prototype.doShow = function () {
         return __awaiter(this, void 0, void 0, function () {
             var layout, element_1, className;
@@ -190,10 +214,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
         return {
             type: ServChannel_1.EServChannel.EVENT_LOADER,
             config: {
-                master: script_1.ScriptUtil.generateCreator({
-                    url: this.app.info.url,
-                    id: this.app.uuid,
-                }),
+                master: this.creator || this.generateLoadCreator(),
             },
         };
     };
@@ -205,6 +226,44 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
             params.container = this.layout.container;
         }
         return params;
+    };
+    SappDefaultAsyncLoadController.prototype.generateLoadCreator = function (preload) {
+        var _this = this;
+        var load = undefined;
+        if (preload) {
+            load = function () {
+                var params = sharedParams_1.getSharedParams(_this.app.getServkit(), _this.app.info.id);
+                if (params && params.bootstrap) {
+                    return params.bootstrap();
+                }
+            };
+        }
+        if (this.app.info.url) {
+            var url = this.app.info.url;
+            url = query_1.replacePlaceholders(url, { version: this.app.info.version });
+            return script_1.ScriptUtil.generatePreloadCreator({
+                url: url,
+                id: this.app.uuid,
+                load: load,
+            });
+        }
+        else {
+            var html = this.app.info.html;
+            html = query_1.replacePlaceholders(html, { version: this.app.info.version });
+            var htmlContent = '';
+            var htmlUrl = '';
+            if (html.startsWith('http') || html.startsWith('/')) {
+                htmlUrl = html;
+            }
+            else {
+                htmlContent = html;
+            }
+            return html_1.HTMLUtil.generatePreloadCreator({
+                htmlContent: htmlContent,
+                htmlUrl: htmlUrl,
+                load: load,
+            });
+        }
     };
     return SappDefaultAsyncLoadController;
 }(SappController_1.SappController));
