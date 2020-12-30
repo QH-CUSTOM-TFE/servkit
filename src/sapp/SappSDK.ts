@@ -18,6 +18,7 @@ import { Deferred, DeferredUtil } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 import { getSharedParams } from '../common/sharedParams';
 import { ESappType } from './Sapp';
+import { SappPreloader } from './SappPreloader';
 
 /**
  * SappSDK启动参数
@@ -28,7 +29,6 @@ export interface SappSDKStartParams {
 
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
-    bootstrap?: () => Promise<void> | void;
 }
 
 /**
@@ -145,6 +145,13 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     asyncLoadAppId?: string;
+
+    /**
+     * ASYNC_LOAD应用的启动函数
+     *
+     * @memberof SappSDKConfig
+     */
+    asyncLoadBootstrap?: (() => Promise<void> | void);
 }
 
 /**
@@ -216,6 +223,24 @@ export class SappSDK {
      */
     setConfig(config: SappSDKConfig) {
         this.config = config;
+
+        try {
+            if (config.asyncLoadAppId) {
+                if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
+                    let bootstrap = config.asyncLoadBootstrap;
+                    if (!bootstrap) {
+                        bootstrap = () => {
+                            this.start();
+                        };
+                    }
+    
+                    SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
+                }
+            }
+        } catch (e) {
+            //
+        }
+        
         return this;
     }
 
@@ -637,4 +662,11 @@ export class SappSDK {
     }
 }
 
-export const sappSDK = new SappSDK();
+let sInstance: SappSDK = undefined!;
+try {
+sInstance = new SappSDK();
+} catch (e) {
+    asyncThrow(e);
+}
+
+export const sappSDK = sInstance;

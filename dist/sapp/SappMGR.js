@@ -40,9 +40,10 @@ exports.sappMGR = exports.SappMGR = exports.SappLayoutOptions = void 0;
 var Sapp_1 = require("./Sapp");
 var Servkit_1 = require("../servkit/Servkit");
 var SappDefaultIFrameController_1 = require("./SappDefaultIFrameController");
-var common_1 = require("../common");
+var common_1 = require("../common/common");
 var SappPlainPage_1 = require("./SappPlainPage");
 var SappDefaultAsyncLoadController_1 = require("./SappDefaultAsyncLoadController");
+var SappPreloader_1 = require("./SappPreloader");
 var DEFAULT_APP_INFO_OPTIONS = {
     create: Sapp_1.ESappCreatePolicy.SINGLETON,
     life: Sapp_1.ESappLifePolicy.MANUAL,
@@ -181,10 +182,7 @@ var SappMGR = /** @class */ (function () {
                         if (!info) {
                             throw new Error("[SAPPMGR] App " + id + " is not exits");
                         }
-                        if (info.type !== Sapp_1.ESappType.ASYNC_LOAD) {
-                            throw new Error("[SAPPMGR] Only async load app support preload");
-                        }
-                        return [2 /*return*/];
+                        return [2 /*return*/, SappPreloader_1.SappPreloader.instance.load(info)];
                 }
             });
         });
@@ -364,5 +362,12 @@ var SappMGR = /** @class */ (function () {
     return SappMGR;
 }());
 exports.SappMGR = SappMGR;
-exports.sappMGR = new SappMGR();
+var sInstance = undefined;
+try {
+    sInstance = new SappMGR();
+}
+catch (e) {
+    common_1.asyncThrow(e);
+}
+exports.sappMGR = sInstance;
 //# sourceMappingURL=SappMGR.js.map

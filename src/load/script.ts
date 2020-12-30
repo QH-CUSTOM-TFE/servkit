@@ -1,13 +1,12 @@
 import { ServEventLoaderChannelConfig, ServEventLoader } from '../session/channel/ServEventLoaderChannel';
-import { DeferredUtil, Deferred } from '../common/Deferred';
+import { LoadScriptContext, LoadUtil } from './load';
 
 export interface ServScriptLoader extends ServEventLoader {
-    script?: HTMLScriptElement;
+    context?: LoadScriptContext;
 }
 
 export interface ServScriptLoaderCreatorConfig {
     url: string | (() => string);
-    id?: string;
 
     onCreateLoader?(loader: ServScriptLoader): void;
     onDestroyLoader?(loader: ServScriptLoader): void;
@@ -24,93 +23,27 @@ export interface ServScriptLoaderCreatorConfig {
     timeout?: number;
 }
 
-export interface ServScriptPreloaderCreatorConfig extends ServScriptLoaderCreatorConfig {
-    load?: () => Promise<void> | void;
-}
-
-interface PreloadContext {
-    script?: HTMLScriptElement;
-    loaded?: Deferred;
-}
-
-const DEFAULT_LOAD_TIMEOUT = 30000;
-
 export class ScriptUtil {
-    static generatePreloadCreator(config: ServScriptPreloaderCreatorConfig)
-        : ServEventLoaderChannelConfig['master'] & { preload: () => Promise<void> } {
-        const context: PreloadContext = {};
-        const preload = async () => {
-            const timeout = config.timeout || DEFAULT_LOAD_TIMEOUT;
-            const deferred = DeferredUtil.create({ timeout });
-            if (config.id) { // Remove the old script element
-                const elOld = document.querySelector(`script[servkit="${config.id}"]`);
-                if (elOld && elOld.parentElement) {
-                    elOld.parentElement.removeChild(elOld);
-                }
-            }
+    static generateCreator(config: ServScriptLoaderCreatorConfig)
+        : ServEventLoaderChannelConfig['master'] {
 
-            const el = document.createElement('script');
-
-            if (config.id) {
-                el.id = config.id;
-                el.setAttribute('servkit', config.id);
-            }
-
-            el.setAttribute('crossorigin', '');
-
-            const url = typeof config.url === 'function' ? config.url() : config.url;
-            el.src = url;
-
-            if (document.head) {
-                document.head.appendChild(el);
-            } else if (document.body) {
-                document.body.appendChild(el);
-            } else {
-                document.appendChild(el);
-            }
-
-            context.script = el;
-            el.onload = () => {
-                deferred.resolve();
-            };
-
-            el.onerror = (e) => {
-                if (el && el.parentElement) {
-                    el.parentElement.removeChild(el);
-                }
-                delete context.script;
-
-                deferred.reject(e);
-            };
-
-            return deferred;
-        };
         return {
-            preload,
             createLoader: (): ServScriptLoader => {
-                const load = async () => {
-                    try {
-                        let d: Promise<void> | undefined = context.loaded;
-                        if (!d) {
-                            d = preload();
-                        }
+                const load = () => {
+                    const context = LoadUtil.loadScript({ url: config.url, timeout: config.timeout });
+                    loader.context = context;
 
-                        await d;
-
-                        if (config.load) {
-                            await config.load();
-                        }
-
+                    return context.loaded.then(() => {
                         if (config.onLoaderLoadSucceed) {
-                            config.onLoaderLoadSucceed(loader);
+                            return config.onLoaderLoadSucceed(loader);
+                        }
+                    }, (error) => {
+                        if (config.onLoaderLoadFailed) {
+                            return config.onLoaderLoadFailed(loader);
                         }
 
-                        loader.script = context.script;
-                    } catch (e) {
-                        if (config.onLoaderLoadFailed) {
-                            config.onLoaderLoadFailed(loader);
-                        }
-                    }
+                        return Promise.reject(error);
+                    });
                 };
 
                 const loader: ServScriptLoader = {
@@ -128,12 +61,11 @@ export class ScriptUtil {
                     config.onDestroyLoader(loader);
                 }
 
-                if (context.script && context.script.parentElement) {
-                    context.script.parentElement.removeChild(context.script);
+                if (loader.context) {
+                    loader.context.clean();
                 }
 
-                delete context.script;
-                delete loader.script;
+                delete loader.context;
             },
             onCreate: config.onCreate,
             onEcho: config.onEcho,
@@ -142,9 +74,5 @@ export class ScriptUtil {
             onDestroy: config.onDestroy,
             onClosed: config.onClosed,
         };
-    }
-
-    static generateCreator(config: ServScriptLoaderCreatorConfig): ServEventLoaderChannelConfig['master'] {
-        return ScriptUtil.generatePreloadCreator(config);
     }
 }

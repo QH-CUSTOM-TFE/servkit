@@ -68,6 +68,7 @@ var SappLifecycle_1 = require("./service/m/SappLifecycle");
 var SappLifecycle_2 = require("./service/s/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
 var AsyncMutex_1 = require("../common/AsyncMutex");
+var query_1 = require("../common/query");
 var ESappCreatePolicy;
 (function (ESappCreatePolicy) {
     ESappCreatePolicy[ESappCreatePolicy["NONE"] = 0] = "NONE";
@@ -410,6 +411,9 @@ var Sapp = /** @class */ (function () {
         this.showHideMutex = new AsyncMutex_1.AsyncMutex();
         this.setConfig({});
     }
+    Sapp.transformContentByInfo = function (content, info) {
+        return query_1.replacePlaceholders(content, { version: info.version });
+    };
     Sapp.prototype.attachController = function (controller) {
         if (this.controller === controller) {
             return false;

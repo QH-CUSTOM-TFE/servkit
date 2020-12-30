@@ -1,10 +1,10 @@
 import { ServEventLoaderChannelConfig, ServEventLoader } from '../session/channel/ServEventLoaderChannel';
+import { LoadScriptContext } from './load';
 export interface ServScriptLoader extends ServEventLoader {
-    script?: HTMLScriptElement;
+    context?: LoadScriptContext;
 }
 export interface ServScriptLoaderCreatorConfig {
     url: string | (() => string);
-    id?: string;
     onCreateLoader?(loader: ServScriptLoader): void;
     onDestroyLoader?(loader: ServScriptLoader): void;
     onLoaderLoadSucceed?(loader: ServScriptLoader): void;
@@ -17,12 +17,6 @@ export interface ServScriptLoaderCreatorConfig {
     onEcho?(loader: ServScriptLoader): void;
     timeout?: number;
 }
-export interface ServScriptPreloaderCreatorConfig extends ServScriptLoaderCreatorConfig {
-    load?: () => Promise<void> | void;
-}
 export declare class ScriptUtil {
-    static generatePreloadCreator(config: ServScriptPreloaderCreatorConfig): ServEventLoaderChannelConfig['master'] & {
-        preload: () => Promise<void>;
-    };
     static generateCreator(config: ServScriptLoaderCreatorConfig): ServEventLoaderChannelConfig['master'];
 }

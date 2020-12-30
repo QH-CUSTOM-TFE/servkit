@@ -13,6 +13,7 @@ import { SappMGR } from './SappMGR';
 import { Deferred, DeferredUtil } from '../common/Deferred';
 import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
+import { replacePlaceholders } from '../common/query';
 
 export enum ESappCreatePolicy {
     NONE = 0,
@@ -81,6 +82,10 @@ export interface SappStartOptions {
 }
 
 export class Sapp {
+    static transformContentByInfo(content: string, info: SappInfo) {
+        return replacePlaceholders(content, { version: info.version });   
+    }
+
     uuid: string;
     info: SappInfo;
 

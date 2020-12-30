@@ -1,29 +1,22 @@
 import { ServEventLoaderChannelConfig, ServEventLoader } from '../session/channel/ServEventLoaderChannel';
-export interface ServHTMLLoader extends ServEventLoader {
-    scripts?: HTMLScriptElement[];
-    styles?: HTMLStyleElement[];
+import { LoadHtmlContext } from './load';
+export interface ServHtmlLoader extends ServEventLoader {
+    context?: LoadHtmlContext;
 }
-export interface ServHTMLLoaderCreatorConfig {
-    htmlContent?: string | (() => Promise<string> | string);
-    htmlUrl?: string | (() => string);
-    onCreateLoader?(loader: ServHTMLLoader): void;
-    onDestroyLoader?(loader: ServHTMLLoader): void;
-    onLoaderLoadSucceed?(loader: ServHTMLLoader): void;
-    onLoaderLoadFailed?(loader: ServHTMLLoader): void;
-    onCreate?(loader: ServHTMLLoader): void;
-    onOpened?(loader: ServHTMLLoader): void;
+export interface ServHtmlLoaderCreatorConfig {
+    html: string | (() => Promise<string> | string);
+    onCreateLoader?(loader: ServHtmlLoader): void;
+    onDestroyLoader?(loader: ServHtmlLoader): void;
+    onLoaderLoadSucceed?(loader: ServHtmlLoader): void;
+    onLoaderLoadFailed?(loader: ServHtmlLoader): void;
+    onCreate?(loader: ServHtmlLoader): void;
+    onOpened?(loader: ServHtmlLoader): void;
     onOpenError?(): void;
-    onDestroy?(loader: ServHTMLLoader): void;
+    onDestroy?(loader: ServHtmlLoader): void;
     onClosed?(): void;
-    onEcho?(loader: ServHTMLLoader): void;
+    onEcho?(loader: ServHtmlLoader): void;
     timeout?: number;
 }
-export interface ServHTMLPreloaderCreatorConfig extends ServHTMLLoaderCreatorConfig {
-    load?: () => Promise<void> | void;
-}
 export declare class HTMLUtil {
-    static generatePreloadCreator(config: ServHTMLPreloaderCreatorConfig): ServEventLoaderChannelConfig['master'] & {
-        preload: () => Promise<void>;
-    };
-    static generateCreator(config: ServHTMLLoaderCreatorConfig): ServEventLoaderChannelConfig['master'];
+    static generateCreator(config: ServHtmlLoaderCreatorConfig): ServEventLoaderChannelConfig['master'];
 }

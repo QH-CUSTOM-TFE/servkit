@@ -50,40 +50,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappDefaultAsyncLoadController = void 0;
+var Sapp_1 = require("./Sapp");
 var SappController_1 = require("./SappController");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var common_1 = require("../common/common");
 var script_1 = require("../load/script");
 var sharedParams_1 = require("../common/sharedParams");
-var query_1 = require("../common/query");
 var html_1 = require("../load/html");
+var SappPreloader_1 = require("./SappPreloader");
 var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
     __extends(SappDefaultAsyncLoadController, _super);
     function SappDefaultAsyncLoadController() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    SappDefaultAsyncLoadController.prototype.preload = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var creator;
-            return __generator(this, function (_a) {
-                creator = this.generateLoadCreator(true);
-                this.creator = creator;
-                return [2 /*return*/, creator.preload()];
-            });
-        });
-    };
-    SappDefaultAsyncLoadController.prototype.doConfig = function (options) {
-        return __awaiter(this, void 0, void 0, function () {
-            var ret;
-            return __generator(this, function (_a) {
-                ret = _super.prototype.doConfig.call(this, options);
-                if (options.preloadForAsyncLoadApp) {
-                    this.preload();
-                }
-                return [2 /*return*/, ret];
-            });
-        });
-    };
     SappDefaultAsyncLoadController.prototype.doShow = function () {
         return __awaiter(this, void 0, void 0, function () {
             var layout, element_1, className;
@@ -214,7 +193,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
         return {
             type: ServChannel_1.EServChannel.EVENT_LOADER,
             config: {
-                master: this.creator || this.generateLoadCreator(),
+                master: this.generateLoadCreator(),
             },
         };
     };
@@ -227,43 +206,94 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
         }
         return params;
     };
-    SappDefaultAsyncLoadController.prototype.generateLoadCreator = function (preload) {
+    SappDefaultAsyncLoadController.prototype.generateLoadCreator = function () {
         var _this = this;
-        var load = undefined;
-        if (preload) {
-            load = function () {
-                var params = sharedParams_1.getSharedParams(_this.app.getServkit(), _this.app.info.id);
-                if (params && params.bootstrap) {
-                    return params.bootstrap();
-                }
-            };
-        }
+        var creator = undefined;
         if (this.app.info.url) {
-            var url = this.app.info.url;
-            url = query_1.replacePlaceholders(url, { version: this.app.info.version });
-            return script_1.ScriptUtil.generatePreloadCreator({
+            var url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+            creator = script_1.ScriptUtil.generateCreator({
                 url: url,
-                id: this.app.uuid,
-                load: load,
             });
         }
         else {
-            var html = this.app.info.html;
-            html = query_1.replacePlaceholders(html, { version: this.app.info.version });
-            var htmlContent = '';
-            var htmlUrl = '';
-            if (html.startsWith('http') || html.startsWith('/')) {
-                htmlUrl = html;
-            }
-            else {
-                htmlContent = html;
-            }
-            return html_1.HTMLUtil.generatePreloadCreator({
-                htmlContent: htmlContent,
-                htmlUrl: htmlUrl,
-                load: load,
+            var html = Sapp_1.Sapp.transformContentByInfo(this.app.info.html, this.app.info);
+            creator = html_1.HTMLUtil.generateCreator({
+                html: html,
             });
         }
+        var preloaded = SappPreloader_1.SappPreloader.instance.getPreloadDeferred(this.app.info.id);
+        if (!preloaded) {
+            return creator;
+        }
+        var dgLoader;
+        return {
+            createLoader: function (channel) {
+                var load = function () { return __awaiter(_this, void 0, void 0, function () {
+                    var e_1, bootstrap;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                _a.trys.push([0, 2, , 3]);
+                                return [4 /*yield*/, preloaded];
+                            case 1:
+                                _a.sent();
+                                return [3 /*break*/, 3];
+                            case 2:
+                                e_1 = _a.sent();
+                                common_1.asyncThrow(e_1);
+                                // Downgrade the normal loader
+                                dgLoader = creator.createLoader(channel);
+                                return [2 /*return*/, dgLoader.load()];
+                            case 3:
+                                bootstrap = SappPreloader_1.SappPreloader.instance.getPreloadBootstrap(this.app.info.id);
+                                if (!bootstrap) {
+                                    throw new Error("[SAPPMGR] Can't find bootstrap for preload app " + this.app.info.id + "; Please ensure the options.asyncLoadAppId is set for this app in sappSDK.setConfig");
+                                }
+                                bootstrap();
+                                return [2 /*return*/];
+                        }
+                    });
+                }); };
+                return {
+                    load: load,
+                };
+            },
+            destroyLoader: function (loader, channel) {
+                if (dgLoader) {
+                    creator.destroyLoader(dgLoader, channel);
+                }
+            },
+            onCreate: function (loader, channel) {
+                if (dgLoader && creator.onCreate) {
+                    creator.onCreate(dgLoader, channel);
+                }
+            },
+            onOpened: function (loader, channel) {
+                if (dgLoader && creator.onOpened) {
+                    creator.onOpened(dgLoader, channel);
+                }
+            },
+            onOpenError: function (channel) {
+                if (dgLoader && creator.onOpenError) {
+                    creator.onOpenError(channel);
+                }
+            },
+            onDestroy: function (loader, channel) {
+                if (dgLoader && creator.onDestroy) {
+                    creator.onDestroy(loader, channel);
+                }
+            },
+            onClosed: function (channel) {
+                if (dgLoader && creator.onClosed) {
+                    creator.onClosed(channel);
+                }
+            },
+            onEcho: function (loader, channel) {
+                if (dgLoader && creator.onEcho) {
+                    creator.onEcho(loader, channel);
+                }
+            },
+        };
     };
     return SappDefaultAsyncLoadController;
 }(SappController_1.SappController));

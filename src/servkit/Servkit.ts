@@ -111,9 +111,12 @@ export class Servkit  {
     }
 }
 
-export const servkit = new Servkit();
+let sInstance: Servkit = undefined!;
 try {
-    servkit.init();
+    sInstance = new Servkit();
+    sInstance.init();
 } catch (e) {
     asyncThrow(e);
 }
+
+export const servkit = sInstance;

@@ -87,11 +87,13 @@ var Servkit = /** @class */ (function () {
     return Servkit;
 }());
 exports.Servkit = Servkit;
-exports.servkit = new Servkit();
+var sInstance = undefined;
 try {
-    exports.servkit.init();
+    sInstance = new Servkit();
+    sInstance.init();
 }
 catch (e) {
     common_1.asyncThrow(e);
 }
+exports.servkit = sInstance;
 //# sourceMappingURL=Servkit.js.map

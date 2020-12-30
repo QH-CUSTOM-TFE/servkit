@@ -6,10 +6,11 @@ import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappSDKAsyncLoadStartParams } from './SappSDK';
 import { ScriptUtil } from '../load/script';
-import { putSharedParams, delSharedParams, getSharedParams } from '../common/sharedParams';
-import { replacePlaceholders } from '../common/query';
+import { putSharedParams, delSharedParams } from '../common/sharedParams';
 import { HTMLUtil } from '../load/html';
 import { ServEventLoaderChannelConfig } from '../session/channel/ServEventLoaderChannel';
+import { SappPreloader } from './SappPreloader';
+import { ServEventLoader } from '../session/channel/ServEventLoaderChannel';
 
 interface LayoutShowHide {
     container: HTMLElement;
@@ -23,21 +24,6 @@ interface LayoutShowHide {
 
 export class SappDefaultAsyncLoadController extends SappController {
     protected layout?: LayoutShowHide;
-    protected creator?: ServEventLoaderChannelConfig['master'];
-
-    async preload() {
-        const creator = this.generateLoadCreator(true);
-        this.creator = creator;
-        return creator.preload();
-    }
-
-    async doConfig(options: SappCreateOptions) {
-        const ret = super.doConfig(options);
-        if (options.preloadForAsyncLoadApp) {
-            this.preload();
-        }
-        return ret;
-    }
 
     async doShow() {
         const layout = this.layout;
@@ -48,7 +34,7 @@ export class SappDefaultAsyncLoadController extends SappController {
             }
 
             const element = layout.container;
-    
+
             if (layout.showClassName) {
                 let className = element.className;
                 if (layout.hideClassName && className.indexOf(layout.hideClassName) >= 0) {
@@ -58,7 +44,7 @@ export class SappDefaultAsyncLoadController extends SappController {
                 }
                 return;
             }
-    
+
             if (layout.showStyle) {
                 Object.keys(layout.showStyle).forEach((key) => {
                     (element.style as any)[key] = (layout.showStyle as any)[key];
@@ -75,9 +61,9 @@ export class SappDefaultAsyncLoadController extends SappController {
                 layout.doHide(this.app);
                 return;
             }
-    
+
             const element = layout.container;
-    
+
             if (layout.hideClassName) {
                 let className = element.className;
                 if (layout.showClassName && className.indexOf(layout.showClassName) >= 0) {
@@ -87,13 +73,13 @@ export class SappDefaultAsyncLoadController extends SappController {
                 }
                 return;
             }
-    
+
             if (layout.hideStyle) {
                 Object.keys(layout.hideStyle).forEach((key) => {
                     (element.style as any)[key] = (layout.hideStyle as any)[key];
                 });
                 return;
-            }    
+            }
         }
     }
 
@@ -140,7 +126,7 @@ export class SappDefaultAsyncLoadController extends SappController {
                 };
             }
 
-            this.layout = { 
+            this.layout = {
                 container,
                 doShow: layout.doShow,
                 doHide: layout.doHide,
@@ -155,7 +141,7 @@ export class SappDefaultAsyncLoadController extends SappController {
                     display: 'block',
                 };
             }
-    
+
             if (!layout.doHide && !layout.hideClassName && !layout.hideStyle) {
                 this.layout.hideStyle = {
                     display: 'none',
@@ -170,7 +156,7 @@ export class SappDefaultAsyncLoadController extends SappController {
         return {
             type: EServChannel.EVENT_LOADER,
             config: {
-                master: this.creator || this.generateLoadCreator(),
+                master: this.generateLoadCreator(),
             },
         };
     }
@@ -187,42 +173,87 @@ export class SappDefaultAsyncLoadController extends SappController {
         return params;
     }
 
-    protected generateLoadCreator(preload?: boolean) {
-        let load: () => Promise<void> | void = undefined!;
-        if (preload) {
-            load = () => {
-                const params = getSharedParams<SappSDKAsyncLoadStartParams>(this.app.getServkit(), this.app.info.id);
-                if (params && params.bootstrap) {
-                    return params.bootstrap();
-                }
-            };
-        }
-
+    protected generateLoadCreator() {
+        let creator = (undefined as ServEventLoaderChannelConfig['master'])!;
         if (this.app.info.url) {
-            let url = this.app.info.url;
-            url = replacePlaceholders(url, { version: this.app.info.version });
-            
-            return ScriptUtil.generatePreloadCreator({
+            const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+            creator = ScriptUtil.generateCreator({
                 url,
-                id: this.app.uuid,
-                load,
-            });
+            })!;
         } else {
-            let html = this.app.info.html!;
-            html = replacePlaceholders(html, { version: this.app.info.version });
-            let htmlContent = '';
-            let htmlUrl = '';
-            if (html.startsWith('http') || html.startsWith('/')) {
-                htmlUrl = html;
-            } else {
-                htmlContent = html;
-            }
-
-            return HTMLUtil.generatePreloadCreator({
-                htmlContent,
-                htmlUrl,
-                load,
-            });
+            const html = Sapp.transformContentByInfo(this.app.info.html!, this.app.info);
+            creator = HTMLUtil.generateCreator({
+                html,
+            })!;
         }
+
+        const preloaded = SappPreloader.instance.getPreloadDeferred(this.app.info.id);
+        if (!preloaded) {
+            return creator;
+        }
+
+        let dgLoader: ServEventLoader;
+        return {
+            createLoader: (channel) => {
+                const load = async () => {
+                    try {
+                        await preloaded;
+                    } catch (e) {
+                        asyncThrow(e);
+
+                        // Downgrade the normal loader
+                        dgLoader = creator.createLoader(channel);
+
+                        return dgLoader.load();
+                    }
+
+                    const bootstrap = SappPreloader.instance.getPreloadBootstrap(this.app.info.id);
+                    if (!bootstrap) {
+                        throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure the options.asyncLoadAppId is set for this app in sappSDK.setConfig`);
+                    }
+
+                    bootstrap();
+                };
+
+                return {
+                    load,
+                };
+            },
+            destroyLoader: (loader, channel) => {
+                if (dgLoader) {
+                    creator.destroyLoader(dgLoader, channel);
+                }
+            },
+            onCreate: (loader, channel) => {
+                if (dgLoader && creator.onCreate) {
+                    creator.onCreate(dgLoader, channel);
+                }
+            },
+            onOpened: (loader, channel) => {
+                if (dgLoader && creator.onOpened) {
+                    creator.onOpened(dgLoader, channel);
+                }
+            },
+            onOpenError: (channel) => {
+                if (dgLoader && creator.onOpenError) {
+                    creator.onOpenError(channel);
+                }
+            },
+            onDestroy: (loader, channel) => {
+                if (dgLoader && creator.onDestroy) {
+                    creator.onDestroy(loader, channel);
+                }
+            },
+            onClosed: (channel) => {
+                if (dgLoader && creator.onClosed) {
+                    creator.onClosed(channel);
+                }
+            },
+            onEcho: (loader, channel) => {
+                if (dgLoader && creator.onEcho) {
+                    creator.onEcho(loader, channel);
+                }
+            },
+        };
     }
 }

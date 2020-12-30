@@ -16,7 +16,6 @@ export interface SappSDKStartParams {
 }
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
-    bootstrap?: () => Promise<void> | void;
 }
 /**
  * SappSDK配置
@@ -117,6 +116,12 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     asyncLoadAppId?: string;
+    /**
+     * ASYNC_LOAD应用的启动函数
+     *
+     * @memberof SappSDKConfig
+     */
+    asyncLoadBootstrap?: (() => Promise<void> | void);
 }
 /**
  * SappSDK start参数项

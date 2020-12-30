@@ -3,10 +3,11 @@ import { SappController } from './SappController';
 import { Servkit, servkit } from '../servkit/Servkit';
 import { SappDefaultIFrameController } from './SappDefaultIFrameController';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
-import { nextUUID } from '../common';
+import { nextUUID, asyncThrow } from '../common/common';
 import { SappPlainPage } from './SappPlainPage';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 import { SappDefaultAsyncLoadController } from './SappDefaultAsyncLoadController';
+import { SappPreloader } from './SappPreloader';
 
 const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
     create: ESappCreatePolicy.SINGLETON,
@@ -36,7 +37,6 @@ export class SappLayoutOptions {
 
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
-    preloadForAsyncLoadApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
@@ -186,10 +186,7 @@ export class SappMGR {
             throw new Error(`[SAPPMGR] App ${id} is not exits`);
         }
 
-        if (info.type !== ESappType.ASYNC_LOAD) {
-            throw new Error(`[SAPPMGR] Only async load app support preload`);
-        }
-
+        return SappPreloader.instance.load(info);
     }
 
     async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {
@@ -345,4 +342,12 @@ export class SappMGR {
     }
 }
 
-export const sappMGR = new SappMGR();
+let sInstance: SappMGR = undefined!;
+
+try {
+    sInstance = new SappMGR();
+} catch (e) {
+    asyncThrow(e);
+}
+
+export const sappMGR = sInstance;

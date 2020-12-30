@@ -50,6 +50,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappDefaultIFrameController = void 0;
+var Sapp_1 = require("./Sapp");
 var SappController_1 = require("./SappController");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var iframe_1 = require("../window/iframe");
@@ -181,8 +182,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             };
         }
         var params = this.resolveQueryParams(options);
-        var url = this.app.info.url;
-        url = query_1.replacePlaceholders(url, { version: this.app.info.version });
+        var url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
         return {
             type: ServChannel_1.EServChannel.WINDOW,
             config: {

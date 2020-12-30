@@ -16,7 +16,6 @@ export declare class SappLayoutOptions {
 }
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
-    preloadForAsyncLoadApp?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);

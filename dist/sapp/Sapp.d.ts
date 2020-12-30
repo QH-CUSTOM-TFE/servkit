@@ -56,6 +56,7 @@ export interface SappStartOptions {
     showData?: any | SappConfig['resolveStartShowData'];
 }
 export declare class Sapp {
+    static transformContentByInfo(content: string, info: SappInfo): string;
     uuid: string;
     info: SappInfo;
     isStarted: boolean;

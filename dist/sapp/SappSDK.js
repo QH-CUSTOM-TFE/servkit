@@ -62,6 +62,7 @@ var Deferred_1 = require("../common/Deferred");
 var SappSDKMock_1 = require("./SappSDKMock");
 var sharedParams_1 = require("../common/sharedParams");
 var Sapp_1 = require("./Sapp");
+var SappPreloader_1 = require("./SappPreloader");
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
@@ -258,7 +259,24 @@ var SappSDK = /** @class */ (function () {
      * @memberof SappSDK
      */
     SappSDK.prototype.setConfig = function (config) {
+        var _this = this;
         this.config = config;
+        try {
+            if (config.asyncLoadAppId) {
+                if (SappPreloader_1.SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
+                    var bootstrap = config.asyncLoadBootstrap;
+                    if (!bootstrap) {
+                        bootstrap = function () {
+                            _this.start();
+                        };
+                    }
+                    SappPreloader_1.SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
+                }
+            }
+        }
+        catch (e) {
+            //
+        }
         return this;
     };
     /**
@@ -611,5 +629,12 @@ var SappSDK = /** @class */ (function () {
     return SappSDK;
 }());
 exports.SappSDK = SappSDK;
-exports.sappSDK = new SappSDK();
+var sInstance = undefined;
+try {
+    sInstance = new SappSDK();
+}
+catch (e) {
+    common_1.asyncThrow(e);
+}
+exports.sappSDK = sInstance;
 //# sourceMappingURL=SappSDK.js.map
