@@ -54,10 +54,9 @@ var Sapp_1 = require("./Sapp");
 var SappController_1 = require("./SappController");
 var ServChannel_1 = require("../session/channel/ServChannel");
 var common_1 = require("../common/common");
-var script_1 = require("../load/script");
 var sharedParams_1 = require("../common/sharedParams");
-var html_1 = require("../load/html");
 var SappPreloader_1 = require("./SappPreloader");
+var load_1 = require("../load/load");
 var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
     __extends(SappDefaultAsyncLoadController, _super);
     function SappDefaultAsyncLoadController() {
@@ -129,7 +128,6 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
     };
     SappDefaultAsyncLoadController.prototype.doCloseAfterAspect = function () {
         _super.prototype.doCloseAfterAspect.call(this);
-        sharedParams_1.delSharedParams(this.app.getServkit(), this.app.info.id);
         delete this.layout;
     };
     SappDefaultAsyncLoadController.prototype.resolveSessionChannelConfig = function (options) {
@@ -188,12 +186,10 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
                 };
             }
         }
-        var params = this.resolveSharedParams(options);
-        sharedParams_1.putSharedParams(this.app.getServkit(), this.app.info.id, params);
         return {
             type: ServChannel_1.EServChannel.EVENT_LOADER,
             config: {
-                master: this.generateLoadCreator(),
+                master: this.generateLoadCreator(options),
             },
         };
     };
@@ -206,50 +202,59 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
         }
         return params;
     };
-    SappDefaultAsyncLoadController.prototype.generateLoadCreator = function () {
+    SappDefaultAsyncLoadController.prototype.generateLoadCreator = function (options) {
         var _this = this;
-        var creator = undefined;
-        if (this.app.info.url) {
-            var url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
-            creator = script_1.ScriptUtil.generateCreator({
-                url: url,
-            });
-        }
-        else {
-            var html = Sapp_1.Sapp.transformContentByInfo(this.app.info.html, this.app.info);
-            creator = html_1.HTMLUtil.generateCreator({
-                html: html,
-            });
-        }
-        var preloaded = SappPreloader_1.SappPreloader.instance.getPreloadDeferred(this.app.info.id);
-        if (!preloaded) {
-            return creator;
-        }
-        var dgLoader;
         return {
             createLoader: function (channel) {
                 var load = function () { return __awaiter(_this, void 0, void 0, function () {
-                    var e_1, bootstrap;
+                    var context, preloaded, needLoad, e_1, url, html, params;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                _a.trys.push([0, 2, , 3]);
-                                return [4 /*yield*/, preloaded];
+                                context = sharedParams_1.getAsyncLoadDeclContext(this.app.info.id);
+                                if (!!context) return [3 /*break*/, 8];
+                                preloaded = SappPreloader_1.SappPreloader.instance.getPreloadDeferred(this.app.info.id);
+                                needLoad = true;
+                                if (!preloaded) return [3 /*break*/, 4];
+                                _a.label = 1;
                             case 1:
-                                _a.sent();
-                                return [3 /*break*/, 3];
+                                _a.trys.push([1, 3, , 4]);
+                                return [4 /*yield*/, preloaded];
                             case 2:
+                                _a.sent();
+                                needLoad = false;
+                                return [3 /*break*/, 4];
+                            case 3:
                                 e_1 = _a.sent();
                                 common_1.asyncThrow(e_1);
-                                // Downgrade the normal loader
-                                dgLoader = creator.createLoader(channel);
-                                return [2 /*return*/, dgLoader.load()];
-                            case 3:
-                                bootstrap = SappPreloader_1.SappPreloader.instance.getPreloadBootstrap(this.app.info.id);
-                                if (!bootstrap) {
-                                    throw new Error("[SAPPMGR] Can't find bootstrap for preload app " + this.app.info.id + "; Please ensure the options.asyncLoadAppId is set for this app in sappSDK.setConfig");
+                                return [3 /*break*/, 4];
+                            case 4:
+                                if (!needLoad) return [3 /*break*/, 8];
+                                if (!this.app.info.url) return [3 /*break*/, 6];
+                                url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+                                return [4 /*yield*/, load_1.LoadUtil.loadScript({
+                                        url: url,
+                                    })];
+                            case 5:
+                                _a.sent();
+                                return [3 /*break*/, 8];
+                            case 6:
+                                html = Sapp_1.Sapp.transformContentByInfo(this.app.info.html, this.app.info);
+                                return [4 /*yield*/, load_1.LoadUtil.loadHtml({
+                                        html: html,
+                                    })];
+                            case 7:
+                                _a.sent();
+                                _a.label = 8;
+                            case 8:
+                                // Re-read the context, if not exist, load fail
+                                context = sharedParams_1.getAsyncLoadDeclContext(this.app.info.id);
+                                if (!context) {
+                                    throw new Error("[SAPPMGR] Can't find bootstrap for preload app " + this.app.info.id + "; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad");
                                 }
-                                bootstrap();
+                                params = this.resolveSharedParams(options);
+                                sharedParams_1.putAsyncLoadStartParams(this.app.info.id, params);
+                                context.bootstrap();
                                 return [2 /*return*/];
                         }
                     });
@@ -259,38 +264,10 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
                 };
             },
             destroyLoader: function (loader, channel) {
-                if (dgLoader) {
-                    creator.destroyLoader(dgLoader, channel);
-                }
-            },
-            onCreate: function (loader, channel) {
-                if (dgLoader && creator.onCreate) {
-                    creator.onCreate(dgLoader, channel);
-                }
-            },
-            onOpened: function (loader, channel) {
-                if (dgLoader && creator.onOpened) {
-                    creator.onOpened(dgLoader, channel);
-                }
-            },
-            onOpenError: function (channel) {
-                if (dgLoader && creator.onOpenError) {
-                    creator.onOpenError(channel);
-                }
-            },
-            onDestroy: function (loader, channel) {
-                if (dgLoader && creator.onDestroy) {
-                    creator.onDestroy(loader, channel);
-                }
-            },
-            onClosed: function (channel) {
-                if (dgLoader && creator.onClosed) {
-                    creator.onClosed(channel);
-                }
-            },
-            onEcho: function (loader, channel) {
-                if (dgLoader && creator.onEcho) {
-                    creator.onEcho(loader, channel);
+                sharedParams_1.delAsyncLoadStartParams(_this.app.info.id);
+                var context = sharedParams_1.getAsyncLoadDeclContext(_this.app.info.id);
+                if (context) {
+                    context.deBootstrap();
                 }
             },
         };

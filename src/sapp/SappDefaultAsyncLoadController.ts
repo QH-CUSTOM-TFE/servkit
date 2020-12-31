@@ -5,12 +5,9 @@ import { EServChannel } from '../session/channel/ServChannel';
 import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappSDKAsyncLoadStartParams } from './SappSDK';
-import { ScriptUtil } from '../load/script';
-import { putSharedParams, delSharedParams } from '../common/sharedParams';
-import { HTMLUtil } from '../load/html';
-import { ServEventLoaderChannelConfig } from '../session/channel/ServEventLoaderChannel';
+import { delAsyncLoadStartParams, putAsyncLoadStartParams, getAsyncLoadDeclContext } from '../common/sharedParams';
 import { SappPreloader } from './SappPreloader';
-import { ServEventLoader } from '../session/channel/ServEventLoaderChannel';
+import { LoadUtil } from '../load/load';
 
 interface LayoutShowHide {
     container: HTMLElement;
@@ -85,7 +82,6 @@ export class SappDefaultAsyncLoadController extends SappController {
 
     protected doCloseAfterAspect() {
         super.doCloseAfterAspect();
-        delSharedParams(this.app.getServkit(), this.app.info.id);
         delete this.layout;
     }
 
@@ -149,14 +145,10 @@ export class SappDefaultAsyncLoadController extends SappController {
             }
         }
 
-        const params = this.resolveSharedParams(options);
-
-        putSharedParams(this.app.getServkit(), this.app.info.id, params);
-
         return {
             type: EServChannel.EVENT_LOADER,
             config: {
-                master: this.generateLoadCreator(),
+                master: this.generateLoadCreator(options),
             },
         };
     }
@@ -173,46 +165,48 @@ export class SappDefaultAsyncLoadController extends SappController {
         return params;
     }
 
-    protected generateLoadCreator() {
-        let creator = (undefined as ServEventLoaderChannelConfig['master'])!;
-        if (this.app.info.url) {
-            const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
-            creator = ScriptUtil.generateCreator({
-                url,
-            })!;
-        } else {
-            const html = Sapp.transformContentByInfo(this.app.info.html!, this.app.info);
-            creator = HTMLUtil.generateCreator({
-                html,
-            })!;
-        }
-
-        const preloaded = SappPreloader.instance.getPreloadDeferred(this.app.info.id);
-        if (!preloaded) {
-            return creator;
-        }
-
-        let dgLoader: ServEventLoader;
+    protected generateLoadCreator(options: SappCreateOptions) {
         return {
             createLoader: (channel) => {
                 const load = async () => {
-                    try {
-                        await preloaded;
-                    } catch (e) {
-                        asyncThrow(e);
+                    let context = getAsyncLoadDeclContext(this.app.info.id);
+                    if (!context) { // Not loaded
+                        const preloaded = SappPreloader.instance.getPreloadDeferred(this.app.info.id);
+                        let needLoad = true;
+                        if (preloaded) { // Has preload ?
+                            try {
+                                await preloaded;
+                                needLoad = false;
+                            } catch (e) {
+                                asyncThrow(e);
+                            }
+                        }
 
-                        // Downgrade the normal loader
-                        dgLoader = creator.createLoader(channel);
-
-                        return dgLoader.load();
+                        if (needLoad) { // Need load by self
+                            if (this.app.info.url) {
+                                const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+                                await LoadUtil.loadScript({
+                                    url,
+                                });
+                            } else {
+                                const html = Sapp.transformContentByInfo(this.app.info.html!, this.app.info);
+                                await LoadUtil.loadHtml({
+                                    html,
+                                });
+                            }
+                        }
                     }
 
-                    const bootstrap = SappPreloader.instance.getPreloadBootstrap(this.app.info.id);
-                    if (!bootstrap) {
-                        throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure the options.asyncLoadAppId is set for this app in sappSDK.setConfig`);
+                    // Re-read the context, if not exist, load fail
+                    context = getAsyncLoadDeclContext(this.app.info.id);
+                    if (!context) {
+                        throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad`);
                     }
 
-                    bootstrap();
+                    const params = this.resolveSharedParams(options);
+                    putAsyncLoadStartParams(this.app.info.id, params);
+        
+                    context.bootstrap();
                 };
 
                 return {
@@ -220,39 +214,11 @@ export class SappDefaultAsyncLoadController extends SappController {
                 };
             },
             destroyLoader: (loader, channel) => {
-                if (dgLoader) {
-                    creator.destroyLoader(dgLoader, channel);
-                }
-            },
-            onCreate: (loader, channel) => {
-                if (dgLoader && creator.onCreate) {
-                    creator.onCreate(dgLoader, channel);
-                }
-            },
-            onOpened: (loader, channel) => {
-                if (dgLoader && creator.onOpened) {
-                    creator.onOpened(dgLoader, channel);
-                }
-            },
-            onOpenError: (channel) => {
-                if (dgLoader && creator.onOpenError) {
-                    creator.onOpenError(channel);
-                }
-            },
-            onDestroy: (loader, channel) => {
-                if (dgLoader && creator.onDestroy) {
-                    creator.onDestroy(loader, channel);
-                }
-            },
-            onClosed: (channel) => {
-                if (dgLoader && creator.onClosed) {
-                    creator.onClosed(channel);
-                }
-            },
-            onEcho: (loader, channel) => {
-                if (dgLoader && creator.onEcho) {
-                    creator.onEcho(loader, channel);
-                }
+                delAsyncLoadStartParams(this.app.info.id);
+                const context = getAsyncLoadDeclContext(this.app.info.id);
+                if (context) {
+                    context.deBootstrap();
+                }  
             },
         };
     }

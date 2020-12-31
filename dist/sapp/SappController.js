@@ -177,7 +177,8 @@ var SappController = /** @class */ (function () {
     };
     SappController.prototype.resolveServiceServerConfig = function (options) {
         return {
-            serviceRefer: /.*/,
+            service: options.services ? { services: options.services } : undefined,
+            serviceRefer: options.serviceRefer || /.*/,
         };
     };
     SappController.prototype.resolveSessionConfig = function (options) {

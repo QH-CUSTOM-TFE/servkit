@@ -49,7 +49,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sappSDK = exports.SappSDK = void 0;
+exports.sappSDK = exports.SappAsyncLoadSDK = exports.SappSDK = void 0;
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var common_1 = require("../common/common");
 var query_1 = require("../common/query");
@@ -62,7 +62,6 @@ var Deferred_1 = require("../common/Deferred");
 var SappSDKMock_1 = require("./SappSDKMock");
 var sharedParams_1 = require("../common/sharedParams");
 var Sapp_1 = require("./Sapp");
-var SappPreloader_1 = require("./SappPreloader");
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
@@ -259,24 +258,22 @@ var SappSDK = /** @class */ (function () {
      * @memberof SappSDK
      */
     SappSDK.prototype.setConfig = function (config) {
-        var _this = this;
         this.config = config;
-        try {
-            if (config.asyncLoadAppId) {
-                if (SappPreloader_1.SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
-                    var bootstrap = config.asyncLoadBootstrap;
-                    if (!bootstrap) {
-                        bootstrap = function () {
-                            _this.start();
-                        };
-                    }
-                    SappPreloader_1.SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
-                }
-            }
-        }
-        catch (e) {
-            //
-        }
+        // try {
+        //     if (config.asyncLoadAppId) {
+        //         if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
+        //             let bootstrap = config.asyncLoadBootstrap;
+        //             if (!bootstrap) {
+        //                 bootstrap = () => {
+        //                     this.start();
+        //                 };
+        //             }
+        //             SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
+        //         }
+        //     }
+        // } catch (e) {
+        //     //
+        // }
         return this;
     };
     /**
@@ -395,7 +392,7 @@ var SappSDK = /** @class */ (function () {
     };
     SappSDK.prototype.initTerminal = function (options, params) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl, authInfo, _d, service, e_2;
+            var config, terminalConfig, _a, _b, services, service, _c, newTerminalConfig, self, SappLifecycleImpl, authInfo, _d, service, e_2;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -419,6 +416,24 @@ var SappSDK = /** @class */ (function () {
                         _b.server = _e.sent();
                         _e.label = 4;
                     case 4:
+                        if (!terminalConfig.server) {
+                            terminalConfig.server = {};
+                        }
+                        services = config.services;
+                        if (services && terminalConfig.server.service && terminalConfig.server.service.services) {
+                            services = services.concat(terminalConfig.server.service.services);
+                        }
+                        if (services) {
+                            service = terminalConfig.server.service || {};
+                            service.services = services;
+                            terminalConfig.server.service = service;
+                        }
+                        if (config.serviceRefer) {
+                            terminalConfig.server.serviceRefer = config.serviceRefer;
+                        }
+                        if (!terminalConfig.server.serviceRefer) {
+                            terminalConfig.server.serviceRefer = /.*/;
+                        }
                         if (!config.resolveSessionConfig) return [3 /*break*/, 6];
                         _c = terminalConfig;
                         return [4 /*yield*/, config.resolveSessionConfig(this)];
@@ -604,31 +619,47 @@ var SappSDK = /** @class */ (function () {
         });
     };
     SappSDK.prototype.getAppType = function () {
-        if (this.config.asyncLoadAppId) {
-            return Sapp_1.ESappType.ASYNC_LOAD;
-        }
         return Sapp_1.ESappType.IFRAME;
     };
     SappSDK.prototype.getDefaultStartParams = function () {
-        var _this = this;
-        var resolveParams = undefined;
-        if (this.getAppType() === Sapp_1.ESappType.ASYNC_LOAD) { // For async load app
-            if (!this.config.asyncLoadAppId) {
-                throw new Error('[SAPPSDK] asyncLoadAppId must be provided for ESappType.ASYNC_LOAD app');
+        return query_1.parseServQueryParams();
+    };
+    SappSDK.declAsyncLoad = function (appId, params) {
+        var sdk = undefined;
+        var bootstrap = function () {
+            if (sdk) {
+                common_1.asyncThrow(new Error("[SAPPSDK] sdk is invalid for async load app " + appId + " on bootstrap"));
             }
-            resolveParams = function () { return sharedParams_1.getSharedParams(_this.getServkit(), _this.config.asyncLoadAppId); };
-        }
-        else {
-            resolveParams = query_1.parseServQueryParams; // For iframe app
-        }
-        if (!resolveParams) {
-            return undefined;
-        }
-        return resolveParams();
+            sdk = new SappAsyncLoadSDK(appId);
+            params.bootstrap(sdk);
+        };
+        var deBootstrap = function () {
+            sdk = undefined;
+        };
+        sharedParams_1.putAsyncLoadDeclContext(appId, {
+            bootstrap: bootstrap,
+            deBootstrap: deBootstrap,
+        });
     };
     return SappSDK;
 }());
 exports.SappSDK = SappSDK;
+var SappAsyncLoadSDK = /** @class */ (function (_super) {
+    __extends(SappAsyncLoadSDK, _super);
+    function SappAsyncLoadSDK(appId) {
+        var _this = _super.call(this) || this;
+        _this.appId = appId;
+        return _this;
+    }
+    SappAsyncLoadSDK.prototype.getAppType = function () {
+        return Sapp_1.ESappType.ASYNC_LOAD;
+    };
+    SappAsyncLoadSDK.prototype.getDefaultStartParams = function () {
+        return sharedParams_1.getAsyncLoadStartParams(this.appId);
+    };
+    return SappAsyncLoadSDK;
+}(SappSDK));
+exports.SappAsyncLoadSDK = SappAsyncLoadSDK;
 var sInstance = undefined;
 try {
     sInstance = new SappSDK();

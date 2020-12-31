@@ -4,7 +4,6 @@ import { asyncThrow } from '../common/common';
 
 export interface SappPreloadContext {
     loadContext: LoadContext;
-    bootstrap?: () => (Promise<void> | void);
 }
 
 let sInstance: SappPreloader;
@@ -30,25 +29,6 @@ export class SappPreloader {
         }
         
         return context ? context.loadContext.loaded : undefined;
-    }
-
-    getPreloadBootstrap(id: string) {
-        const context = this.contexts[id];
-        return context ? context.bootstrap : undefined;
-    }
-
-    setPreloadBootstrap(id: string, bootstrap: () => (Promise<void> | void)) {
-        const context = this.contexts[id];
-        if (!context) {
-            asyncThrow(new Error(`[SAPPMGR] Preload context is not existed for ${id}`));
-            return;
-        }
-
-        if (context.bootstrap) {
-            asyncThrow(new Error(`[SAPPMGR] Bootstrap conflict for ${id}`));
-        }
-
-        context.bootstrap = bootstrap;
     }
 
     load(info: SappInfo) {

@@ -225,13 +225,16 @@ var ServServiceManager = /** @class */ (function () {
         try {
             var meta = decl.meta();
             if (!meta) {
+                common_1.asyncThrowMessage("Service meta is undefined");
                 return false;
             }
             if (impl.meta() !== meta) {
+                common_1.asyncThrowMessage(meta.id + " impl meta is not equal to decl, Maybe you have mutiple decl npm package");
                 return false;
             }
             var info = this.serviceInfos[meta.id];
             if (info) {
+                common_1.asyncThrowMessage(meta.id + " has added");
                 return false;
             }
             info = {

@@ -16,9 +16,9 @@ import {
 } from './service/m/SappLifecycle';
 import { Deferred, DeferredUtil } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
-import { getSharedParams } from '../common/sharedParams';
+import { getAsyncLoadStartParams, putAsyncLoadDeclContext } from '../common/sharedParams';
 import { ESappType } from './Sapp';
-import { SappPreloader } from './SappPreloader';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
 
 /**
  * SappSDK启动参数
@@ -29,6 +29,16 @@ export interface SappSDKStartParams {
 
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
+}
+
+export interface SappSDKAsyncLoadDeclParams {
+    bootstrap: (sdk: SappAsyncLoadSDK) => void;
+    deBootstrap?: (sdk: SappAsyncLoadSDK) => void;
+}
+
+export interface SappSDKAsyncLoadDeclContext {
+    bootstrap: () => void;
+    deBootstrap: () => void;
 }
 
 /**
@@ -46,6 +56,10 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
+
+    services?: ServServiceConfig['services'];
+
+    serviceRefer?: ServServiceReferPattern;
 
     /**
      * SappSDK.start() 前置回调
@@ -137,21 +151,6 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
-
-    /**
-     * ESappType.ASYNC_LOAD类型APP的id，如果指定该属性后，该应用则认定为ESappType.ASYNC_LOAD
-     *
-     * @type {string}
-     * @memberof SappSDKConfig
-     */
-    asyncLoadAppId?: string;
-
-    /**
-     * ASYNC_LOAD应用的启动函数
-     *
-     * @memberof SappSDKConfig
-     */
-    asyncLoadBootstrap?: (() => Promise<void> | void);
 }
 
 /**
@@ -224,22 +223,22 @@ export class SappSDK {
     setConfig(config: SappSDKConfig) {
         this.config = config;
 
-        try {
-            if (config.asyncLoadAppId) {
-                if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
-                    let bootstrap = config.asyncLoadBootstrap;
-                    if (!bootstrap) {
-                        bootstrap = () => {
-                            this.start();
-                        };
-                    }
+        // try {
+        //     if (config.asyncLoadAppId) {
+        //         if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
+        //             let bootstrap = config.asyncLoadBootstrap;
+        //             if (!bootstrap) {
+        //                 bootstrap = () => {
+        //                     this.start();
+        //                 };
+        //             }
     
-                    SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
-                }
-            }
-        } catch (e) {
-            //
-        }
+        //             SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
+        //         }
+        //     }
+        // } catch (e) {
+        //     //
+        // }
         
         return this;
     }
@@ -510,8 +509,33 @@ export class SappSDK {
             terminalConfig.client = await config.resolveServiceClientConfig(this);
         }
 
-        if (config.resolveServiceServerConfig) {
-            terminalConfig.server = await config.resolveServiceServerConfig(this);
+        // Service server config
+        {
+            if (config.resolveServiceServerConfig) {
+                terminalConfig.server = await config.resolveServiceServerConfig(this);
+            }
+
+            if (!terminalConfig.server) {
+                terminalConfig.server = {};
+            }
+
+            let services = config.services;
+            if (services && terminalConfig.server.service && terminalConfig.server.service.services) {
+                services = services.concat(terminalConfig.server.service.services);
+            }
+            if (services) {
+                const service = terminalConfig.server.service || {};
+                service.services = services;
+                terminalConfig.server.service = service;
+            }
+
+            if (config.serviceRefer) {
+                terminalConfig.server.serviceRefer = config.serviceRefer;
+            }
+
+            if (!terminalConfig.server.serviceRefer) {
+                terminalConfig.server.serviceRefer = /.*/;
+            }
         }
 
         if (config.resolveSessionConfig) {
@@ -636,29 +660,49 @@ export class SappSDK {
     }
 
     getAppType(): ESappType {
-        if (this.config.asyncLoadAppId) {
-            return ESappType.ASYNC_LOAD;
-        }
-
         return ESappType.IFRAME;
     }
 
-    getDefaultStartParams<T extends SappSDKStartParams = SappSDKStartParams>(): T | undefined {
-        let resolveParams: () => T | undefined = undefined!;
-        if (this.getAppType() === ESappType.ASYNC_LOAD) {  // For async load app
-            if (!this.config.asyncLoadAppId) {
-                throw new Error('[SAPPSDK] asyncLoadAppId must be provided for ESappType.ASYNC_LOAD app');
+    getDefaultStartParams(): SappSDKStartParams | undefined {
+        return parseServQueryParams();
+    }
+
+    static declAsyncLoad(appId: string, params: SappSDKAsyncLoadDeclParams) {
+        let sdk: SappAsyncLoadSDK = undefined!;
+
+        const bootstrap = () => {
+            if (sdk) {
+                asyncThrow(new Error(`[SAPPSDK] sdk is invalid for async load app ${appId} on bootstrap`));
             }
-            resolveParams = () => getSharedParams(this.getServkit(), this.config.asyncLoadAppId!);
-        } else {
-            resolveParams = parseServQueryParams;   // For iframe app
-        }
+            sdk = new SappAsyncLoadSDK(appId);
+            params.bootstrap(sdk);
+        };
 
-        if (!resolveParams) {
-            return undefined;
-        }
+        const deBootstrap = () => {
+            sdk = undefined!;
+        };
 
-        return resolveParams();
+        putAsyncLoadDeclContext(appId, {
+            bootstrap,
+            deBootstrap,
+        });
+    }
+}
+
+export class SappAsyncLoadSDK extends SappSDK {
+    protected appId: string;
+    
+    constructor(appId: string) {
+        super();
+        this.appId = appId;
+    }
+
+    getAppType(): ESappType {
+        return ESappType.ASYNC_LOAD;
+    }
+
+    getDefaultStartParams() {
+        return getAsyncLoadStartParams(this.appId);
     }
 }
 

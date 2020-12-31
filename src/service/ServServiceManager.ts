@@ -1,4 +1,4 @@
-import { asyncThrow } from '../common/common';
+import { asyncThrow, asyncThrowMessage } from '../common/common';
 import { ServEventerManager, ServEventerOnEmitListener } from './event/ServEventerManager';
 import { EServImplInject, ServService, ServServiceMeta, util } from './ServService';
 
@@ -283,15 +283,19 @@ export class ServServiceManager {
         try {
             const meta = decl.meta();
             if (!meta) {
+                asyncThrowMessage(`Service meta is undefined`);
                 return false;
             }
 
             if (impl.meta() !== meta) {
+                asyncThrowMessage(`${meta.id} impl meta is not equal to decl, Maybe you have mutiple decl npm package`);
                 return false;
             }
 
             let info = this.serviceInfos[meta.id];
             if (info) {
+                asyncThrowMessage(`${meta.id} has added`);
+                
                 return false;
             }
 

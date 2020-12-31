@@ -1,4 +1,5 @@
-import { Servkit } from '../servkit/Servkit';
+import { Servkit, servkit as defaultServkit } from '../servkit/Servkit';
+import { SappSDKAsyncLoadStartParams, SappSDKAsyncLoadDeclContext } from '../sapp/SappSDK';
 const target = Date.prototype.getTime as any;
 
 interface ShareParams {
@@ -13,7 +14,7 @@ if (!sharedParams) {
 
 const DEFAULT_SERVKIT_NAMESPACE = '__DEFAULT_SERVKIT__';
 
-export function getParamsPool(servkit: Servkit, create?: boolean) {
+function getParamsPool(servkit: Servkit, create?: boolean) {
     const namesapce = servkit.namespace || DEFAULT_SERVKIT_NAMESPACE;
     let pool = sharedParams[namesapce];
     if (!pool && create) {
@@ -24,7 +25,7 @@ export function getParamsPool(servkit: Servkit, create?: boolean) {
     return pool;
 }
 
-export function delParamsPool(servkit: Servkit, create?: boolean) {
+function delParamsPool(servkit: Servkit, create?: boolean) {
     const namesapce = servkit.namespace || DEFAULT_SERVKIT_NAMESPACE;
     delete sharedParams[namesapce];
 }
@@ -53,4 +54,36 @@ export function popSharedParams<T = any>(servkit: Servkit, key: string): T | und
     }
 
     return params;
+}
+
+function startParamsKey(id: string) {
+    return `${id}-startParams`;
+}
+
+function declContextKey(id: string) {
+    return `${id}-declContext`;
+}
+
+export function putAsyncLoadStartParams(appId: string, params: SappSDKAsyncLoadStartParams) {
+    return putSharedParams(defaultServkit, startParamsKey(appId), params);
+}
+
+export function getAsyncLoadStartParams(appId: string) {
+    return getSharedParams<SappSDKAsyncLoadStartParams>(defaultServkit, startParamsKey(appId));
+}
+
+export function delAsyncLoadStartParams(appId: string) {
+    return delSharedParams(defaultServkit, startParamsKey(appId));
+}
+
+export function putAsyncLoadDeclContext(appId: string, context: SappSDKAsyncLoadDeclContext) {
+    return putSharedParams(defaultServkit, declContextKey(appId), context);
+}
+
+export function getAsyncLoadDeclContext(appId: string) {
+    return getSharedParams<SappSDKAsyncLoadDeclContext>(defaultServkit, declContextKey(appId));
+}
+
+export function delAsyncLoadDeclContext(appId: string) {
+    return delSharedParams(defaultServkit, declContextKey(appId));
 }

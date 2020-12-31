@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappPreloader = void 0;
 var load_1 = require("../load/load");
 var Sapp_1 = require("./Sapp");
-var common_1 = require("../common/common");
 var sInstance;
 var SappPreloader = /** @class */ (function () {
     function SappPreloader() {
@@ -25,21 +24,6 @@ var SappPreloader = /** @class */ (function () {
             return;
         }
         return context ? context.loadContext.loaded : undefined;
-    };
-    SappPreloader.prototype.getPreloadBootstrap = function (id) {
-        var context = this.contexts[id];
-        return context ? context.bootstrap : undefined;
-    };
-    SappPreloader.prototype.setPreloadBootstrap = function (id, bootstrap) {
-        var context = this.contexts[id];
-        if (!context) {
-            common_1.asyncThrow(new Error("[SAPPMGR] Preload context is not existed for " + id));
-            return;
-        }
-        if (context.bootstrap) {
-            common_1.asyncThrow(new Error("[SAPPMGR] Bootstrap conflict for " + id));
-        }
-        context.bootstrap = bootstrap;
     };
     SappPreloader.prototype.load = function (info) {
         var _this = this;

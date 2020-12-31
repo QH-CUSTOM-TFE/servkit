@@ -8,6 +8,7 @@ import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthPar
 import { Deferred } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 import { ESappType } from './Sapp';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
 /**
  * SappSDK启动参数
  */
@@ -16,6 +17,14 @@ export interface SappSDKStartParams {
 }
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
+}
+export interface SappSDKAsyncLoadDeclParams {
+    bootstrap: (sdk: SappAsyncLoadSDK) => void;
+    deBootstrap?: (sdk: SappAsyncLoadSDK) => void;
+}
+export interface SappSDKAsyncLoadDeclContext {
+    bootstrap: () => void;
+    deBootstrap: () => void;
 }
 /**
  * SappSDK配置
@@ -31,6 +40,8 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
+    services?: ServServiceConfig['services'];
+    serviceRefer?: ServServiceReferPattern;
     /**
      * SappSDK.start() 前置回调
      * @param sdk
@@ -109,19 +120,6 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
-    /**
-     * ESappType.ASYNC_LOAD类型APP的id，如果指定该属性后，该应用则认定为ESappType.ASYNC_LOAD
-     *
-     * @type {string}
-     * @memberof SappSDKConfig
-     */
-    asyncLoadAppId?: string;
-    /**
-     * ASYNC_LOAD应用的启动函数
-     *
-     * @memberof SappSDKConfig
-     */
-    asyncLoadBootstrap?: (() => Promise<void> | void);
 }
 /**
  * SappSDK start参数项
@@ -268,6 +266,13 @@ export declare class SappSDK {
     protected onHide(params: SappHideParams): Promise<boolean | void>;
     protected onClose(): Promise<void>;
     getAppType(): ESappType;
-    getDefaultStartParams<T extends SappSDKStartParams = SappSDKStartParams>(): T | undefined;
+    getDefaultStartParams(): SappSDKStartParams | undefined;
+    static declAsyncLoad(appId: string, params: SappSDKAsyncLoadDeclParams): void;
+}
+export declare class SappAsyncLoadSDK extends SappSDK {
+    protected appId: string;
+    constructor(appId: string);
+    getAppType(): ESappType;
+    getDefaultStartParams(): SappSDKAsyncLoadStartParams | undefined;
 }
 export declare const sappSDK: SappSDK;

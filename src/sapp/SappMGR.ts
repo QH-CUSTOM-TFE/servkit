@@ -8,6 +8,7 @@ import { SappPlainPage } from './SappPlainPage';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 import { SappDefaultAsyncLoadController } from './SappDefaultAsyncLoadController';
 import { SappPreloader } from './SappPreloader';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
 
 const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
     create: ESappCreatePolicy.SINGLETON,
@@ -41,6 +42,8 @@ export interface SappCreateOptions {
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
     startShowData?: any | ((app: Sapp) => any);
+    services?: ServServiceConfig['services'];
+    serviceRefer?: ServServiceReferPattern;
 }
 
 export interface SappMGRConfig {

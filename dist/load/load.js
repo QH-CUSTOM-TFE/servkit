@@ -40,6 +40,7 @@ exports.LoadUtil = void 0;
 var Deferred_1 = require("../common/Deferred");
 var utils_1 = require("./importHtml/utils");
 var processTpl_1 = require("./importHtml/processTpl");
+var common_1 = require("../common/common");
 var DEFAULT_LOAD_TIMEOUT = 60000;
 var LoadUtil = /** @class */ (function () {
     function LoadUtil() {
@@ -153,9 +154,24 @@ var LoadUtil = /** @class */ (function () {
                             context.scripts.push(el);
                             waits.push(deferred);
                         });
+                        context.clean = function () {
+                            context.styles.forEach(function (item) {
+                                if (item.parentElement) {
+                                    item.parentElement.removeChild(item);
+                                }
+                            });
+                            context.scripts.forEach(function (item) {
+                                if (item.parentElement) {
+                                    item.parentElement.removeChild(item);
+                                }
+                            });
+                            context.styles = [];
+                            context.scripts = [];
+                        };
                         return [4 /*yield*/, Promise.all(waits).then(function () {
                                 context.loaded.resolve();
                             }, function (error) {
+                                context.clean();
                                 context.loaded.reject(error);
                             })];
                     case 7:
@@ -172,24 +188,8 @@ var LoadUtil = /** @class */ (function () {
             scripts: [],
             styles: [],
             loaded: loaded,
-            clean: function () {
-                context.styles.forEach(function (item) {
-                    if (item.parentElement) {
-                        item.parentElement.removeChild(item);
-                    }
-                });
-                context.scripts.forEach(function (item) {
-                    if (item.parentElement) {
-                        item.parentElement.removeChild(item);
-                    }
-                });
-                context.styles = [];
-                context.scripts = [];
-            },
+            clean: common_1.noop,
         };
-        context.loaded.catch(function () {
-            context.clean();
-        });
         LoadUtil._loadHtml(params.html, context);
         return context;
     };
@@ -213,10 +213,17 @@ var LoadUtil = /** @class */ (function () {
                     document.appendChild(el);
                 }
                 context.script = el;
+                context.clean = function () {
+                    if (context.script && context.script.parentElement) {
+                        context.script.parentElement.removeChild(context.script);
+                    }
+                    delete context.script;
+                };
                 el.onload = function () {
                     context.loaded.resolve();
                 };
                 el.onerror = function (error) {
+                    context.clean();
                     context.loaded.reject(error);
                 };
                 return [2 /*return*/];
@@ -228,16 +235,8 @@ var LoadUtil = /** @class */ (function () {
         var loaded = Deferred_1.DeferredUtil.create({ timeout: timeout });
         var context = {
             loaded: loaded,
-            clean: function () {
-                if (context.script && context.script.parentElement) {
-                    context.script.parentElement.removeChild(context.script);
-                }
-                delete context.script;
-            },
+            clean: common_1.noop,
         };
-        context.loaded.catch(function () {
-            context.clean();
-        });
         LoadUtil._loadScript(params.url, context);
         return context;
     };

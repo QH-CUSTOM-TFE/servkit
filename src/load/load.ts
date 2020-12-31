@@ -1,6 +1,8 @@
 import { Deferred, DeferredUtil } from '../common/Deferred';
 import { readResAsString, defaultGetPublicPath, isInlineCode } from './importHtml/utils';
 import processTpl from './importHtml/processTpl';
+import { noop } from '../common/common';
+
 export interface LoadContext {
     loaded: Deferred;
     clean: () => void;
@@ -147,9 +149,26 @@ export class LoadUtil {
             waits.push(deferred);
         });
 
+        context.clean = () => {
+            context.styles.forEach((item) => {
+                if (item.parentElement) {
+                    item.parentElement.removeChild(item);
+                }
+            });
+            context.scripts.forEach((item) => {
+                if (item.parentElement) {
+                    item.parentElement.removeChild(item);
+                }
+            });
+
+            context.styles = [];
+            context.scripts = [];
+        };
+
         await Promise.all(waits).then(() => {
             context.loaded.resolve();
         }, (error) => {
+            context.clean();
             context.loaded.reject(error);
         });
     }
@@ -162,26 +181,8 @@ export class LoadUtil {
             scripts: [],
             styles: [],
             loaded,
-            clean: () => {
-                context.styles.forEach((item) => {
-                    if (item.parentElement) {
-                        item.parentElement.removeChild(item);
-                    }
-                });
-                context.scripts.forEach((item) => {
-                    if (item.parentElement) {
-                        item.parentElement.removeChild(item);
-                    }
-                });
-
-                context.styles = [];
-                context.scripts = [];
-            },
+            clean: noop,
         };
-
-        context.loaded.catch(() => {
-            context.clean();
-        });
 
         LoadUtil._loadHtml(params.html, context);
 
@@ -207,11 +208,20 @@ export class LoadUtil {
         }
 
         context.script = el;
+        context.clean = () => {
+            if (context.script && context.script.parentElement) {
+                    context.script.parentElement.removeChild(context.script);
+            }
+
+            delete context.script;
+        };
+
         el.onload = () => {
             context.loaded.resolve();
         };
 
         el.onerror = (error) => {
+            context.clean();
             context.loaded.reject(error);
         };
     }
@@ -222,18 +232,8 @@ export class LoadUtil {
             
         const context: LoadScriptContext = {
             loaded,
-            clean: () => {
-                if (context.script && context.script.parentElement) {
-                        context.script.parentElement.removeChild(context.script);
-                }
-
-                delete context.script;
-            },
+            clean: noop,
         };
-
-        context.loaded.catch(() => {
-            context.clean();
-        });
 
         LoadUtil._loadScript(params.url, context);
 

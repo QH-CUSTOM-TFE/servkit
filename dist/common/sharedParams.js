@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.popSharedParams = exports.delSharedParams = exports.getSharedParams = exports.putSharedParams = exports.delParamsPool = exports.getParamsPool = void 0;
+exports.delAsyncLoadDeclContext = exports.getAsyncLoadDeclContext = exports.putAsyncLoadDeclContext = exports.delAsyncLoadStartParams = exports.getAsyncLoadStartParams = exports.putAsyncLoadStartParams = exports.popSharedParams = exports.delSharedParams = exports.getSharedParams = exports.putSharedParams = void 0;
+var Servkit_1 = require("../servkit/Servkit");
 var target = Date.prototype.getTime;
 var sharedParams = target.__$servkit_sharedParams;
 if (!sharedParams) {
@@ -17,12 +18,10 @@ function getParamsPool(servkit, create) {
     }
     return pool;
 }
-exports.getParamsPool = getParamsPool;
 function delParamsPool(servkit, create) {
     var namesapce = servkit.namespace || DEFAULT_SERVKIT_NAMESPACE;
     delete sharedParams[namesapce];
 }
-exports.delParamsPool = delParamsPool;
 function putSharedParams(servkit, key, params) {
     var pool = getParamsPool(servkit, true);
     pool[key] = params;
@@ -48,4 +47,34 @@ function popSharedParams(servkit, key) {
     return params;
 }
 exports.popSharedParams = popSharedParams;
+function startParamsKey(id) {
+    return id + "-startParams";
+}
+function declContextKey(id) {
+    return id + "-declContext";
+}
+function putAsyncLoadStartParams(appId, params) {
+    return putSharedParams(Servkit_1.servkit, startParamsKey(appId), params);
+}
+exports.putAsyncLoadStartParams = putAsyncLoadStartParams;
+function getAsyncLoadStartParams(appId) {
+    return getSharedParams(Servkit_1.servkit, startParamsKey(appId));
+}
+exports.getAsyncLoadStartParams = getAsyncLoadStartParams;
+function delAsyncLoadStartParams(appId) {
+    return delSharedParams(Servkit_1.servkit, startParamsKey(appId));
+}
+exports.delAsyncLoadStartParams = delAsyncLoadStartParams;
+function putAsyncLoadDeclContext(appId, context) {
+    return putSharedParams(Servkit_1.servkit, declContextKey(appId), context);
+}
+exports.putAsyncLoadDeclContext = putAsyncLoadDeclContext;
+function getAsyncLoadDeclContext(appId) {
+    return getSharedParams(Servkit_1.servkit, declContextKey(appId));
+}
+exports.getAsyncLoadDeclContext = getAsyncLoadDeclContext;
+function delAsyncLoadDeclContext(appId) {
+    return delSharedParams(Servkit_1.servkit, declContextKey(appId));
+}
+exports.delAsyncLoadDeclContext = delAsyncLoadDeclContext;
 //# sourceMappingURL=sharedParams.js.map

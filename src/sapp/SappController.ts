@@ -140,7 +140,8 @@ export abstract class SappController {
 
     protected resolveServiceServerConfig(options: SappCreateOptions): ServServiceServerConfig {
         return {
-            serviceRefer: /.*/,
+            service: options.services ? { services: options.services } : undefined,
+            serviceRefer: options.serviceRefer || /.*/,
         };
     }
 

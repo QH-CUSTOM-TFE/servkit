@@ -3,6 +3,7 @@ import { SappController } from './SappController';
 import { Servkit } from '../servkit/Servkit';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
 export declare class SappLayoutOptions {
     container?: string | HTMLElement;
     className?: string;
@@ -20,6 +21,8 @@ export interface SappCreateOptions {
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
     startShowData?: any | ((app: Sapp) => any);
+    services?: ServServiceConfig['services'];
+    serviceRefer?: ServServiceReferPattern;
 }
 export interface SappMGRConfig {
     servkit?: Servkit;
