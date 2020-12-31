@@ -5,18 +5,24 @@ import { ServServiceClientConfig, ServServiceClient } from '../service/ServServi
 import { AsyncMutex } from '../common/AsyncMutex';
 import { Deferred } from '../common/Deferred';
 import { SappSDK } from './SappSDK';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { SappLayoutOptions } from './SappMGR';
 export interface SappSDKMockConfig {
     hideOnStart?: boolean;
+    services?: ServServiceConfig['services'];
+    serviceRefer?: ServServiceReferPattern;
     beforeStart?(): Promise<void>;
     resolveStartData?(): Promise<any> | any;
     resolveStartShowData?(): Promise<any> | any;
     resolveServiceServerConfig?(): Promise<ServServiceServerConfig> | ServServiceServerConfig;
     resolveServiceClientConfig?(): Promise<ServServiceClientConfig> | ServServiceClientConfig;
+    resolveAsyncLoadLayout?(): Promise<SappLayoutOptions> | SappLayoutOptions;
     afterStart?(): Promise<void>;
 }
 export declare class SappSDKMock {
     static ENABLE_MARK: string;
     static isMockEnabled(): boolean;
+    static tryAsynLoadBootstrap(appId: string): void;
     protected sdk: SappSDK;
     protected isStarted: boolean;
     protected config: SappSDKMockConfig;
@@ -54,4 +60,5 @@ export declare class SappSDKMock {
     protected beforeStart(): Promise<void>;
     protected afterStart(): Promise<void>;
     protected onSessionBroken(): void;
+    protected prepareForAsyncLoad(): Promise<void>;
 }

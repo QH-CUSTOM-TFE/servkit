@@ -259,21 +259,6 @@ var SappSDK = /** @class */ (function () {
      */
     SappSDK.prototype.setConfig = function (config) {
         this.config = config;
-        // try {
-        //     if (config.asyncLoadAppId) {
-        //         if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
-        //             let bootstrap = config.asyncLoadBootstrap;
-        //             if (!bootstrap) {
-        //                 bootstrap = () => {
-        //                     this.start();
-        //                 };
-        //             }
-        //             SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
-        //         }
-        //     }
-        // } catch (e) {
-        //     //
-        // }
         return this;
     };
     /**
@@ -640,6 +625,14 @@ var SappSDK = /** @class */ (function () {
             bootstrap: bootstrap,
             deBootstrap: deBootstrap,
         });
+        try {
+            if (SappSDKMock_1.SappSDKMock.isMockEnabled()) {
+                SappSDKMock_1.SappSDKMock.tryAsynLoadBootstrap(appId);
+            }
+        }
+        catch (e) {
+            //
+        }
     };
     return SappSDK;
 }());
@@ -651,6 +644,9 @@ var SappAsyncLoadSDK = /** @class */ (function (_super) {
         _this.appId = appId;
         return _this;
     }
+    SappAsyncLoadSDK.prototype.getAppId = function () {
+        return this.appId;
+    };
     SappAsyncLoadSDK.prototype.getAppType = function () {
         return Sapp_1.ESappType.ASYNC_LOAD;
     };

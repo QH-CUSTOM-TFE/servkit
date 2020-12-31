@@ -272,6 +272,7 @@ export declare class SappSDK {
 export declare class SappAsyncLoadSDK extends SappSDK {
     protected appId: string;
     constructor(appId: string);
+    getAppId(): string;
     getAppType(): ESappType;
     getDefaultStartParams(): SappSDKAsyncLoadStartParams | undefined;
 }

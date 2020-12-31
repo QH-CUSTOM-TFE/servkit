@@ -69,7 +69,9 @@ var ServService_1 = require("../service/ServService");
 var AsyncMutex_1 = require("../common/AsyncMutex");
 var Deferred_1 = require("../common/Deferred");
 var SappLifecycle_2 = require("./service/s/SappLifecycle");
+var SappSDK_1 = require("./SappSDK");
 var Sapp_1 = require("./Sapp");
+var sharedParams_1 = require("../common/sharedParams");
 var SappSDKMock = /** @class */ (function () {
     function SappSDKMock(sdk) {
         var _this = this;
@@ -221,6 +223,22 @@ var SappSDKMock = /** @class */ (function () {
             return false;
         }
     };
+    SappSDKMock.tryAsynLoadBootstrap = function (appId) {
+        try {
+            if (!SappSDKMock.isMockEnabled()) {
+                return;
+            }
+            setTimeout(function () {
+                var context = sharedParams_1.getAsyncLoadDeclContext(appId);
+                if (context) {
+                    context.bootstrap();
+                }
+            }, Math.random() * 50);
+        }
+        catch (e) {
+            //
+        }
+    };
     SappSDKMock.prototype.setConfig = function (config) {
         this.config = config;
         return this;
@@ -248,6 +266,9 @@ var SappSDKMock = /** @class */ (function () {
                         _a.sent();
                         return [4 /*yield*/, this.initTerminal()];
                     case 2:
+                        _a.sent();
+                        return [4 /*yield*/, this.prepareForAsyncLoad()];
+                    case 3:
                         _a.sent();
                         this.waitOnStart = Deferred_1.DeferredUtil.create();
                         this.waitOnStart.then(function () {
@@ -289,12 +310,12 @@ var SappSDKMock = /** @class */ (function () {
     };
     SappSDKMock.prototype.initTerminal = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var isAsyncLoadApp, terminalConfig, config, _a, _b, terminal, self, SappLifecycleImpl;
+            var isAsyncLoadApp, terminalConfig, config, _a, services, service, _b, terminal, self, SappLifecycleImpl;
             var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        isAsyncLoadApp = this.sdk.getConfig() === Sapp_1.ESappType.ASYNC_LOAD;
+                        isAsyncLoadApp = this.sdk.getAppType() === Sapp_1.ESappType.ASYNC_LOAD;
                         terminalConfig = {
                             id: common_1.nextUUID(),
                             type: ServTerminal_1.EServTerminal.MASTER,
@@ -318,6 +339,24 @@ var SappSDKMock = /** @class */ (function () {
                         _a.server = _c.sent();
                         _c.label = 2;
                     case 2:
+                        if (!terminalConfig.server) {
+                            terminalConfig.server = {};
+                        }
+                        services = config.services;
+                        if (services && terminalConfig.server.service && terminalConfig.server.service.services) {
+                            services = services.concat(terminalConfig.server.service.services);
+                        }
+                        if (services) {
+                            service = terminalConfig.server.service || {};
+                            service.services = services;
+                            terminalConfig.server.service = service;
+                        }
+                        if (config.serviceRefer) {
+                            terminalConfig.server.serviceRefer = config.serviceRefer;
+                        }
+                        if (!terminalConfig.server.serviceRefer) {
+                            terminalConfig.server.serviceRefer = /.*/;
+                        }
                         if (!config.resolveServiceClientConfig) return [3 /*break*/, 4];
                         _b = terminalConfig;
                         return [4 /*yield*/, config.resolveServiceClientConfig()];
@@ -372,7 +411,7 @@ var SappSDKMock = /** @class */ (function () {
         });
     };
     SappSDKMock.prototype.fixSlaveTerminalConfig = function (config) {
-        var isAsyncLoadApp = this.sdk.getConfig() === Sapp_1.ESappType.ASYNC_LOAD;
+        var isAsyncLoadApp = this.sdk.getAppType() === Sapp_1.ESappType.ASYNC_LOAD;
         config.id = this.terminal.id;
         config.session.checkSession = true;
         config.session.channel = {
@@ -452,6 +491,44 @@ var SappSDKMock = /** @class */ (function () {
             common_1.asyncThrow(new Error('Session broken'));
             this.close();
         }
+    };
+    SappSDKMock.prototype.prepareForAsyncLoad = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var sdk, config, layout, el;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        sdk = this.sdk;
+                        if (!(sdk instanceof SappSDK_1.SappAsyncLoadSDK)) {
+                            return [2 /*return*/];
+                        }
+                        config = this.config;
+                        if (!config.resolveAsyncLoadLayout) return [3 /*break*/, 2];
+                        return [4 /*yield*/, config.resolveAsyncLoadLayout()];
+                    case 1:
+                        layout = _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        if (!layout || !layout.container) {
+                            el = document.createElement('div');
+                            el.style.position = 'absolute';
+                            el.style.top = '0';
+                            el.style.left = '0';
+                            el.style.width = '100%';
+                            el.style.height = '100%';
+                            document.body.appendChild(el);
+                            layout = {
+                                container: el,
+                            };
+                        }
+                        sharedParams_1.putAsyncLoadStartParams(sdk.getAppId(), {
+                            uuid: this.terminal.id,
+                            container: layout.container,
+                        });
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     SappSDKMock.ENABLE_MARK = '__SAPPSDK_MOCK_ENABLE__';
     return SappSDKMock;

@@ -223,23 +223,6 @@ export class SappSDK {
     setConfig(config: SappSDKConfig) {
         this.config = config;
 
-        // try {
-        //     if (config.asyncLoadAppId) {
-        //         if (SappPreloader.instance.getPreloadDeferred(config.asyncLoadAppId)) {
-        //             let bootstrap = config.asyncLoadBootstrap;
-        //             if (!bootstrap) {
-        //                 bootstrap = () => {
-        //                     this.start();
-        //                 };
-        //             }
-    
-        //             SappPreloader.instance.setPreloadBootstrap(config.asyncLoadAppId, bootstrap);
-        //         }
-        //     }
-        // } catch (e) {
-        //     //
-        // }
-        
         return this;
     }
 
@@ -686,6 +669,14 @@ export class SappSDK {
             bootstrap,
             deBootstrap,
         });
+
+        try {
+            if (SappSDKMock.isMockEnabled()) {
+                SappSDKMock.tryAsynLoadBootstrap(appId);
+            }
+        } catch (e) {
+            //
+        }
     }
 }
 
@@ -695,6 +686,10 @@ export class SappAsyncLoadSDK extends SappSDK {
     constructor(appId: string) {
         super();
         this.appId = appId;
+    }
+
+    getAppId() {
+        return this.appId;
     }
 
     getAppType(): ESappType {

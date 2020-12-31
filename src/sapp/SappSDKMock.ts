@@ -8,11 +8,18 @@ import { ServServiceClientConfig, ServServiceClient } from '../service/ServServi
 import { AsyncMutex } from '../common/AsyncMutex';
 import { DeferredUtil, Deferred } from '../common/Deferred';
 import { SappLifecycle as Lifecycle } from './service/s/SappLifecycle';
-import { SappSDK } from './SappSDK';
+import { SappSDK, SappAsyncLoadSDK } from './SappSDK';
 import { ESappType } from './Sapp';
+import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { getAsyncLoadDeclContext, putAsyncLoadStartParams } from '../common/sharedParams';
+import { SappLayoutOptions } from './SappMGR';
 
 export interface SappSDKMockConfig {
     hideOnStart?: boolean;
+
+    services?: ServServiceConfig['services'];
+
+    serviceRefer?: ServServiceReferPattern;
 
     beforeStart?(): Promise<void>;
 
@@ -23,6 +30,8 @@ export interface SappSDKMockConfig {
     resolveServiceServerConfig?(): Promise<ServServiceServerConfig> | ServServiceServerConfig;
 
     resolveServiceClientConfig?(): Promise<ServServiceClientConfig> | ServServiceClientConfig;
+
+    resolveAsyncLoadLayout?(): Promise<SappLayoutOptions> | SappLayoutOptions;
 
     afterStart?(): Promise<void>;
 }
@@ -35,6 +44,23 @@ export class SappSDKMock {
                 || (!!window.location.search && window.location.search.indexOf(SappSDKMock.ENABLE_MARK) >= 0);
         } catch (e) {
             return false;
+        }
+    }
+
+    static tryAsynLoadBootstrap(appId: string) {
+        try {
+            if (!SappSDKMock.isMockEnabled()) {
+                return;
+            }
+
+            setTimeout(() => {
+                const context = getAsyncLoadDeclContext(appId);
+                if (context) {
+                    context.bootstrap();
+                }
+            }, Math.random() * 50);
+        } catch (e) {
+            //
         }
     }
 
@@ -78,9 +104,11 @@ export class SappSDKMock {
 
         await this.initTerminal();
 
+        await this.prepareForAsyncLoad();
+
         this.waitOnStart = DeferredUtil.create();
         this.waitOnStart.then(() => {
-            this.waitOnStart = undefined; 
+            this.waitOnStart = undefined;
             setTimeout(async () => {
                 this.isStarted = true;
 
@@ -88,24 +116,24 @@ export class SappSDKMock {
                     const showParams: SappShowParams = {
                         force: true,
                     };
-    
+
                     const data = await this.resolveStartShowData();
                     if (data !== undefined) {
                         showParams.data = data;
                     }
-    
+
                     await this._show(showParams, true);
                 }
-    
+
                 await this.afterStart();
             }, Math.random() * 50);
         }, () => {
-            this.waitOnStart = undefined; 
+            this.waitOnStart = undefined;
         });
     }
 
     protected async initTerminal() {
-        const isAsyncLoadApp = this.sdk.getConfig() === ESappType.ASYNC_LOAD;
+        const isAsyncLoadApp = this.sdk.getAppType() === ESappType.ASYNC_LOAD;
         const terminalConfig: ServTerminalConfig = {
             id: nextUUID(),
             type: EServTerminal.MASTER,
@@ -121,10 +149,35 @@ export class SappSDKMock {
                 },
             },
         };
-        
+
         const config = this.config;
-        if (config.resolveServiceServerConfig) {
-            terminalConfig.server = await config.resolveServiceServerConfig();
+        // Service server config
+        {
+            if (config.resolveServiceServerConfig) {
+                terminalConfig.server = await config.resolveServiceServerConfig();
+            }
+
+            if (!terminalConfig.server) {
+                terminalConfig.server = {};
+            }
+
+            let services = config.services;
+            if (services && terminalConfig.server.service && terminalConfig.server.service.services) {
+                services = services.concat(terminalConfig.server.service.services);
+            }
+            if (services) {
+                const service = terminalConfig.server.service || {};
+                service.services = services;
+                terminalConfig.server.service = service;
+            }
+
+            if (config.serviceRefer) {
+                terminalConfig.server.serviceRefer = config.serviceRefer;
+            }
+
+            if (!terminalConfig.server.serviceRefer) {
+                terminalConfig.server.serviceRefer = /.*/;
+            }
         }
 
         if (config.resolveServiceClientConfig) {
@@ -177,8 +230,8 @@ export class SappSDKMock {
     }
 
     fixSlaveTerminalConfig(config: ServTerminalConfig) {
-        const isAsyncLoadApp = this.sdk.getConfig() === ESappType.ASYNC_LOAD;
-        
+        const isAsyncLoadApp = this.sdk.getAppType() === ESappType.ASYNC_LOAD;
+
         config.id = this.terminal.id;
         config.session.checkSession = true;
         config.session.channel = {
@@ -289,7 +342,7 @@ export class SappSDKMock {
 
                 this.sdk = undefined!;
                 this.isStarted = false;
-                this.waitOnStart = undefined;                
+                this.waitOnStart = undefined;
             }));
 
     getService: ServServiceClient['getService'] = function(this: SappSDK) {
@@ -365,5 +418,38 @@ export class SappSDKMock {
             asyncThrow(new Error('Session broken'));
             this.close();
         }
+    }
+
+    protected async prepareForAsyncLoad() {
+        const sdk = this.sdk;
+        if (!(sdk instanceof SappAsyncLoadSDK)) {
+            return;
+        }
+        const config = this.config;
+
+        let layout: SappLayoutOptions | undefined;
+        if (config.resolveAsyncLoadLayout) {
+            layout = await config.resolveAsyncLoadLayout();
+        }
+
+        if (!layout || !layout.container) {
+            const el = document.createElement('div');
+            el.style.position = 'absolute';
+            el.style.top = '0';
+            el.style.left = '0';
+            el.style.width = '100%';
+            el.style.height = '100%';
+
+            document.body.appendChild(el);
+            
+            layout = {
+                container: el,
+            };
+        }
+
+        putAsyncLoadStartParams(sdk.getAppId(), {
+            uuid: this.terminal.id,
+            container: layout.container as HTMLElement,
+        });
     }
 }
