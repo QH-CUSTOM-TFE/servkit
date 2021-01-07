@@ -155,7 +155,7 @@ export class SappDefaultAsyncLoadController extends SappController {
 
     protected resolveSharedParams(options: SappCreateOptions) {
         const params: SappSDKAsyncLoadStartParams = {
-            uuid: this.app.uuid,
+            uuid: this.app.getTerminalId(),
         };
 
         if (this.layout) {

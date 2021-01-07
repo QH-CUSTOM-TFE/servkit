@@ -240,17 +240,18 @@ var SappPlainPage = /** @class */ (function (_super) {
     };
     SappPlainPage.prototype.initTerminal = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, newTerminalConfig, channelConfig;
+            var config, isIFrameApp, terminalConfig, _a, newTerminalConfig, channelConfig;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         config = this.config;
+                        isIFrameApp = this.getAppType() === Sapp_1.ESappType.IFRAME;
                         terminalConfig = {
-                            id: this.uuid,
+                            id: this.getTerminalId(),
                             type: ServTerminal_1.EServTerminal.MASTER,
                             session: {
                                 channel: {
-                                    type: this.getAppType() === Sapp_1.ESappType.IFRAME ? ServChannel_1.EServChannel.WINDOW : ServChannel_1.EServChannel.EVENT_LOADER,
+                                    type: isIFrameApp ? ServChannel_1.EServChannel.WINDOW : ServChannel_1.EServChannel.EVENT_LOADER,
                                 },
                             },
                         };
@@ -275,9 +276,11 @@ var SappPlainPage = /** @class */ (function (_super) {
                         terminalConfig.session.checkOptions = undefined;
                         terminalConfig.client = undefined;
                         terminalConfig.server = undefined;
-                        channelConfig = terminalConfig.session.channel.config;
-                        if (channelConfig && channelConfig.master) {
-                            channelConfig.master.dontWaitEcho = true;
+                        if (isIFrameApp) {
+                            channelConfig = terminalConfig.session.channel.config;
+                            if (channelConfig && channelConfig.master) {
+                                channelConfig.master.dontWaitEcho = true;
+                            }
                         }
                         // Check config validation
                         if (!terminalConfig.id || !terminalConfig.session) {

@@ -28,7 +28,7 @@ var ServWindowChannel = /** @class */ (function (_super) {
         };
         return _this;
     }
-    ServWindowChannel.prototype.open = function () {
+    ServWindowChannel.prototype.open = function (options) {
         var _this = this;
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
@@ -41,12 +41,13 @@ var ServWindowChannel = /** @class */ (function (_super) {
             window: null,
             origin: '*',
         };
+        options = options || {};
         if (this.session.isMaster()) {
             var master_1 = this.config.master;
             if (!master_1) {
                 return Promise.reject(new Error('Can\'t open channel without window.'));
             }
-            var waitEcho = this.waitSlaveEcho();
+            var waitEcho = this.waitSlaveEcho(options);
             var windowInfo = master_1.createWindow(this);
             this.windowInfo.target = windowInfo.target;
             this.windowInfo.window = windowInfo.window || window;
@@ -118,10 +119,10 @@ var ServWindowChannel = /** @class */ (function (_super) {
             }
         }
     };
-    ServWindowChannel.prototype.waitSlaveEcho = function () {
+    ServWindowChannel.prototype.waitSlaveEcho = function (options) {
         var _this = this;
         var master = this.config.master;
-        if (!master || master.dontWaitEcho) {
+        if (!master || master.dontWaitEcho || options.dontWaitSlaveEcho) {
             return Promise.resolve();
         }
         var res;

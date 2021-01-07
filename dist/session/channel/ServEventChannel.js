@@ -35,7 +35,7 @@ var ServEventChannel = /** @class */ (function (_super) {
         _super.prototype.init.call(this, session, config);
         this.asyncDispatchPromise = Promise.resolve();
     };
-    ServEventChannel.prototype.open = function () {
+    ServEventChannel.prototype.open = function (options) {
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
         }

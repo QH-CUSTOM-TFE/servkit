@@ -139,13 +139,14 @@ export class SappPlainPage extends Sapp {
 
     protected async initTerminal(options: SappStartOptions): Promise<void> {
         const config = this.config;
+        const isIFrameApp = this.getAppType() === ESappType.IFRAME;
 
         let terminalConfig: ServTerminalConfig = {
-            id: this.uuid,
+            id: this.getTerminalId(),
             type: EServTerminal.MASTER,
             session: {
                 channel: {
-                    type: this.getAppType() === ESappType.IFRAME ? EServChannel.WINDOW : EServChannel.EVENT_LOADER,
+                    type: isIFrameApp ? EServChannel.WINDOW : EServChannel.EVENT_LOADER,
                 },
             },
         };
@@ -167,11 +168,13 @@ export class SappPlainPage extends Sapp {
         terminalConfig.client = undefined;
         terminalConfig.server = undefined;
 
-        const channelConfig = terminalConfig.session.channel.config as ServWindowChannelConfig;
-        if (channelConfig && channelConfig.master) {
-            channelConfig.master.dontWaitEcho = true;
+        if (isIFrameApp) {
+            const channelConfig = terminalConfig.session.channel.config as ServWindowChannelConfig;
+            if (channelConfig && channelConfig.master) {
+                channelConfig.master.dontWaitEcho = true;
+            }
         }
-        
+
         // Check config validation
         if (!terminalConfig.id || !terminalConfig.session) {
             throw new Error('[SAPP] Invalid terminal config');

@@ -1,5 +1,5 @@
 import { asyncThrow } from '../../common/common';
-import { ServChannel, ServChannelConfig, ServChannelPackage } from './ServChannel';
+import { ServChannel, ServChannelConfig, ServChannelPackage, ServChannelOpenOptions } from './ServChannel';
 
 export interface ServChannelWindow {
     target: Window | null;
@@ -13,6 +13,10 @@ export interface ServChanleWindowData {
     window?: Window;
     origin?: string;
     element?: HTMLIFrameElement;
+}
+
+export interface ServWindowChannelOpenOptions extends ServChannelOpenOptions {
+    dontWaitSlaveEcho?: boolean;
 }
 
 export interface ServWindowChannelConfig extends ServChannelConfig {
@@ -37,7 +41,7 @@ export class ServWindowChannel extends ServChannel {
     protected windowInfo: ServChannelWindow;
     protected doWaitSlaveCleanWork?: (() => void);
 
-    open(): Promise<void> {
+    open(options?: ServWindowChannelOpenOptions): Promise<void> {
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
         }
@@ -52,13 +56,15 @@ export class ServWindowChannel extends ServChannel {
             origin: '*',
         };
 
+        options = options || {};
+
         if (this.session.isMaster()) {
             const master = this.config.master;
             if (!master) {
                 return Promise.reject(new Error('Can\'t open channel without window.'));
             }
 
-            const waitEcho = this.waitSlaveEcho();
+            const waitEcho = this.waitSlaveEcho(options);
 
             const windowInfo = master.createWindow(this);
             this.windowInfo.target = windowInfo.target;
@@ -144,9 +150,9 @@ export class ServWindowChannel extends ServChannel {
         }
     }
 
-    protected waitSlaveEcho() {
+    protected waitSlaveEcho(options: ServWindowChannelOpenOptions) {
         const master = this.config.master!;
-        if (!master || master.dontWaitEcho) {
+        if (!master || master.dontWaitEcho || options.dontWaitSlaveEcho) {
             return Promise.resolve();
         }
 

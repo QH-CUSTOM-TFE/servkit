@@ -8,6 +8,8 @@ export declare enum EServChannel {
 export interface ServChannelConfig {
     ignoreSenderType?: boolean;
 }
+export interface ServChannelOpenOptions {
+}
 export interface ServChannelObjectPackage {
     __mark__: string;
     data: ServSessionPackage;
@@ -28,7 +30,7 @@ export declare abstract class ServChannel {
     isSendable(): boolean;
     isOpened(): boolean;
     send(msg: ServSessionPackage): boolean;
-    abstract open(): Promise<void>;
+    abstract open(options?: ServChannelOpenOptions): Promise<void>;
     abstract close(): void;
     protected toObjectPackage(data: ServSessionPackage): ServChannelObjectPackage;
     protected toStringPackage(data: ServSessionPackage): string;

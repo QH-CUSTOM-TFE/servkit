@@ -195,7 +195,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
     };
     SappDefaultAsyncLoadController.prototype.resolveSharedParams = function (options) {
         var params = {
-            uuid: this.app.uuid,
+            uuid: this.app.getTerminalId(),
         };
         if (this.layout) {
             params.container = this.layout.container;

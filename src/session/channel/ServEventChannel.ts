@@ -1,5 +1,5 @@
 import { ServSession } from '../ServSession';
-import { ServChannel, ServChannelConfig, ServChannelPackage } from './ServChannel';
+import { ServChannel, ServChannelConfig, ServChannelPackage, ServChannelOpenOptions } from './ServChannel';
 
 // tslint:disable-next-line:no-empty-interface
 export interface ServEventChannelConfig extends ServChannelConfig {
@@ -19,7 +19,7 @@ export class ServEventChannel extends ServChannel {
         this.asyncDispatchPromise = Promise.resolve();
     }
 
-    open(): Promise<void> {
+    open(options?: ServChannelOpenOptions): Promise<void> {
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
         }

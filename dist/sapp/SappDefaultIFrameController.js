@@ -181,13 +181,15 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
                 display: 'none',
             };
         }
-        var params = this.resolveQueryParams(options);
-        var url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
         return {
             type: ServChannel_1.EServChannel.WINDOW,
             config: {
                 master: iframe_1.IFrameUtil.generateCreator({
-                    url: query_1.wrapServQueryParams(url, params),
+                    url: function () {
+                        var params = _this.resolveQueryParams(options);
+                        var url = Sapp_1.Sapp.transformContentByInfo(_this.app.info.url, _this.app.info);
+                        return query_1.wrapServQueryParams(url, params);
+                    },
                     id: this.app.uuid,
                     showPolicy: iframe_1.EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',
@@ -212,7 +214,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
     };
     SappDefaultIFrameController.prototype.resolveQueryParams = function (options) {
         var params = {
-            uuid: this.app.uuid,
+            uuid: this.app.getTerminalId(),
         };
         return params;
     };

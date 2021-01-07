@@ -22,19 +22,20 @@ var ServEventLoaderChannel = /** @class */ (function (_super) {
     function ServEventLoaderChannel() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    ServEventLoaderChannel.prototype.open = function () {
+    ServEventLoaderChannel.prototype.open = function (options) {
         var _this = this;
         if (this.isOpened()) {
             return Promise.resolve();
         }
-        _super.prototype.open.call(this);
+        _super.prototype.open.call(this, options);
+        options = options || {};
         this.sendable = false;
         if (this.session.isMaster()) {
             var master_1 = this.config.master;
             if (!master_1) {
                 throw new Error('Can\'t open channel without window.');
             }
-            var waitEcho_1 = this.waitSlaveEcho();
+            var waitEcho_1 = this.waitSlaveEcho(options);
             var loader = master_1.createLoader(this);
             if (master_1.onCreate) {
                 master_1.onCreate(this.loader, this);
@@ -86,10 +87,10 @@ var ServEventLoaderChannel = /** @class */ (function (_super) {
             }
         }
     };
-    ServEventLoaderChannel.prototype.waitSlaveEcho = function () {
+    ServEventLoaderChannel.prototype.waitSlaveEcho = function (options) {
         var _this = this;
         var master = this.config.master;
-        if (!master || master.dontWaitEcho) {
+        if (!master || master.dontWaitEcho || options.dontWaitSlaveEcho) {
             return Promise.resolve();
         }
         var wait = Deferred_1.DeferredUtil.create();

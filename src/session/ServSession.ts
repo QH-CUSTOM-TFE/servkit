@@ -165,7 +165,20 @@ export class ServSession {
             work();
         };
 
-        const p = this.channel.open().then(() => {
+        const timeout = (options && options.timeout) || EServConstant.SERV_SESSION_OPEN_TIMEOUT;
+        const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
+            timer = setTimeout(() => {
+                doSafeWork(() => {
+                    logSession(this, 'OPENNING TIMEOUT');
+                    reject(new Error('timeout'));
+                    this.close();
+                });
+            }, timeout) as any;
+        }) : undefined;
+
+        const p = this.channel.open({
+            dontWaitSlaveEcho: !pTimeout,
+        }).then(() => {
             doSafeWork(() => {
                 logSession(this, 'OPENNED');
                 this.status = EServSessionStatus.OPENED;
@@ -178,17 +191,6 @@ export class ServSession {
             return Promise.reject(e);
         });
 
-        const timeout = (options && options.timeout) || EServConstant.SERV_SESSION_OPEN_TIMEOUT;
-        const pTimeout = new Promise<void>((resolve, reject) => {
-            timer = setTimeout(() => {
-                doSafeWork(() => {
-                    logSession(this, 'OPENNING TIMEOUT');
-                    reject(new Error('timeout'));
-                    this.close();
-                });
-            }, timeout) as any;
-        });
-
         const pCancel = new Promise<void>((resolve, reject) => {
             this.openningCancel = () => {
                 doSafeWork(() => {
@@ -198,17 +200,23 @@ export class ServSession {
                 });
             };
         });
-        this.openningPromise = Promise.race([p, pTimeout, pCancel]);
+        const promises = [p, pCancel];
+        if (pTimeout) {
+            promises.push(pTimeout);
+        }
+        this.openningPromise = Promise.race(promises);
 
-        if (this.sessionChecker) {
-            this.sessionChecker.start(this.sessionCheckOptions);
+        const sessionChecker = pTimeout ? this.sessionChecker : undefined;
+
+        if (sessionChecker) {
+            sessionChecker.start(this.sessionCheckOptions);
         }
 
         return this.openningPromise.then(() => {
             this.flushPendingQueue();
 
-            if (this.sessionChecker) {
-                this.sessionChecker.startChecking();
+            if (sessionChecker) {
+                sessionChecker.startChecking();
             }
         });
     }

@@ -19,12 +19,22 @@ import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 import { getAsyncLoadStartParams, putAsyncLoadDeclContext } from '../common/sharedParams';
 import { ESappType } from './Sapp';
 import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { EventEmitter } from 'eventemitter3';
 
 /**
  * SappSDK启动参数
  */
 export interface SappSDKStartParams {
     uuid?: string;
+}
+
+export enum ESappSDKLifeCycleEvent {
+    BEFORE_START = 'BEFORE_START',
+    ON_CREATE = 'ON_CREATE',
+    ON_SHOW = 'ON_SHOW',
+    ON_HIDE = 'ON_HIDE',
+    ON_CLOSE = 'ON_CLOSE',
+    AFTER_START = 'AFTER_START',
 }
 
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
@@ -51,15 +61,19 @@ export interface SappSDKConfig {
     servkit?: Servkit;
 
     /**
+     * 通信的terminal id；SappSDK仍然采用的是ServTerminal作为双端通信，该双端通信基于一个id进行匹配
+     *
+     * @type {string}
+     * @memberof SappSDKConfig
+     */
+    useTerminalId?: string;
+
+    /**
      * SappSDK权限认证信息
      *
      * @memberof SappSDKConfig
      */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
-
-    services?: ServServiceConfig['services'];
-
-    serviceRefer?: ServServiceReferPattern;
 
     /**
      * SappSDK.start() 前置回调
@@ -151,6 +165,10 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
+
+    services?: ServServiceConfig['services'];
+
+    serviceRefer?: ServServiceReferPattern;
 }
 
 /**
@@ -163,7 +181,7 @@ export interface SappSDKStartOptions {
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
-export class SappSDK {
+export class SappSDK extends EventEmitter {
     /**
      * SDK是否已经初始化
      *
@@ -199,6 +217,8 @@ export class SappSDK {
     protected config: SappSDKConfig;
 
     constructor() {
+        super();
+
         this.started = DeferredUtil.create();
         this.setConfig({
             // Default Config
@@ -285,8 +305,6 @@ export class SappSDK {
             await this.initSDK();
 
             this.isStarted = true;
-            
-            await this.afterStart();
 
             const data = await this.service(Lifecycle).then((service) => {
                 return service.getStartData();
@@ -296,6 +314,8 @@ export class SappSDK {
             });
 
             await this.onCreate(params, data);
+            
+            await this.afterStart();
 
             this.started.resolve();
 
@@ -441,9 +461,13 @@ export class SappSDK {
         if (this.config.beforeStart) {
             await this.config.beforeStart(this);
         }
+
+        this.emit(ESappSDKLifeCycleEvent.BEFORE_START, this);
     }
 
     protected async afterStart(): Promise<void> {
+        this.emit(ESappSDKLifeCycleEvent.AFTER_START, this);
+        
         if (this.config.afterStart) {
             await this.config.afterStart(this);
         }
@@ -482,8 +506,10 @@ export class SappSDK {
     protected async initTerminal(options: SappSDKStartOptions, params: SappSDKStartParams): Promise<void> {
         const config = this.config;
 
+        const terminalId = config.useTerminalId || params.uuid || '';
+
         let terminalConfig: ServTerminalConfig = {
-            id: params.uuid || '',
+            id: terminalId,
             type: EServTerminal.SLAVE,
             session: undefined!,
         };
@@ -617,6 +643,8 @@ export class SappSDK {
         if (this.config.onCreate) {
             await this.config.onCreate(this, params, data);
         }
+
+        this.emit(ESappSDKLifeCycleEvent.ON_CREATE, this, params, data);
     }
 
     protected async onShow(params: SappShowParams) {
@@ -624,6 +652,8 @@ export class SappSDK {
         if (this.config.onShow) {
             dontShow = await this.config.onShow(this, params);
         }
+
+        this.emit(ESappSDKLifeCycleEvent.ON_SHOW, this, params);
 
         return dontShow;
     }
@@ -633,10 +663,15 @@ export class SappSDK {
         if (this.config.onHide) {
             dontHide = await this.config.onHide(this, params);
         }
+
+        this.emit(ESappSDKLifeCycleEvent.ON_HIDE, this, params);
+
         return dontHide;
     }
 
     protected async onClose() {
+        this.emit(ESappSDKLifeCycleEvent.ON_CLOSE, this);
+
         if (this.config.onClose) {
             await this.config.onClose(this);
         }

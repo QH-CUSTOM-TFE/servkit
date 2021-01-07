@@ -49,7 +49,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sappSDK = exports.SappAsyncLoadSDK = exports.SappSDK = void 0;
+exports.sappSDK = exports.SappAsyncLoadSDK = exports.SappSDK = exports.ESappSDKLifeCycleEvent = void 0;
 var ServTerminal_1 = require("../terminal/ServTerminal");
 var common_1 = require("../common/common");
 var query_1 = require("../common/query");
@@ -62,12 +62,23 @@ var Deferred_1 = require("../common/Deferred");
 var SappSDKMock_1 = require("./SappSDKMock");
 var sharedParams_1 = require("../common/sharedParams");
 var Sapp_1 = require("./Sapp");
+var eventemitter3_1 = require("eventemitter3");
+var ESappSDKLifeCycleEvent;
+(function (ESappSDKLifeCycleEvent) {
+    ESappSDKLifeCycleEvent["BEFORE_START"] = "BEFORE_START";
+    ESappSDKLifeCycleEvent["ON_CREATE"] = "ON_CREATE";
+    ESappSDKLifeCycleEvent["ON_SHOW"] = "ON_SHOW";
+    ESappSDKLifeCycleEvent["ON_HIDE"] = "ON_HIDE";
+    ESappSDKLifeCycleEvent["ON_CLOSE"] = "ON_CLOSE";
+    ESappSDKLifeCycleEvent["AFTER_START"] = "AFTER_START";
+})(ESappSDKLifeCycleEvent = exports.ESappSDKLifeCycleEvent || (exports.ESappSDKLifeCycleEvent = {}));
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
-var SappSDK = /** @class */ (function () {
+var SappSDK = /** @class */ (function (_super) {
+    __extends(SappSDK, _super);
     function SappSDK() {
-        var _this = this;
+        var _this = _super.call(this) || this;
         /**
          * 启动SDK
          *
@@ -75,7 +86,7 @@ var SappSDK = /** @class */ (function () {
          * @returns {Promise<void>}
          * @memberof SappSDK
          */
-        this.start = Deferred_1.DeferredUtil.reEntryGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
+        _this.start = Deferred_1.DeferredUtil.reEntryGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
             var config, params, data, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -118,18 +129,18 @@ var SappSDK = /** @class */ (function () {
                     case 9:
                         _a.sent();
                         this.isStarted = true;
-                        return [4 /*yield*/, this.afterStart()];
-                    case 10:
-                        _a.sent();
                         return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.getStartData();
                             }).catch(function (error) {
                                 common_1.asyncThrow(error);
                                 common_1.asyncThrow(new Error('[SAPPSDK] Can\'t get start datas from SAPP'));
                             })];
-                    case 11:
+                    case 10:
                         data = _a.sent();
                         return [4 /*yield*/, this.onCreate(params, data)];
+                    case 11:
+                        _a.sent();
+                        return [4 /*yield*/, this.afterStart()];
                     case 12:
                         _a.sent();
                         this.started.resolve();
@@ -156,7 +167,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceClient['getService']}
          * @memberof SappSDK
          */
-        this.getService = function () {
+        _this.getService = function () {
             if (!this.isStarted) {
                 return;
             }
@@ -168,7 +179,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceClient['getServiceUnsafe']}
          * @memberof SappSDK
          */
-        this.getServiceUnsafe = function () {
+        _this.getServiceUnsafe = function () {
             return this.getService.apply(this, arguments);
         };
         /**
@@ -177,7 +188,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceClient['service']}
          * @memberof SappSDK
          */
-        this.service = function () {
+        _this.service = function () {
             if (!this.isStarted) {
                 return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
             }
@@ -189,7 +200,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceClient['serviceExec']}
          * @memberof SappSDK
          */
-        this.serviceExec = function () {
+        _this.serviceExec = function () {
             if (!this.isStarted) {
                 return null;
             }
@@ -201,7 +212,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceServer['getService']}
          * @memberof SappSDK
          */
-        this.getServerService = function () {
+        _this.getServerService = function () {
             if (!this.isStarted) {
                 return;
             }
@@ -213,7 +224,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceServer['getServiceUnsafe']}
          * @memberof SappSDK
          */
-        this.getServerServiceUnsafe = function () {
+        _this.getServerServiceUnsafe = function () {
             return this.getServerService.apply(this, arguments);
         };
         /**
@@ -222,7 +233,7 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceServer['service']}
          * @memberof SappSDK
          */
-        this.serverService = function () {
+        _this.serverService = function () {
             if (!this.isStarted) {
                 return Promise.reject(new Error('[SAPPSDK] SappSDK is not started'));
             }
@@ -234,21 +245,22 @@ var SappSDK = /** @class */ (function () {
          * @type {ServServiceServer['serviceExec']}
          * @memberof SappSDK
          */
-        this.serverServiceExec = function () {
+        _this.serverServiceExec = function () {
             if (!this.isStarted) {
                 return null;
             }
             return this.terminal.server.serviceExec.apply(this.terminal.server, arguments);
         };
-        this.started = Deferred_1.DeferredUtil.create();
-        this.setConfig({
+        _this.started = Deferred_1.DeferredUtil.create();
+        _this.setConfig({
         // Default Config
         });
         if (SappSDKMock_1.SappSDKMock.isMockEnabled()) {
-            this.sdkMock = new SappSDKMock_1.SappSDKMock(this);
+            _this.sdkMock = new SappSDKMock_1.SappSDKMock(_this);
             // tslint:disable-next-line:no-console
             console.warn('[SAPPSDK]\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nSAPPSDK MOCK FEATURE ENABLED.\n');
         }
+        return _this;
     }
     /**
      * SappSDK的全局配置，需要在start之前设定好
@@ -316,7 +328,9 @@ var SappSDK = /** @class */ (function () {
                     case 1:
                         _a.sent();
                         _a.label = 2;
-                    case 2: return [2 /*return*/];
+                    case 2:
+                        this.emit(ESappSDKLifeCycleEvent.BEFORE_START, this);
+                        return [2 /*return*/];
                 }
             });
         });
@@ -326,6 +340,7 @@ var SappSDK = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        this.emit(ESappSDKLifeCycleEvent.AFTER_START, this);
                         if (!this.config.afterStart) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.afterStart(this)];
                     case 1:
@@ -377,13 +392,14 @@ var SappSDK = /** @class */ (function () {
     };
     SappSDK.prototype.initTerminal = function (options, params) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, _b, services, service, _c, newTerminalConfig, self, SappLifecycleImpl, authInfo, _d, service, e_2;
+            var config, terminalId, terminalConfig, _a, _b, services, service, _c, newTerminalConfig, self, SappLifecycleImpl, authInfo, _d, service, e_2;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
                         config = this.config;
+                        terminalId = config.useTerminalId || params.uuid || '';
                         terminalConfig = {
-                            id: params.uuid || '',
+                            id: terminalId,
                             type: ServTerminal_1.EServTerminal.SLAVE,
                             session: undefined,
                         };
@@ -549,7 +565,9 @@ var SappSDK = /** @class */ (function () {
                     case 1:
                         _a.sent();
                         _a.label = 2;
-                    case 2: return [2 /*return*/];
+                    case 2:
+                        this.emit(ESappSDKLifeCycleEvent.ON_CREATE, this, params, data);
+                        return [2 /*return*/];
                 }
             });
         });
@@ -566,7 +584,9 @@ var SappSDK = /** @class */ (function () {
                     case 1:
                         dontShow = _a.sent();
                         _a.label = 2;
-                    case 2: return [2 /*return*/, dontShow];
+                    case 2:
+                        this.emit(ESappSDKLifeCycleEvent.ON_SHOW, this, params);
+                        return [2 /*return*/, dontShow];
                 }
             });
         });
@@ -583,7 +603,9 @@ var SappSDK = /** @class */ (function () {
                     case 1:
                         dontHide = _a.sent();
                         _a.label = 2;
-                    case 2: return [2 /*return*/, dontHide];
+                    case 2:
+                        this.emit(ESappSDKLifeCycleEvent.ON_HIDE, this, params);
+                        return [2 /*return*/, dontHide];
                 }
             });
         });
@@ -593,6 +615,7 @@ var SappSDK = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        this.emit(ESappSDKLifeCycleEvent.ON_CLOSE, this);
                         if (!this.config.onClose) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.onClose(this)];
                     case 1:
@@ -635,7 +658,7 @@ var SappSDK = /** @class */ (function () {
         }
     };
     return SappSDK;
-}());
+}(eventemitter3_1.EventEmitter));
 exports.SappSDK = SappSDK;
 var SappAsyncLoadSDK = /** @class */ (function (_super) {
     __extends(SappAsyncLoadSDK, _super);

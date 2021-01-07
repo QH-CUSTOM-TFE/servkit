@@ -1,4 +1,4 @@
-import { ServChannel, ServChannelConfig, ServChannelPackage } from './ServChannel';
+import { ServChannel, ServChannelConfig, ServChannelPackage, ServChannelOpenOptions } from './ServChannel';
 export interface ServChannelWindow {
     target: Window | null;
     window: Window | null;
@@ -10,6 +10,9 @@ export interface ServChanleWindowData {
     window?: Window;
     origin?: string;
     element?: HTMLIFrameElement;
+}
+export interface ServWindowChannelOpenOptions extends ServChannelOpenOptions {
+    dontWaitSlaveEcho?: boolean;
 }
 export interface ServWindowChannelConfig extends ServChannelConfig {
     master?: {
@@ -31,9 +34,9 @@ export declare class ServWindowChannel extends ServChannel {
     protected config: ServWindowChannelConfig;
     protected windowInfo: ServChannelWindow;
     protected doWaitSlaveCleanWork?: (() => void);
-    open(): Promise<void>;
+    open(options?: ServWindowChannelOpenOptions): Promise<void>;
     close(): void;
-    protected waitSlaveEcho(): Promise<void>;
+    protected waitSlaveEcho(options: ServWindowChannelOpenOptions): Promise<void>;
     protected slaveEcho(): void;
     protected attachMessageChannel(): void;
     protected detachMessageChannel?: () => void;

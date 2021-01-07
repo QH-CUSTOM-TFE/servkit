@@ -1,4 +1,4 @@
-import { ServWindowChannel } from './ServWindowChannel';
+import { ServWindowChannel, ServWindowChannelOpenOptions } from './ServWindowChannel';
 
 // tslint:disable-next-line:no-empty-interface
 export interface ServMessageChannelConfig {
@@ -8,7 +8,7 @@ export interface ServMessageChannelConfig {
 export class ServMessageChannel extends ServWindowChannel {
     protected config: ServMessageChannelConfig;
 
-    open(): Promise<void> {
+    open(options?: ServWindowChannelOpenOptions): Promise<void> {
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
         }

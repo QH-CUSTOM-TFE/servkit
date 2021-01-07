@@ -90,7 +90,6 @@ var SappMGR = /** @class */ (function () {
         };
         this.infos = {};
         this.apps = {};
-        this.nextId = Date.now();
         this.setConfig({});
     }
     SappMGR.prototype.setConfig = function (config) {

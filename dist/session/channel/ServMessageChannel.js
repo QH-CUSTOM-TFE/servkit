@@ -27,7 +27,7 @@ var ServMessageChannel = /** @class */ (function (_super) {
         };
         return _this;
     }
-    ServMessageChannel.prototype.open = function () {
+    ServMessageChannel.prototype.open = function (options) {
         if (!this.session) {
             return Promise.reject(new Error('unknown'));
         }

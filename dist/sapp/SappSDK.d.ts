@@ -9,11 +9,20 @@ import { Deferred } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
 import { ESappType } from './Sapp';
 import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { EventEmitter } from 'eventemitter3';
 /**
  * SappSDK启动参数
  */
 export interface SappSDKStartParams {
     uuid?: string;
+}
+export declare enum ESappSDKLifeCycleEvent {
+    BEFORE_START = "BEFORE_START",
+    ON_CREATE = "ON_CREATE",
+    ON_SHOW = "ON_SHOW",
+    ON_HIDE = "ON_HIDE",
+    ON_CLOSE = "ON_CLOSE",
+    AFTER_START = "AFTER_START"
 }
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
     container?: HTMLElement;
@@ -35,13 +44,18 @@ export interface SappSDKConfig {
      */
     servkit?: Servkit;
     /**
+     * 通信的terminal id；SappSDK仍然采用的是ServTerminal作为双端通信，该双端通信基于一个id进行匹配
+     *
+     * @type {string}
+     * @memberof SappSDKConfig
+     */
+    useTerminalId?: string;
+    /**
      * SappSDK权限认证信息
      *
      * @memberof SappSDKConfig
      */
     authInfo?: AuthParams | ((sdk: SappSDK) => AuthParams | Promise<AuthParams>);
-    services?: ServServiceConfig['services'];
-    serviceRefer?: ServServiceReferPattern;
     /**
      * SappSDK.start() 前置回调
      * @param sdk
@@ -120,6 +134,8 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
+    services?: ServServiceConfig['services'];
+    serviceRefer?: ServServiceReferPattern;
 }
 /**
  * SappSDK start参数项
@@ -130,7 +146,7 @@ export interface SappSDKStartOptions {
 /**
  * SappSDK是为Servkit应用提供的一个SDK
  */
-export declare class SappSDK {
+export declare class SappSDK extends EventEmitter {
     /**
      * SDK是否已经初始化
      *

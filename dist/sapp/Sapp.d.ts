@@ -24,7 +24,7 @@ export declare enum ESappType {
 export declare class SappInfo {
     id: string;
     version: string;
-    name: string;
+    name?: string;
     desc?: string;
     type?: ESappType;
     url: string;
@@ -36,9 +36,9 @@ export declare class SappInfo {
         dontStartOnCreate?: boolean;
         layout?: string;
         isPlainPage?: boolean;
+        startTimeout?: number;
+        useTerminalId?: string;
     };
-}
-export interface SappStartParams {
 }
 export interface SappConfig {
     hideOnStart?: boolean;
@@ -50,6 +50,8 @@ export interface SappConfig {
     resolveSessionConfig?(sdk: Sapp): Promise<ServSessionConfig> | ServSessionConfig;
     resolveTerminalConfig?(sdk: Sapp, config: ServTerminalConfig): Promise<ServTerminalConfig> | ServTerminalConfig | void;
     afterStart?(sdk: Sapp): Promise<void>;
+    startTimeout?: number;
+    useTerminalId?: string;
 }
 export interface SappStartOptions {
     data?: any | SappConfig['resolveStartData'];
@@ -111,4 +113,5 @@ export declare class Sapp {
     protected beforeInitTerminal(): Promise<void>;
     protected initTerminal(options: SappStartOptions): Promise<void>;
     protected afterInitTerminal(): Promise<void>;
+    getTerminalId(): string;
 }

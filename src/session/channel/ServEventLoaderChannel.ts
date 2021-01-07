@@ -1,5 +1,5 @@
 import { ServEventChannel, ServEventChannelConfig } from './ServEventChannel';
-import { ServChannelPackage } from './ServChannel';
+import { ServChannelPackage, ServChannelOpenOptions } from './ServChannel';
 import { DeferredUtil } from '../../common/Deferred';
 import { safeExec } from '../../common/common';
 
@@ -7,7 +7,10 @@ export interface ServEventLoader {
     load(): Promise<void>;
 }
 
-// tslint:disable-next-line:no-empty-interface
+export interface ServEventLoaderChannelOpenOptions extends ServChannelOpenOptions {
+    dontWaitSlaveEcho?: boolean;
+}
+
 export interface ServEventLoaderChannelConfig extends ServEventChannelConfig {
     master?: {
         dontWaitEcho?: boolean;
@@ -31,12 +34,14 @@ export class ServEventLoaderChannel extends ServEventChannel {
     protected doWaitSlaveCleanWork?: (() => void);
     protected tryWaitSlaveEcho?: (msg: ServChannelPackage) => void;
     
-    open(): Promise<void> {
+    open(options?: ServEventLoaderChannelOpenOptions): Promise<void> {
         if (this.isOpened()) {
             return Promise.resolve();
         }
 
-        super.open();
+        super.open(options);
+
+        options = options || {};
     
         this.sendable = false;
         if (this.session.isMaster()) {
@@ -45,7 +50,7 @@ export class ServEventLoaderChannel extends ServEventChannel {
                 throw new Error('Can\'t open channel without window.');
             }
 
-            const waitEcho = this.waitSlaveEcho();
+            const waitEcho = this.waitSlaveEcho(options);
 
             const loader = master.createLoader(this);
             
@@ -111,9 +116,9 @@ export class ServEventLoaderChannel extends ServEventChannel {
         }
     }
 
-    protected waitSlaveEcho() {
+    protected waitSlaveEcho(options: ServEventLoaderChannelOpenOptions) {
         const master = this.config.master!;
-        if (!master || master.dontWaitEcho) {
+        if (!master || master.dontWaitEcho || options.dontWaitSlaveEcho) {
             return Promise.resolve();
         }
 

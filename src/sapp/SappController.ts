@@ -46,6 +46,14 @@ export abstract class SappController {
             },
         };
 
+        if (options.startTimeout !== undefined) {
+            config.startTimeout = options.startTimeout;
+        }
+
+        if (options.useTerminalId !== undefined) {
+            config.useTerminalId = options.useTerminalId;
+        }
+
         if (options.startData !== undefined) {
             config.resolveStartData = typeof options.startData === 'function'
                                         ? options.startData

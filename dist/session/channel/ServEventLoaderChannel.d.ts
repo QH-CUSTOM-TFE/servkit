@@ -1,7 +1,10 @@
 import { ServEventChannel, ServEventChannelConfig } from './ServEventChannel';
-import { ServChannelPackage } from './ServChannel';
+import { ServChannelPackage, ServChannelOpenOptions } from './ServChannel';
 export interface ServEventLoader {
     load(): Promise<void>;
+}
+export interface ServEventLoaderChannelOpenOptions extends ServChannelOpenOptions {
+    dontWaitSlaveEcho?: boolean;
 }
 export interface ServEventLoaderChannelConfig extends ServEventChannelConfig {
     master?: {
@@ -22,9 +25,9 @@ export declare class ServEventLoaderChannel extends ServEventChannel {
     protected config: ServEventLoaderChannelConfig;
     protected doWaitSlaveCleanWork?: (() => void);
     protected tryWaitSlaveEcho?: (msg: ServChannelPackage) => void;
-    open(): Promise<void>;
+    open(options?: ServEventLoaderChannelOpenOptions): Promise<void>;
     close(): void;
-    protected waitSlaveEcho(): Promise<void>;
+    protected waitSlaveEcho(options: ServEventLoaderChannelOpenOptions): Promise<void>;
     recvChannelPackage(msg: ServChannelPackage): void;
     protected slaveEcho(): void;
 }

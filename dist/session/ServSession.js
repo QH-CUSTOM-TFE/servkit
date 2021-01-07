@@ -99,7 +99,19 @@ var ServSession = /** @class */ (function () {
             }
             work();
         };
-        var p = this.channel.open().then(function () {
+        var timeout = (options && options.timeout) || common_1.EServConstant.SERV_SESSION_OPEN_TIMEOUT;
+        var pTimeout = timeout > 0 ? new Promise(function (resolve, reject) {
+            timer = setTimeout(function () {
+                doSafeWork(function () {
+                    common_1.logSession(_this, 'OPENNING TIMEOUT');
+                    reject(new Error('timeout'));
+                    _this.close();
+                });
+            }, timeout);
+        }) : undefined;
+        var p = this.channel.open({
+            dontWaitSlaveEcho: !pTimeout,
+        }).then(function () {
             doSafeWork(function () {
                 common_1.logSession(_this, 'OPENNED');
                 _this.status = EServSessionStatus.OPENED;
@@ -111,16 +123,6 @@ var ServSession = /** @class */ (function () {
             });
             return Promise.reject(e);
         });
-        var timeout = (options && options.timeout) || common_1.EServConstant.SERV_SESSION_OPEN_TIMEOUT;
-        var pTimeout = new Promise(function (resolve, reject) {
-            timer = setTimeout(function () {
-                doSafeWork(function () {
-                    common_1.logSession(_this, 'OPENNING TIMEOUT');
-                    reject(new Error('timeout'));
-                    _this.close();
-                });
-            }, timeout);
-        });
         var pCancel = new Promise(function (resolve, reject) {
             _this.openningCancel = function () {
                 doSafeWork(function () {
@@ -130,14 +132,19 @@ var ServSession = /** @class */ (function () {
                 });
             };
         });
-        this.openningPromise = Promise.race([p, pTimeout, pCancel]);
-        if (this.sessionChecker) {
-            this.sessionChecker.start(this.sessionCheckOptions);
+        var promises = [p, pCancel];
+        if (pTimeout) {
+            promises.push(pTimeout);
+        }
+        this.openningPromise = Promise.race(promises);
+        var sessionChecker = pTimeout ? this.sessionChecker : undefined;
+        if (sessionChecker) {
+            sessionChecker.start(this.sessionCheckOptions);
         }
         return this.openningPromise.then(function () {
             _this.flushPendingQueue();
-            if (_this.sessionChecker) {
-                _this.sessionChecker.startChecking();
+            if (sessionChecker) {
+                sessionChecker.startChecking();
             }
         });
     };

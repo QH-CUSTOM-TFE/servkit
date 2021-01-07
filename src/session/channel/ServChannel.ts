@@ -9,9 +9,13 @@ export enum EServChannel {
     EVENT_LOADER,
 }
 
-// tslint:disable-next-line:no-empty-interface
 export interface ServChannelConfig {
     ignoreSenderType?: boolean;
+}
+
+// tslint:disable-next-line:no-empty-interface
+export interface ServChannelOpenOptions {
+    
 }
 
 export interface ServChannelObjectPackage {
@@ -111,7 +115,7 @@ export abstract class ServChannel {
         return false;
     }
 
-    abstract open(): Promise<void>;
+    abstract open(options?: ServChannelOpenOptions): Promise<void>;
     abstract close(): void;
 
     protected toObjectPackage(data: ServSessionPackage): ServChannelObjectPackage {

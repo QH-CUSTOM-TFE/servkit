@@ -4,7 +4,7 @@ import {
     asyncThrow,
     EServConstant,
 } from '../common/common';
-import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED } from '../service/ServService';
+import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, API_ERROR } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
@@ -35,7 +35,7 @@ export enum ESappType {
 export class SappInfo {
     id: string;
     version: string;
-    name: string;
+    name?: string;
     desc?: string;
     type?: ESappType;
     url: string;
@@ -47,12 +47,9 @@ export class SappInfo {
         dontStartOnCreate?: boolean;
         layout?: string;
         isPlainPage?: boolean;
+        startTimeout?: number;
+        useTerminalId?: string;
     };
-}
-
-// tslint:disable-next-line:no-empty-interface
-export interface SappStartParams {
-
 }
 
 export interface SappConfig {
@@ -74,6 +71,10 @@ export interface SappConfig {
         : Promise<ServTerminalConfig> | ServTerminalConfig | void;
 
     afterStart?(sdk: Sapp): Promise<void>;
+
+    startTimeout?: number;
+
+    useTerminalId?: string;
 }
 
 export interface SappStartOptions {
@@ -174,61 +175,95 @@ export class Sapp {
                 throw new Error('[SAPP] Config must be set before start');
             }
 
-            const waitOnAuth = DeferredUtil.create({ timeout: EServConstant.SERV_SAPP_ON_START_TIMEOUT });
-            this.waitOnAuth = waitOnAuth;
+            const newOptions = options || {};
 
-            const waitOnStart = DeferredUtil.create({
-                timeout: EServConstant.SERV_SAPP_ON_START_TIMEOUT,
-                rejectIf: waitOnAuth,
-            });
-            this.waitOnStart = waitOnStart;
+            const timeout = config.startTimeout
+                            || this.info.options.startTimeout
+                            || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
             
-            options = options || {};
+            let timer = 0;
+            const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
+                timer = setTimeout(() => {
+                    timer = 0;
+                    reject(new Error('timeout'));
+                }, timeout) as any;
+            }) : undefined;
+ 
+            const startWork = async () => {
+                const waitOnAuth = DeferredUtil.create({
+                    rejectIf: pTimeout, 
+                });
+                this.waitOnAuth = waitOnAuth;
 
-            await this.beforeStart(options);
+                const waitOnStart = DeferredUtil.create({
+                    rejectIf: waitOnAuth,
+                });
+                this.waitOnStart = waitOnStart;
 
-            await this.beforeInitTerminal();
-            await this.initTerminal(options);
-            await this.afterInitTerminal();
+                await this.beforeStart(newOptions);
 
-            await waitOnAuth.catch((error) => {
-                if (this.waitOnAuth) {
-                    asyncThrow(new Error('[SAPP] App auth failed'));
+                await this.beforeInitTerminal();
+                await this.initTerminal(newOptions);
+                await this.afterInitTerminal();
+
+                await waitOnAuth.catch((error) => {
+                    if (this.waitOnAuth) {
+                        asyncThrow(new Error('[SAPP] App auth failed'));
+                    }
+                    throw error;
+                });
+                this.waitOnAuth = undefined;
+
+                await waitOnStart.catch((error) => {
+                    if (this.waitOnStart) {
+                        asyncThrow(new Error('[SAPP] App start timeout'));
+                    }
+                    throw error;
+                });
+                this.waitOnStart = undefined;
+
+                this.isStarted = true;
+
+                if (this.controller) {
+                    await this.controller.doCreate();
                 }
-                throw error;
-            });
-            this.waitOnAuth = undefined;
 
-            await waitOnStart.catch((error) => {
-                if (this.waitOnStart) {
-                    asyncThrow(new Error('[SAPP] App start timeout'));
+                if (!this.config.hideOnStart) {
+                    const showParams: SappShowParams = {
+                        force: true,
+                    };
+
+                    const data = await this.resolveStartShowData(newOptions);
+                    if (data !== undefined) {
+                        showParams.data = data;
+                    }
+
+                    await this._show(showParams, true);
                 }
-                throw error;
-            });
-            this.waitOnStart = undefined;
 
-            this.isStarted = true;
+                await this.afterStart();
 
-            if (this.controller) {
-                await this.controller.doCreate();
+                this.started.resolve();
+            };
+
+            const pWork = startWork();
+            let pDone = pWork;
+            if (pTimeout) {
+                pDone = Promise.race([pWork, pTimeout]).then(() => {
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = 0;
+                    }
+                }, (error) => {
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = 0;
+                    }
+                    throw error;
+                });
             }
 
-            if (!this.config.hideOnStart) {
-                const showParams: SappShowParams = {
-                    force: true,
-                };
-
-                const data = await this.resolveStartShowData(options);
-                if (data !== undefined) {
-                    showParams.data = data;
-                }
-
-                await this._show(showParams, true);
-            }
-
-            await this.afterStart();
-
-            this.started.resolve();
+            await pDone;
         } catch (e) {
             this.started.reject(e);
             this.close();
@@ -459,6 +494,10 @@ export class Sapp {
     };
 
     protected async auth(params: SappAuthParams): Promise<void> {
+        if (this.isClosed) {
+            return Promise.reject('closed');
+        }
+
         if (!this.controller) {
             return;
         }
@@ -525,7 +564,7 @@ export class Sapp {
         const config = this.config;
 
         let terminalConfig: ServTerminalConfig = {
-            id: this.uuid,
+            id: this.getTerminalId(),
             type: EServTerminal.MASTER,
             session: undefined!,
         };
@@ -564,13 +603,39 @@ export class Sapp {
         const self = this;
         const SappLifecycleImpl = class extends SappLifecycle {
             onStart(): ServAPIRetn {
+                if (self.isClosed) {
+                    return API_ERROR('closed');
+                }
                 if (self.waitOnStart) {
                     self.waitOnStart.resolve();
+                }
+
+                if (self.isStarted) {   // For has started app, do show work
+                    Promise.resolve().then(async () => {
+                        if (!self.isStarted) {
+                            return;
+                        }
+
+                        const showParams: SappShowParams = {
+                            force: true,
+                        };
+    
+                        const data = await self.resolveStartShowData(options);
+                        if (data !== undefined) {
+                            showParams.data = data;
+                        }
+    
+                        self._show(showParams, true);
+                    });
                 }
                 return API_SUCCEED();
             }
 
             auth(params: SappAuthParams): ServAPIRetn {
+                if (self.isClosed) {
+                    return API_ERROR('closed');
+                }
+
                 const p = self.auth(params);
                 p.then(() => {
                     if (self.waitOnAuth) {
@@ -586,6 +651,9 @@ export class Sapp {
             }
 
             getStartData(): ServAPIRetn<any> {
+                if (self.isClosed) {
+                    return API_ERROR('closed');
+                }
                 return self.resolveStartData(options);
             }
 
@@ -610,10 +678,24 @@ export class Sapp {
             lazy: true,
         });
 
-        await this.terminal.openSession();
+        const timeout = config.startTimeout
+                        || this.info.options.startTimeout
+                        || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
+
+        await this.terminal.openSession({ timeout });
     }
 
     protected async afterInitTerminal(): Promise<void> {
         //
+    }
+
+    getTerminalId() {
+        if (this.terminal) {
+            return this.terminal.id;
+        }
+
+        return this.config.useTerminalId
+            || this.info.options.useTerminalId
+            || this.uuid;
     }
 }

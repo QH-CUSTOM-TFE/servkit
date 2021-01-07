@@ -135,16 +135,16 @@ export class SappDefaultIFrameController extends SappController {
                 display: 'none',
             };
         }
-
-        const params = this.resolveQueryParams(options);
-
-        const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
-        
+   
         return {
             type: EServChannel.WINDOW,
             config: {
                 master: IFrameUtil.generateCreator({
-                    url: wrapServQueryParams(url, params),
+                    url: () => {
+                        const params = this.resolveQueryParams(options);
+                        const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+                        return wrapServQueryParams(url, params);
+                    },
                     id: this.app.uuid,
                     showPolicy: EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',
@@ -170,7 +170,7 @@ export class SappDefaultIFrameController extends SappController {
 
     protected resolveQueryParams(options: SappCreateOptions) {
         const params: SappSDKStartParams = {
-            uuid: this.app.uuid,
+            uuid: this.app.getTerminalId(),
         };
 
         return params;

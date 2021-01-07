@@ -98,7 +98,7 @@ var Sapp = /** @class */ (function () {
         this.mutex = new AsyncMutex_1.AsyncMutex();
         this.showHideMutex = new AsyncMutex_1.AsyncMutex();
         this.start = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
-            var config, waitOnAuth, waitOnStart, showParams, data, e_1;
+            var config, newOptions_1, timeout_1, timer_1, pTimeout_1, startWork, pWork, pDone, e_1;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -111,81 +111,121 @@ var Sapp = /** @class */ (function () {
                         }
                         _a.label = 1;
                     case 1:
-                        _a.trys.push([1, 14, , 15]);
+                        _a.trys.push([1, 3, , 4]);
                         config = this.config;
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
                         }
-                        waitOnAuth = Deferred_1.DeferredUtil.create({ timeout: common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT });
-                        this.waitOnAuth = waitOnAuth;
-                        waitOnStart = Deferred_1.DeferredUtil.create({
-                            timeout: common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT,
-                            rejectIf: waitOnAuth,
-                        });
-                        this.waitOnStart = waitOnStart;
-                        options = options || {};
-                        return [4 /*yield*/, this.beforeStart(options)];
+                        newOptions_1 = options || {};
+                        timeout_1 = config.startTimeout
+                            || this.info.options.startTimeout
+                            || common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT;
+                        timer_1 = 0;
+                        pTimeout_1 = timeout_1 > 0 ? new Promise(function (resolve, reject) {
+                            timer_1 = setTimeout(function () {
+                                timer_1 = 0;
+                                reject(new Error('timeout'));
+                            }, timeout_1);
+                        }) : undefined;
+                        startWork = function () { return __awaiter(_this, void 0, void 0, function () {
+                            var waitOnAuth, waitOnStart, showParams, data;
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        waitOnAuth = Deferred_1.DeferredUtil.create({
+                                            rejectIf: pTimeout_1,
+                                        });
+                                        this.waitOnAuth = waitOnAuth;
+                                        waitOnStart = Deferred_1.DeferredUtil.create({
+                                            rejectIf: waitOnAuth,
+                                        });
+                                        this.waitOnStart = waitOnStart;
+                                        return [4 /*yield*/, this.beforeStart(newOptions_1)];
+                                    case 1:
+                                        _a.sent();
+                                        return [4 /*yield*/, this.beforeInitTerminal()];
+                                    case 2:
+                                        _a.sent();
+                                        return [4 /*yield*/, this.initTerminal(newOptions_1)];
+                                    case 3:
+                                        _a.sent();
+                                        return [4 /*yield*/, this.afterInitTerminal()];
+                                    case 4:
+                                        _a.sent();
+                                        return [4 /*yield*/, waitOnAuth.catch(function (error) {
+                                                if (_this.waitOnAuth) {
+                                                    common_1.asyncThrow(new Error('[SAPP] App auth failed'));
+                                                }
+                                                throw error;
+                                            })];
+                                    case 5:
+                                        _a.sent();
+                                        this.waitOnAuth = undefined;
+                                        return [4 /*yield*/, waitOnStart.catch(function (error) {
+                                                if (_this.waitOnStart) {
+                                                    common_1.asyncThrow(new Error('[SAPP] App start timeout'));
+                                                }
+                                                throw error;
+                                            })];
+                                    case 6:
+                                        _a.sent();
+                                        this.waitOnStart = undefined;
+                                        this.isStarted = true;
+                                        if (!this.controller) return [3 /*break*/, 8];
+                                        return [4 /*yield*/, this.controller.doCreate()];
+                                    case 7:
+                                        _a.sent();
+                                        _a.label = 8;
+                                    case 8:
+                                        if (!!this.config.hideOnStart) return [3 /*break*/, 11];
+                                        showParams = {
+                                            force: true,
+                                        };
+                                        return [4 /*yield*/, this.resolveStartShowData(newOptions_1)];
+                                    case 9:
+                                        data = _a.sent();
+                                        if (data !== undefined) {
+                                            showParams.data = data;
+                                        }
+                                        return [4 /*yield*/, this._show(showParams, true)];
+                                    case 10:
+                                        _a.sent();
+                                        _a.label = 11;
+                                    case 11: return [4 /*yield*/, this.afterStart()];
+                                    case 12:
+                                        _a.sent();
+                                        this.started.resolve();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); };
+                        pWork = startWork();
+                        pDone = pWork;
+                        if (pTimeout_1) {
+                            pDone = Promise.race([pWork, pTimeout_1]).then(function () {
+                                if (timer_1) {
+                                    clearTimeout(timer_1);
+                                    timer_1 = 0;
+                                }
+                            }, function (error) {
+                                if (timer_1) {
+                                    clearTimeout(timer_1);
+                                    timer_1 = 0;
+                                }
+                                throw error;
+                            });
+                        }
+                        return [4 /*yield*/, pDone];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, this.beforeInitTerminal()];
+                        return [3 /*break*/, 4];
                     case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.initTerminal(options)];
-                    case 4:
-                        _a.sent();
-                        return [4 /*yield*/, this.afterInitTerminal()];
-                    case 5:
-                        _a.sent();
-                        return [4 /*yield*/, waitOnAuth.catch(function (error) {
-                                if (_this.waitOnAuth) {
-                                    common_1.asyncThrow(new Error('[SAPP] App auth failed'));
-                                }
-                                throw error;
-                            })];
-                    case 6:
-                        _a.sent();
-                        this.waitOnAuth = undefined;
-                        return [4 /*yield*/, waitOnStart.catch(function (error) {
-                                if (_this.waitOnStart) {
-                                    common_1.asyncThrow(new Error('[SAPP] App start timeout'));
-                                }
-                                throw error;
-                            })];
-                    case 7:
-                        _a.sent();
-                        this.waitOnStart = undefined;
-                        this.isStarted = true;
-                        if (!this.controller) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.controller.doCreate()];
-                    case 8:
-                        _a.sent();
-                        _a.label = 9;
-                    case 9:
-                        if (!!this.config.hideOnStart) return [3 /*break*/, 12];
-                        showParams = {
-                            force: true,
-                        };
-                        return [4 /*yield*/, this.resolveStartShowData(options)];
-                    case 10:
-                        data = _a.sent();
-                        if (data !== undefined) {
-                            showParams.data = data;
-                        }
-                        return [4 /*yield*/, this._show(showParams, true)];
-                    case 11:
-                        _a.sent();
-                        _a.label = 12;
-                    case 12: return [4 /*yield*/, this.afterStart()];
-                    case 13:
-                        _a.sent();
-                        this.started.resolve();
-                        return [3 /*break*/, 15];
-                    case 14:
                         e_1 = _a.sent();
                         this.started.reject(e_1);
                         this.close();
                         throw e_1;
-                    case 15: return [2 /*return*/];
+                    case 4: return [2 /*return*/];
                 }
             });
         }); }));
@@ -466,6 +506,9 @@ var Sapp = /** @class */ (function () {
     Sapp.prototype.auth = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (this.isClosed) {
+                    return [2 /*return*/, Promise.reject('closed')];
+                }
                 if (!this.controller) {
                     return [2 /*return*/];
                 }
@@ -560,13 +603,13 @@ var Sapp = /** @class */ (function () {
     };
     Sapp.prototype.initTerminal = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl;
+            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl, timeout;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
                         config = this.config;
                         terminalConfig = {
-                            id: this.uuid,
+                            id: this.getTerminalId(),
                             type: ServTerminal_1.EServTerminal.MASTER,
                             session: undefined,
                         };
@@ -615,12 +658,43 @@ var Sapp = /** @class */ (function () {
                                 return _super !== null && _super.apply(this, arguments) || this;
                             }
                             class_1.prototype.onStart = function () {
+                                var _this = this;
+                                if (self.isClosed) {
+                                    return ServService_1.API_ERROR('closed');
+                                }
                                 if (self.waitOnStart) {
                                     self.waitOnStart.resolve();
+                                }
+                                if (self.isStarted) { // For has started app, do show work
+                                    Promise.resolve().then(function () { return __awaiter(_this, void 0, void 0, function () {
+                                        var showParams, data;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    if (!self.isStarted) {
+                                                        return [2 /*return*/];
+                                                    }
+                                                    showParams = {
+                                                        force: true,
+                                                    };
+                                                    return [4 /*yield*/, self.resolveStartShowData(options)];
+                                                case 1:
+                                                    data = _a.sent();
+                                                    if (data !== undefined) {
+                                                        showParams.data = data;
+                                                    }
+                                                    self._show(showParams, true);
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    }); });
                                 }
                                 return ServService_1.API_SUCCEED();
                             };
                             class_1.prototype.auth = function (params) {
+                                if (self.isClosed) {
+                                    return ServService_1.API_ERROR('closed');
+                                }
                                 var p = self.auth(params);
                                 p.then(function () {
                                     if (self.waitOnAuth) {
@@ -634,6 +708,9 @@ var Sapp = /** @class */ (function () {
                                 return p;
                             };
                             class_1.prototype.getStartData = function () {
+                                if (self.isClosed) {
+                                    return ServService_1.API_ERROR('closed');
+                                }
                                 return self.resolveStartData(options);
                             };
                             class_1.prototype.show = function (p) {
@@ -654,7 +731,10 @@ var Sapp = /** @class */ (function () {
                             }], {
                             lazy: true,
                         });
-                        return [4 /*yield*/, this.terminal.openSession()];
+                        timeout = config.startTimeout
+                            || this.info.options.startTimeout
+                            || common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT;
+                        return [4 /*yield*/, this.terminal.openSession({ timeout: timeout })];
                     case 9:
                         _d.sent();
                         return [2 /*return*/];
@@ -668,6 +748,14 @@ var Sapp = /** @class */ (function () {
                 return [2 /*return*/];
             });
         });
+    };
+    Sapp.prototype.getTerminalId = function () {
+        if (this.terminal) {
+            return this.terminal.id;
+        }
+        return this.config.useTerminalId
+            || this.info.options.useTerminalId
+            || this.uuid;
     };
     return Sapp;
 }());

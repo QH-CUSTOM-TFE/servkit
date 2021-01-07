@@ -23,6 +23,8 @@ export interface SappCreateOptions {
     startShowData?: any | ((app: Sapp) => any);
     services?: ServServiceConfig['services'];
     serviceRefer?: ServServiceReferPattern;
+    startTimeout?: number;
+    useTerminalId?: string;
 }
 export interface SappMGRConfig {
     servkit?: Servkit;
@@ -36,7 +38,6 @@ export declare class SappMGR {
     protected apps: {
         [key: string]: Sapp[];
     };
-    protected nextId: number;
     protected config: SappMGRConfig;
     constructor();
     setConfig(config: SappMGRConfig): this;
