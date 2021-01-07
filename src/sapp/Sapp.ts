@@ -292,12 +292,12 @@ export class Sapp {
                         return service.onShow({
                             ...params,
                             byCreate,
-                        }).then((dontShow) => {
-                            if (dontShow) {
+                        }).then((result) => {
+                            if (result && result.dontShow) {
                                 asyncThrow(new Error(`[SAPP] Can\'t show app because rejection`));
                             }
                             return {
-                                dontShow: !!dontShow,
+                                dontShow: !!(result && result.dontShow),
                             };
                         }, (error) => {
                             asyncThrow(error);
@@ -343,12 +343,12 @@ export class Sapp {
                         return service.onHide({
                             byClose,
                             ...params,
-                        }).then((dontHide) => {
-                            if (dontHide) {
+                        }).then((result) => {
+                            if (result && result.dontHide) {
                                 asyncThrow(new Error(`[SAPP] Can\'t hide app because rejection`));
                             }
                             return {
-                                dontHide: !!dontHide,
+                                dontHide: !!(result && result.dontHide),
                             };
                         }, (error) => {
                             asyncThrow(error);
@@ -393,12 +393,16 @@ export class Sapp {
         this.mutex.lockGuard(
             async (result?: SappCloseResult) => {
                 if (this.isStarted) {
-                    await this._hide({ force: true }, true).catch(() => undefined);
-                    await this.service(Lifecycle).then((service) => {
+                    // await this._hide({ force: true }, true).catch(() => undefined);
+                    const onCloseResult = await this.service(Lifecycle).then((service) => {
                         return service.onClose();
                     }).catch((error) => {
                         asyncThrow(error);
                     });
+
+                    if (onCloseResult && onCloseResult.dontClose) {
+                        throw new Error('reject');
+                    }
                 }
 
                 if (this.controller) {

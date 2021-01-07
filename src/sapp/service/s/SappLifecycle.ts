@@ -9,23 +9,35 @@ export interface SappHideParams extends HideParams {
     byClose?: boolean;
 }
 
+export interface SappOnShowResult {
+    dontShow?: boolean;
+}
+
+export interface SappOnHideResult {
+    dontHide?: boolean;
+}
+
+export interface SappOnCloseResult {
+    dontClose?: boolean;
+}
+
 @anno.decl({
     id: '$service.sapp.s.lifecycle',
     version: '1.0.0',
 })
 export class SappLifecycle extends ServService {
     @anno.decl.api()
-    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean | void> {
+    onShow(params: ServAPIArgs<SappShowParams>): ServAPIRetn<SappOnShowResult | void> {
         return API_UNSUPPORT();
     }
     
     @anno.decl.api()
-    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean | void> {
+    onHide(params: ServAPIArgs<SappHideParams>): ServAPIRetn<SappOnHideResult | void> {
         return API_UNSUPPORT();
     }
 
     @anno.decl.api()
-    onClose(): ServAPIRetn {
+    onClose(): ServAPIRetn<SappOnCloseResult | void> {
         return API_UNSUPPORT();
     }
 }

@@ -234,12 +234,12 @@ var Sapp = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
-                            return service.onShow(__assign(__assign({}, params), { byCreate: byCreate })).then(function (dontShow) {
-                                if (dontShow) {
+                            return service.onShow(__assign(__assign({}, params), { byCreate: byCreate })).then(function (result) {
+                                if (result && result.dontShow) {
                                     common_1.asyncThrow(new Error("[SAPP] Can't show app because rejection"));
                                 }
                                 return {
-                                    dontShow: !!dontShow,
+                                    dontShow: !!(result && result.dontShow),
                                 };
                             }, function (error) {
                                 common_1.asyncThrow(error);
@@ -290,12 +290,12 @@ var Sapp = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
-                            return service.onHide(__assign({ byClose: byClose }, params)).then(function (dontHide) {
-                                if (dontHide) {
+                            return service.onHide(__assign({ byClose: byClose }, params)).then(function (result) {
+                                if (result && result.dontHide) {
                                     common_1.asyncThrow(new Error("[SAPP] Can't hide app because rejection"));
                                 }
                                 return {
-                                    dontHide: !!dontHide,
+                                    dontHide: !!(result && result.dontHide),
                                 };
                             }, function (error) {
                                 common_1.asyncThrow(error);
@@ -343,36 +343,36 @@ var Sapp = /** @class */ (function () {
             });
         }); }));
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
-            var e_4;
+            var onCloseResult, e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.isStarted) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this._hide({ force: true }, true).catch(function () { return undefined; })];
-                    case 1:
-                        _a.sent();
+                        if (!this.isStarted) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.onClose();
                             }).catch(function (error) {
                                 common_1.asyncThrow(error);
                             })];
+                    case 1:
+                        onCloseResult = _a.sent();
+                        if (onCloseResult && onCloseResult.dontClose) {
+                            throw new Error('reject');
+                        }
+                        _a.label = 2;
                     case 2:
-                        _a.sent();
+                        if (!this.controller) return [3 /*break*/, 6];
                         _a.label = 3;
                     case 3:
-                        if (!this.controller) return [3 /*break*/, 7];
-                        _a.label = 4;
-                    case 4:
-                        _a.trys.push([4, 6, , 7]);
+                        _a.trys.push([3, 5, , 6]);
                         return [4 /*yield*/, this.controller.doClose(result)];
-                    case 5:
+                    case 4:
                         _a.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
+                        return [3 /*break*/, 6];
+                    case 5:
                         e_4 = _a.sent();
                         common_1.asyncThrow(e_4);
-                        return [3 /*break*/, 7];
-                    case 7:
+                        return [3 /*break*/, 6];
+                    case 6:
                         this.isClosed = true;
                         if (result) {
                             if (result.error) {

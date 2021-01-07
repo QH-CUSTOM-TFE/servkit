@@ -574,38 +574,36 @@ var SappSDK = /** @class */ (function (_super) {
     };
     SappSDK.prototype.onShow = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var dontShow;
+            var ret;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        dontShow = false;
                         if (!this.config.onShow) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.onShow(this, params)];
                     case 1:
-                        dontShow = _a.sent();
+                        ret = _a.sent();
                         _a.label = 2;
                     case 2:
                         this.emit(ESappSDKLifeCycleEvent.ON_SHOW, this, params);
-                        return [2 /*return*/, dontShow];
+                        return [2 /*return*/, ret];
                 }
             });
         });
     };
     SappSDK.prototype.onHide = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var dontHide;
+            var ret;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        dontHide = false;
                         if (!this.config.onHide) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.onHide(this, params)];
                     case 1:
-                        dontHide = _a.sent();
+                        ret = _a.sent();
                         _a.label = 2;
                     case 2:
                         this.emit(ESappSDKLifeCycleEvent.ON_HIDE, this, params);
-                        return [2 /*return*/, dontHide];
+                        return [2 /*return*/, ret];
                 }
             });
         });
@@ -618,9 +616,7 @@ var SappSDK = /** @class */ (function (_super) {
                         this.emit(ESappSDKLifeCycleEvent.ON_CLOSE, this);
                         if (!this.config.onClose) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.onClose(this)];
-                    case 1:
-                        _a.sent();
-                        _a.label = 2;
+                    case 1: return [2 /*return*/, _a.sent()];
                     case 2: return [2 /*return*/];
                 }
             });

@@ -7,7 +7,14 @@ import { servkit, Servkit } from '../servkit/Servkit';
 import { anno, ServAPIArgs, ServAPIRetn } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
-import { SappLifecycle, SappShowParams, SappHideParams } from './service/s/SappLifecycle';
+import { 
+    SappLifecycle,
+    SappShowParams,
+    SappHideParams,
+    SappOnShowResult,
+    SappOnHideResult,
+    SappOnCloseResult,
+} from './service/s/SappLifecycle';
 import { 
     SappLifecycle as Lifecycle,
     SappShowParams as ShowParams,
@@ -134,28 +141,28 @@ export interface SappSDKConfig {
      * 生命周期回调，应用显示时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnShowResult | void>}
      * @memberof SappSDKConfig
      */
-    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean | void>;
+    onShow?(sdk: SappSDK, params: SappShowParams): Promise<SappOnShowResult | void> | void;
     
     /**
      * 生命周期回调，应用隐藏时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnHideResult | void>}
      * @memberof SappSDKConfig
      */
-    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean | void>;
+    onHide?(sdk: SappSDK, params: SappHideParams): Promise<SappOnHideResult | void> | void;
 
     /**
      * 生命周期回调，应用关闭时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnCloseResult | void>}
      * @memberof SappSDKConfig
      */
-    onClose?(sdk: SappSDK): Promise<void>;
+    onClose?(sdk: SappSDK): Promise<SappOnCloseResult | void> | void;
 
     /**
      * SappSDK的mock配置，通过该配置，SappSDK应用可脱离主应用调试开发；
@@ -583,15 +590,15 @@ export class SappSDK extends EventEmitter {
         // Setup lifecycle
         const self = this;
         const SappLifecycleImpl = class extends SappLifecycle {
-            onShow(p: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean | void> {
+            onShow(p: ServAPIArgs<SappShowParams>): ServAPIRetn<SappOnShowResult | void> {
                 return self.onShow(p);
             }
             
-            onHide(p: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean | void> {
+            onHide(p: ServAPIArgs<SappHideParams>): ServAPIRetn<SappOnHideResult | void> {
                 return self.onHide(p);
             }
 
-            onClose(): ServAPIRetn {
+            onClose(): ServAPIRetn<SappOnCloseResult | void> {
                 return self.onClose();
             }
         };
@@ -648,32 +655,32 @@ export class SappSDK extends EventEmitter {
     }
 
     protected async onShow(params: SappShowParams) {
-        let dontShow: boolean | void = false;
+        let ret: SappOnShowResult | void;
         if (this.config.onShow) {
-            dontShow = await this.config.onShow(this, params);
+            ret = await this.config.onShow(this, params);
         }
 
         this.emit(ESappSDKLifeCycleEvent.ON_SHOW, this, params);
 
-        return dontShow;
+        return ret;
     }
 
     protected async onHide(params: SappHideParams) {
-        let dontHide: boolean | void = false;
+        let ret: SappOnHideResult | void;
         if (this.config.onHide) {
-            dontHide = await this.config.onHide(this, params);
+            ret = await this.config.onHide(this, params);
         }
 
         this.emit(ESappSDKLifeCycleEvent.ON_HIDE, this, params);
 
-        return dontHide;
+        return ret;
     }
 
     protected async onClose() {
         this.emit(ESappSDKLifeCycleEvent.ON_CLOSE, this);
 
         if (this.config.onClose) {
-            await this.config.onClose(this);
+            return await this.config.onClose(this);
         }
     }
 

@@ -3,7 +3,7 @@ import { ServServiceServerConfig, ServServiceServer } from '../service/ServServi
 import { Servkit } from '../servkit/Servkit';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
-import { SappShowParams, SappHideParams } from './service/s/SappLifecycle';
+import { SappShowParams, SappHideParams, SappOnShowResult, SappOnHideResult, SappOnCloseResult } from './service/s/SappLifecycle';
 import { SappShowParams as ShowParams, SappHideParams as HideParams, SappAuthParams as AuthParams } from './service/m/SappLifecycle';
 import { Deferred } from '../common/Deferred';
 import { SappSDKMock, SappSDKMockConfig } from './SappSDKMock';
@@ -106,26 +106,26 @@ export interface SappSDKConfig {
      * 生命周期回调，应用显示时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnShowResult | void>}
      * @memberof SappSDKConfig
      */
-    onShow?(sdk: SappSDK, params: SappShowParams): Promise<boolean | void>;
+    onShow?(sdk: SappSDK, params: SappShowParams): Promise<SappOnShowResult | void> | void;
     /**
      * 生命周期回调，应用隐藏时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnHideResult | void>}
      * @memberof SappSDKConfig
      */
-    onHide?(sdk: SappSDK, params: SappHideParams): Promise<boolean | void>;
+    onHide?(sdk: SappSDK, params: SappHideParams): Promise<SappOnHideResult | void> | void;
     /**
      * 生命周期回调，应用关闭时回调
      *
      * @param {SappSDK} sdk
-     * @returns {Promise<void>}
+     * @returns {Promise<SappOnCloseResult | void>}
      * @memberof SappSDKConfig
      */
-    onClose?(sdk: SappSDK): Promise<void>;
+    onClose?(sdk: SappSDK): Promise<SappOnCloseResult | void> | void;
     /**
      * SappSDK的mock配置，通过该配置，SappSDK应用可脱离主应用调试开发；
      * 通过window.__$servkit.enableSappSDKMock()或者链接添加__SAPPSDK_MOCK_ENABLE__打开开关才能生效；
@@ -278,9 +278,9 @@ export declare class SappSDK extends EventEmitter {
     protected initSDK(): Promise<void>;
     protected initSDKMock(): Promise<void>;
     protected onCreate(params: SappSDKStartParams, data: any): Promise<void>;
-    protected onShow(params: SappShowParams): Promise<boolean | void>;
-    protected onHide(params: SappHideParams): Promise<boolean | void>;
-    protected onClose(): Promise<void>;
+    protected onShow(params: SappShowParams): Promise<void | SappOnShowResult>;
+    protected onHide(params: SappHideParams): Promise<void | SappOnHideResult>;
+    protected onClose(): Promise<void | SappOnCloseResult>;
     getAppType(): ESappType;
     getDefaultStartParams(): SappSDKStartParams | undefined;
     static declAsyncLoad(appId: string, params: SappSDKAsyncLoadDeclParams): void;
