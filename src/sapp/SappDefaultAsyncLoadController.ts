@@ -187,12 +187,12 @@ export class SappDefaultAsyncLoadController extends SappController {
                                 const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
                                 await LoadUtil.loadScript({
                                     url,
-                                });
+                                }).loaded;
                             } else {
                                 const html = Sapp.transformContentByInfo(this.app.info.html!, this.app.info);
                                 await LoadUtil.loadHtml({
                                     html,
-                                });
+                                }).loaded;
                             }
                         }
                     }
@@ -200,13 +200,15 @@ export class SappDefaultAsyncLoadController extends SappController {
                     // Re-read the context, if not exist, load fail
                     context = getAsyncLoadDeclContext(this.app.info.id);
                     if (!context) {
-                        throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad`);
+                        if (!this.app.info.options.isPlainPage) {
+                            throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad`);
+                        }
+                    } else {
+                        const params = this.resolveSharedParams(options);
+                        putAsyncLoadStartParams(this.app.info.id, params);
+            
+                        context.bootstrap();
                     }
-
-                    const params = this.resolveSharedParams(options);
-                    putAsyncLoadStartParams(this.app.info.id, params);
-        
-                    context.bootstrap();
                 };
 
                 return {

@@ -12,6 +12,8 @@ var utils_1 = require("./utils");
 var ALL_SCRIPT_REGEX = /(<script[\s\S]*?>)[\s\S]*?<\/script>/gi;
 var SCRIPT_TAG_REGEX = /<(script)\s+((?!type=('|')text\/ng-template\3)[\s\S])*?>[\s\S]*?<\/\1>/i;
 var SCRIPT_SRC_REGEX = /.*\ssrc=('|")?([^>'"\s]+)/;
+var SCRIPT_CROSSORIGIN_REGEX = /.*\scrossorigin=('|")?([^>'"\s]+)/;
+var SCRIPT_CROSSORIGIN_MARK_REGEX = /.*\scrossorigin\s*.*/;
 var SCRIPT_TYPE_REGEX = /.*\stype=('|")?([^>'"\s]+)/;
 var SCRIPT_ENTRY_REGEX = /.*\sentry\s*.*/;
 var SCRIPT_ASYNC_REGEX = /.*\sasync\s*.*/;
@@ -139,8 +141,26 @@ function processTpl(tpl, baseURI) {
                 return exports.genModuleScriptReplaceSymbol(matchedScriptSrc || 'js file', moduleSupport);
             }
             if (matchedScriptSrc) {
+                var meta = {
+                    async: false,
+                    src: matchedScriptSrc,
+                    crossorigin: undefined,
+                };
                 var asyncScript = !!scriptTag.match(SCRIPT_ASYNC_REGEX);
-                scripts.push(asyncScript ? { async: true, src: matchedScriptSrc } : matchedScriptSrc);
+                if (asyncScript) {
+                    meta.async = true;
+                }
+                var crossoriginMatch = scriptTag.match(SCRIPT_CROSSORIGIN_REGEX);
+                if (crossoriginMatch) {
+                    meta.crossorigin = crossoriginMatch[2] || 'anonymous';
+                }
+                else {
+                    var crossoriginMarkMatch = scriptTag.match(SCRIPT_CROSSORIGIN_MARK_REGEX);
+                    if (crossoriginMarkMatch) {
+                        meta.crossorigin = 'anonymous';
+                    }
+                }
+                scripts.push(meta);
                 return exports.genScriptReplaceSymbol(matchedScriptSrc, asyncScript);
             }
             return match;
@@ -170,8 +190,6 @@ function processTpl(tpl, baseURI) {
         template: template,
         scripts: scripts,
         styles: styles,
-        // set the last script as entry if have not set
-        entry: entry || scripts[scripts.length - 1],
     };
 }
 exports.default = processTpl;

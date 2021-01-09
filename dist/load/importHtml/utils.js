@@ -162,5 +162,5 @@ function readResAsString(response, autoDetectCharset) {
     }); });
 }
 exports.readResAsString = readResAsString;
-exports.isInlineCode = function (code) { return code.startsWith('<'); };
+exports.isInlineCode = function (code) { return typeof code === 'string' && code.startsWith('<'); };
 //# sourceMappingURL=utils.js.map

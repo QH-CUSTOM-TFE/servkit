@@ -121,9 +121,9 @@ export class SappMGR {
         return this.infos[id];
     }
 
-    addAppInfo(info: SappInfo) {
+    addAppInfo(info: SappInfo): SappInfo | undefined {
         if (!info.id) {
-            return false;
+            return;
         }
 
         const oldInfo = info;
@@ -137,17 +137,18 @@ export class SappMGR {
         
         this.infos[info.id] = info;
 
-        return true;
+        return info;
     }
 
     remAppInfo(id: string) {
-        if (!this.infos[id]) {
-            return false;
+        const info = this.infos[id];
+        if (!info) {
+            return info;
         }
 
         delete this.infos[id];
 
-        return true;
+        return info;
     }
 
     async loadAppInfo(id: string): Promise<SappInfo | undefined> {
@@ -166,7 +167,7 @@ export class SappMGR {
         return this.getAppInfo(id);
     }
 
-    async preload(id: string | SappInfo): Promise<void> {
+    async preload(id: string | SappInfo): Promise<boolean> {
         let info: SappInfo | undefined;
         if (typeof id === 'object') {
             info = id;
@@ -175,21 +176,31 @@ export class SappMGR {
 
         const app = this.getApp(id);
         if (app && app.isStarted) {  // Has Create 
-            return;
+            return true;
         }
 
         if (info) {
-            if (!this.addAppInfo(info)) {
-                throw new Error(`[SAPPMGR] App info is invalid`);
+            info = this.addAppInfo(info);
+            if (!info) {
+                return false;
             }
+        } else {
+            info = await this.loadAppInfo(id).catch(() => undefined);
         }
-
-        info = await this.loadAppInfo(id);
+        
         if (!info) {
-            throw new Error(`[SAPPMGR] App ${id} is not exits`);
+            return false;
         }
 
-        return SappPreloader.instance.load(info);
+        if (info.type !== ESappType.ASYNC_LOAD || info.options.isPlainPage) {
+            return false;
+        }
+
+        return SappPreloader.instance.load(info).then(() => {
+            return true;
+        }, () => {
+            return false;
+        });
     }
 
     async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {

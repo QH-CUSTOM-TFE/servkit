@@ -18,5 +18,4 @@ export default function processTpl(tpl: any, baseURI: any): {
     template: any;
     scripts: never[];
     styles: never[];
-    entry: never;
 };

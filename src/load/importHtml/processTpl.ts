@@ -11,6 +11,8 @@ import { getInlineCode, isModuleScriptSupported } from './utils';
 const ALL_SCRIPT_REGEX = /(<script[\s\S]*?>)[\s\S]*?<\/script>/gi;
 const SCRIPT_TAG_REGEX = /<(script)\s+((?!type=('|')text\/ng-template\3)[\s\S])*?>[\s\S]*?<\/\1>/i;
 const SCRIPT_SRC_REGEX = /.*\ssrc=('|")?([^>'"\s]+)/;
+const SCRIPT_CROSSORIGIN_REGEX = /.*\scrossorigin=('|")?([^>'"\s]+)/;
+const SCRIPT_CROSSORIGIN_MARK_REGEX = /.*\scrossorigin\s*.*/;
 const SCRIPT_TYPE_REGEX = /.*\stype=('|")?([^>'"\s]+)/;
 const SCRIPT_ENTRY_REGEX = /.*\sentry\s*.*/;
 const SCRIPT_ASYNC_REGEX = /.*\sasync\s*.*/;
@@ -157,8 +159,28 @@ export default function processTpl(tpl, baseURI) {
 				}
 
 				if (matchedScriptSrc) {
+					const meta = {
+						async: false,
+						src: matchedScriptSrc,
+						crossorigin: undefined,
+					};
+
 					const asyncScript = !!scriptTag.match(SCRIPT_ASYNC_REGEX);
-					scripts.push(asyncScript ? { async: true, src: matchedScriptSrc } : matchedScriptSrc);
+					if (asyncScript) {
+						meta.async = true;
+					}
+
+					const crossoriginMatch = scriptTag.match(SCRIPT_CROSSORIGIN_REGEX);
+					if (crossoriginMatch) {
+						meta.crossorigin = crossoriginMatch[2] || 'anonymous';
+					} else {
+						const crossoriginMarkMatch = scriptTag.match(SCRIPT_CROSSORIGIN_MARK_REGEX);
+						if (crossoriginMarkMatch) {
+							meta.crossorigin = 'anonymous';
+						}
+					}
+				
+					scripts.push(meta);
 					return genScriptReplaceSymbol(matchedScriptSrc, asyncScript);
 				}
 
@@ -195,8 +217,6 @@ export default function processTpl(tpl, baseURI) {
 		template,
 		scripts,
 		styles,
-		// set the last script as entry if have not set
-		entry: entry || scripts[scripts.length - 1],
 	};
 }
 

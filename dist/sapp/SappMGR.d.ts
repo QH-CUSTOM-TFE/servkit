@@ -52,10 +52,10 @@ export declare class SappMGR {
     getApp(id: string): Sapp;
     getApps(id: string): Sapp[];
     getAppInfo(id: string): SappInfo;
-    addAppInfo(info: SappInfo): boolean;
-    remAppInfo(id: string): boolean;
+    addAppInfo(info: SappInfo): SappInfo | undefined;
+    remAppInfo(id: string): SappInfo;
     loadAppInfo(id: string): Promise<SappInfo | undefined>;
-    preload(id: string | SappInfo): Promise<void>;
+    preload(id: string | SappInfo): Promise<boolean>;
     create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp>;
     show(id: string, params?: SappShowParams): Promise<Sapp>;
     hide(id: string, params?: SappHideParams): Promise<Sapp>;

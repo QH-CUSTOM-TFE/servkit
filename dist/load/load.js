@@ -47,7 +47,7 @@ var LoadUtil = /** @class */ (function () {
     }
     LoadUtil._loadHtml = function (html, context) {
         return __awaiter(this, void 0, void 0, function () {
-            var content, url, fetch_1, xhrDeferred_1, xhr_1, assets, waits;
+            var content, url, fetch_1, xhrDeferred_1, xhr_1, assets, cleanElement, waits;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -103,7 +103,11 @@ var LoadUtil = /** @class */ (function () {
                         if (!content) {
                             return [2 /*return*/, Promise.reject(new Error('[SERVKIT] html is invalid for html loader'))];
                         }
-                        assets = processTpl_1.default(content, utils_1.defaultGetPublicPath(window.location.href));
+                        assets = processTpl_1.default(content, utils_1.defaultGetPublicPath(url || window.location.href));
+                        cleanElement = function (el) {
+                            el.onload = null;
+                            el.onerror = null;
+                        };
                         waits = assets.styles
                             .filter(function (item) { return !utils_1.isInlineCode(item); })
                             .map(function (href) {
@@ -121,9 +125,11 @@ var LoadUtil = /** @class */ (function () {
                                 document.appendChild(el);
                             }
                             el.onload = function () {
+                                cleanElement(el);
                                 deferred.resolve();
                             };
                             el.onerror = function (e) {
+                                cleanElement(el);
                                 deferred.resolve(); // Don't care about fail of styles
                             };
                             context.styles.push(el);
@@ -131,11 +137,16 @@ var LoadUtil = /** @class */ (function () {
                         });
                         assets.scripts
                             .filter(function (item) { return !utils_1.isInlineCode(item); })
-                            .forEach(function (src) {
+                            .forEach(function (meta) {
+                            if (typeof meta === 'string') {
+                                return;
+                            }
                             var deferred = Deferred_1.DeferredUtil.create();
                             var el = document.createElement('script');
-                            el.setAttribute('crossorigin', '');
-                            el.src = src;
+                            if (meta.crossorigin !== undefined) {
+                                el.setAttribute('crossorigin', meta.crossorigin);
+                            }
+                            el.src = meta.src;
                             if (document.head) {
                                 document.head.appendChild(el);
                             }
@@ -146,9 +157,11 @@ var LoadUtil = /** @class */ (function () {
                                 document.appendChild(el);
                             }
                             el.onload = function () {
+                                cleanElement(el);
                                 deferred.resolve();
                             };
                             el.onerror = function (e) {
+                                cleanElement(el);
                                 deferred.reject(e);
                             };
                             context.scripts.push(el);

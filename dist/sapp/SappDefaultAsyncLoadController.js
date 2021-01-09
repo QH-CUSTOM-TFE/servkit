@@ -234,7 +234,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
                                 url = Sapp_1.Sapp.transformContentByInfo(this.app.info.url, this.app.info);
                                 return [4 /*yield*/, load_1.LoadUtil.loadScript({
                                         url: url,
-                                    })];
+                                    }).loaded];
                             case 5:
                                 _a.sent();
                                 return [3 /*break*/, 8];
@@ -242,7 +242,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
                                 html = Sapp_1.Sapp.transformContentByInfo(this.app.info.html, this.app.info);
                                 return [4 /*yield*/, load_1.LoadUtil.loadHtml({
                                         html: html,
-                                    })];
+                                    }).loaded];
                             case 7:
                                 _a.sent();
                                 _a.label = 8;
@@ -250,11 +250,15 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
                                 // Re-read the context, if not exist, load fail
                                 context = sharedParams_1.getAsyncLoadDeclContext(this.app.info.id);
                                 if (!context) {
-                                    throw new Error("[SAPPMGR] Can't find bootstrap for preload app " + this.app.info.id + "; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad");
+                                    if (!this.app.info.options.isPlainPage) {
+                                        throw new Error("[SAPPMGR] Can't find bootstrap for preload app " + this.app.info.id + "; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad");
+                                    }
                                 }
-                                params = this.resolveSharedParams(options);
-                                sharedParams_1.putAsyncLoadStartParams(this.app.info.id, params);
-                                context.bootstrap();
+                                else {
+                                    params = this.resolveSharedParams(options);
+                                    sharedParams_1.putAsyncLoadStartParams(this.app.info.id, params);
+                                    context.bootstrap();
+                                }
                                 return [2 /*return*/];
                         }
                     });

@@ -176,4 +176,4 @@ export function readResAsString(response, autoDetectCharset) {
         }));
 }
 
-export const isInlineCode = code => code.startsWith('<');
+export const isInlineCode = code => typeof code === 'string' && code.startsWith('<');

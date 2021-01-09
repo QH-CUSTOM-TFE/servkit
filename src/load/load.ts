@@ -84,7 +84,12 @@ export class LoadUtil {
             return Promise.reject(new Error('[SERVKIT] html is invalid for html loader'));
         }
 
-        const assets = processTpl(content, defaultGetPublicPath(window.location.href));
+        const assets = processTpl(content, defaultGetPublicPath(url || window.location.href));
+
+        const cleanElement = (el: HTMLElement) => {
+            el.onload = null;
+            el.onerror = null;
+        };
         
         const waits = assets.styles
         .filter((item) => !isInlineCode(item))
@@ -105,10 +110,12 @@ export class LoadUtil {
             }
 
             el.onload = () => {
+                cleanElement(el);
                 deferred.resolve();
             };
 
             el.onerror = (e) => {
+                cleanElement(el);
                 deferred.resolve(); // Don't care about fail of styles
             };
 
@@ -119,14 +126,20 @@ export class LoadUtil {
 
         assets.scripts
             .filter((item) => !isInlineCode(item))
-            .forEach((src: string) => {
+            .forEach((meta: string | { async: boolean; src: string; crossorigin?: string }) => {
+            if (typeof meta === 'string') {
+                return;
+            }
+
             const deferred = DeferredUtil.create();
         
             const el = document.createElement('script');
 
-            el.setAttribute('crossorigin', '');
-
-            el.src = src;
+            if (meta.crossorigin !== undefined) {
+                el.setAttribute('crossorigin', meta.crossorigin);
+            }
+            
+            el.src = meta.src;
 
             if (document.head) {
                 document.head.appendChild(el);
@@ -137,10 +150,12 @@ export class LoadUtil {
             }
 
             el.onload = () => {
+                cleanElement(el);
                 deferred.resolve();
             };
 
             el.onerror = (e) => {
+                cleanElement(el);
                 deferred.reject(e);
             };
 

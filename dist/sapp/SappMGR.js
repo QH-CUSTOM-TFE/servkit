@@ -113,7 +113,7 @@ var SappMGR = /** @class */ (function () {
     };
     SappMGR.prototype.addAppInfo = function (info) {
         if (!info.id) {
-            return false;
+            return;
         }
         var oldInfo = info;
         info = Object.assign({}, DEFAULT_APP_INFO, oldInfo);
@@ -124,14 +124,15 @@ var SappMGR = /** @class */ (function () {
             info.options.create = Sapp_1.ESappCreatePolicy.SINGLETON;
         }
         this.infos[info.id] = info;
-        return true;
+        return info;
     };
     SappMGR.prototype.remAppInfo = function (id) {
-        if (!this.infos[id]) {
-            return false;
+        var info = this.infos[id];
+        if (!info) {
+            return info;
         }
         delete this.infos[id];
-        return true;
+        return info;
     };
     SappMGR.prototype.loadAppInfo = function (id) {
         return __awaiter(this, void 0, void 0, function () {
@@ -168,20 +169,30 @@ var SappMGR = /** @class */ (function () {
                         }
                         app = this.getApp(id);
                         if (app && app.isStarted) { // Has Create 
-                            return [2 /*return*/];
+                            return [2 /*return*/, true];
                         }
-                        if (info) {
-                            if (!this.addAppInfo(info)) {
-                                throw new Error("[SAPPMGR] App info is invalid");
-                            }
-                        }
-                        return [4 /*yield*/, this.loadAppInfo(id)];
-                    case 1:
-                        info = _a.sent();
+                        if (!info) return [3 /*break*/, 1];
+                        info = this.addAppInfo(info);
                         if (!info) {
-                            throw new Error("[SAPPMGR] App " + id + " is not exits");
+                            return [2 /*return*/, false];
                         }
-                        return [2 /*return*/, SappPreloader_1.SappPreloader.instance.load(info)];
+                        return [3 /*break*/, 3];
+                    case 1: return [4 /*yield*/, this.loadAppInfo(id).catch(function () { return undefined; })];
+                    case 2:
+                        info = _a.sent();
+                        _a.label = 3;
+                    case 3:
+                        if (!info) {
+                            return [2 /*return*/, false];
+                        }
+                        if (info.type !== Sapp_1.ESappType.ASYNC_LOAD || info.options.isPlainPage) {
+                            return [2 /*return*/, false];
+                        }
+                        return [2 /*return*/, SappPreloader_1.SappPreloader.instance.load(info).then(function () {
+                                return true;
+                            }, function () {
+                                return false;
+                            })];
                 }
             });
         });

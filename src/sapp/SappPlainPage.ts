@@ -5,6 +5,7 @@ import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';
 import { ServWindowChannelConfig } from '../session/channel/ServWindowChannel';
 import { asyncThrow } from '../common/common';
+import { ServEventLoaderChannelConfig } from '../session/channel/ServEventLoaderChannel';
 
 export class SappPlainPage extends Sapp {
     start = DeferredUtil.reEntryGuard(this.mutex.lockGuard(async (options?: SappStartOptions): Promise<void> => {
@@ -168,12 +169,13 @@ export class SappPlainPage extends Sapp {
         terminalConfig.client = undefined;
         terminalConfig.server = undefined;
 
-        if (isIFrameApp) {
-            const channelConfig = terminalConfig.session.channel.config as ServWindowChannelConfig;
-            if (channelConfig && channelConfig.master) {
-                channelConfig.master.dontWaitEcho = true;
-            }
-        }
+        let channelConfig =
+            terminalConfig.session.channel.config as (ServWindowChannelConfig | ServEventLoaderChannelConfig);
+        channelConfig = channelConfig ? { ... channelConfig} : {};
+        channelConfig.master = channelConfig.master ? { ...channelConfig.master } : {} as any;
+        channelConfig.master!.dontWaitEcho = true;
+
+        terminalConfig.session.channel.config = channelConfig;
 
         // Check config validation
         if (!terminalConfig.id || !terminalConfig.session) {
