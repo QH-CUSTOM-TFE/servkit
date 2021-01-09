@@ -41,17 +41,17 @@ export class SappLifecycle extends ServService {
     }
 
     @anno.decl.api()
-    show(params?: ServAPIArgs<SappShowParams>): ServAPIRetn {
+    show(params?: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }
     
     @anno.decl.api()
-    hide(params?: ServAPIArgs<SappHideParams>): ServAPIRetn {
+    hide(params?: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }
 
     @anno.decl.api()
-    close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn {
+    close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }
 }

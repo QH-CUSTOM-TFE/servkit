@@ -209,9 +209,9 @@ export declare class SappSDK extends EventEmitter {
     start: ((options?: SappSDKStartOptions | undefined) => Promise<void>) & {
         deferred: Deferred<void> | undefined;
     };
-    show(params?: ShowParams): Promise<void>;
-    hide(params?: HideParams): Promise<void>;
-    close(): Promise<void>;
+    show(params?: ShowParams): Promise<boolean>;
+    hide(params?: HideParams): Promise<boolean>;
+    close(): Promise<boolean>;
     /**
      * 获取service
      *

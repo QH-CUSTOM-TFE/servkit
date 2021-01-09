@@ -155,7 +155,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         return [3 /*break*/, 4];
                     case 4:
                         this.showDone = Deferred_1.DeferredUtil.create();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));
@@ -179,7 +179,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         e_3 = _a.sent();
                         common_1.asyncThrow(e_3);
                         return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
+                    case 4: return [2 /*return*/, true];
                 }
             });
         }); }));
@@ -188,25 +188,19 @@ var SappPlainPage = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.isStarted) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this._hide({ force: true }, true).catch(function () { return undefined; })];
+                        if (!this.controller) return [3 /*break*/, 4];
+                        _a.label = 1;
                     case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        if (!this.controller) return [3 /*break*/, 6];
-                        _a.label = 3;
-                    case 3:
-                        _a.trys.push([3, 5, , 6]);
+                        _a.trys.push([1, 3, , 4]);
                         return [4 /*yield*/, this.controller.doClose(result)];
-                    case 4:
+                    case 2:
                         _a.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
+                        return [3 /*break*/, 4];
+                    case 3:
                         e_4 = _a.sent();
                         common_1.asyncThrow(e_4);
-                        return [3 /*break*/, 6];
-                    case 6:
+                        return [3 /*break*/, 4];
+                    case 4:
                         this.isClosed = true;
                         if (result) {
                             if (result.error) {
@@ -229,7 +223,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         this.started.catch(function () { return undefined; });
                         this.waitOnStart = undefined;
                         this.manager = undefined;
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));

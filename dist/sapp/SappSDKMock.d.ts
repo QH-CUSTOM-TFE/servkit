@@ -38,15 +38,15 @@ export declare class SappSDKMock {
     fixSlaveTerminalConfig(config: ServTerminalConfig): void;
     protected resolveStartData(): Promise<any>;
     protected resolveStartShowData(): Promise<any>;
-    show(params?: SappShowParams): Promise<void>;
-    hide(params?: SappHideParams): Promise<void>;
-    protected _show: ((params?: SappShowParams | undefined, byCreate?: boolean | undefined) => Promise<void>) & {
+    show(params?: SappShowParams): Promise<boolean>;
+    hide(params?: SappHideParams): Promise<boolean>;
+    protected _show: ((params?: SappShowParams | undefined, byCreate?: boolean | undefined) => Promise<boolean>) & {
         deferred: Deferred<void> | undefined;
     };
-    protected _hide: ((params?: SappHideParams | undefined, byClose?: boolean | undefined) => Promise<void>) & {
+    protected _hide: ((params?: SappHideParams | undefined, byClose?: boolean | undefined) => Promise<boolean>) & {
         deferred: Deferred<void> | undefined;
     };
-    close: ((result?: SappCloseResult | undefined) => Promise<void>) & {
+    close: ((result?: SappCloseResult | undefined) => Promise<boolean>) & {
         deferred: Deferred<void> | undefined;
     };
     getService: ServServiceClient['getService'];

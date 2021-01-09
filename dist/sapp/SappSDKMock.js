@@ -105,7 +105,7 @@ var SappSDKMock = /** @class */ (function () {
                         })];
                     case 1:
                         ret = _a.sent();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));
@@ -137,35 +137,41 @@ var SappSDKMock = /** @class */ (function () {
                         })];
                     case 1:
                         ret = _a.sent();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
+            var onCloseResult, terminal_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.isStarted) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this._hide({ force: true }, true).catch(function () { return undefined; })];
-                    case 1:
-                        _a.sent();
+                        if (!this.isStarted) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.terminal.client.service(SappLifecycle_2.SappLifecycle).then(function (service) {
                                 return service.onClose();
                             }).catch(function (error) {
                                 common_1.asyncThrow(error);
                             })];
+                    case 1:
+                        onCloseResult = _a.sent();
+                        if (onCloseResult && onCloseResult.dontClose) {
+                            return [2 /*return*/, false];
+                        }
+                        _a.label = 2;
                     case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
                         if (this.terminal) {
-                            this.terminal.servkit.destroyTerminal(this.terminal);
+                            terminal_1 = this.terminal;
                             this.terminal = undefined;
+                            // The close operation maybe from sapp, need to send back message;
+                            // so lazy the destroy to next tick 
+                            setTimeout(function () {
+                                terminal_1.servkit.destroyTerminal(terminal_1);
+                            });
                         }
                         this.sdk = undefined;
                         this.isStarted = false;
                         this.waitOnStart = undefined;
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));

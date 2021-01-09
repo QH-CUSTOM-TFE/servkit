@@ -80,6 +80,8 @@ export class SappPlainPage extends Sapp {
                 }
                 
                 this.showDone = DeferredUtil.create();
+
+                return true;
             }));
 
     protected _hide = DeferredUtil.reEntryGuard(
@@ -94,16 +96,17 @@ export class SappPlainPage extends Sapp {
                     } catch (e) {
                         asyncThrow(e);
                     }
-                    
                 }
+
+                return true;
             }));
 
     close = DeferredUtil.reEntryGuard(
         this.mutex.lockGuard(
             async (result?: SappCloseResult) => {
-                if (this.isStarted) {
-                    await this._hide({ force: true }, true).catch(() => undefined);
-                }
+                // if (this.isStarted) {
+                //     await this._hide({ force: true }, true).catch(() => undefined);
+                // }
 
                 if (this.controller) {
                     try {
@@ -111,7 +114,6 @@ export class SappPlainPage extends Sapp {
                     } catch (e) {
                         asyncThrow(e);
                     }
-                    
                 }
                 this.isClosed = true;
                 
@@ -136,6 +138,8 @@ export class SappPlainPage extends Sapp {
                 this.started.catch(() => undefined);
                 this.waitOnStart = undefined;
                 this.manager = undefined!;
+
+                return true;
             }));
 
     protected async initTerminal(options: SappStartOptions): Promise<void> {

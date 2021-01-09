@@ -272,16 +272,15 @@ var Sapp = /** @class */ (function () {
                         return [3 /*break*/, 5];
                     case 5:
                         this.showDone = Deferred_1.DeferredUtil.create();
-                        return [3 /*break*/, 7];
+                        return [2 /*return*/, true];
                     case 6:
                         if (ret.error) {
                             throw ret.error;
                         }
                         if (ret.dontShow) {
-                            throw new Error('reject');
+                            return [2 /*return*/, false];
                         }
                         throw new Error('unknow');
-                    case 7: return [2 /*return*/];
                 }
             });
         }); }));
@@ -329,21 +328,20 @@ var Sapp = /** @class */ (function () {
                         e_3 = _a.sent();
                         common_1.asyncThrow(e_3);
                         return [3 /*break*/, 5];
-                    case 5: return [3 /*break*/, 7];
+                    case 5: return [2 /*return*/, true];
                     case 6:
                         if (ret.error) {
                             throw ret.error;
                         }
                         if (ret.dontHide) {
-                            throw new Error('reject');
+                            return [2 /*return*/, false];
                         }
                         throw new Error('unknow');
-                    case 7: return [2 /*return*/];
                 }
             });
         }); }));
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
-            var onCloseResult, e_4;
+            var onCloseResult, e_4, terminal_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -356,7 +354,7 @@ var Sapp = /** @class */ (function () {
                     case 1:
                         onCloseResult = _a.sent();
                         if (onCloseResult && onCloseResult.dontClose) {
-                            throw new Error('reject');
+                            return [2 /*return*/, false];
                         }
                         _a.label = 2;
                     case 2:
@@ -386,8 +384,13 @@ var Sapp = /** @class */ (function () {
                             this.closed.resolve();
                         }
                         if (this.terminal) {
-                            this.terminal.servkit.destroyTerminal(this.terminal);
+                            terminal_1 = this.terminal;
                             this.terminal = undefined;
+                            // The close operation maybe from sapp, need to send back message;
+                            // so lazy the destroy to next tick 
+                            setTimeout(function () {
+                                terminal_1.servkit.destroyTerminal(terminal_1);
+                            });
                         }
                         this.detachController();
                         this.isStarted = false;
@@ -396,7 +399,7 @@ var Sapp = /** @class */ (function () {
                         this.waitOnStart = undefined;
                         this.waitOnAuth = undefined;
                         this.manager = undefined;
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         }); }));

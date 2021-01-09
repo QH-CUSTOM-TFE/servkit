@@ -323,12 +323,14 @@ export class Sapp {
                         }
                     }
                     this.showDone = DeferredUtil.create();
+
+                    return true;
                 } else {
                     if (ret.error) {
                         throw ret.error;
                     }
                     if (ret.dontShow) {
-                        throw new Error('reject');
+                        return false;
                     }
 
                     throw new Error('unknow');
@@ -376,13 +378,15 @@ export class Sapp {
                             asyncThrow(e);
                         }
                     }
+
+                    return true;
                 } else {
                     if (ret.error) {
                         throw ret.error;
                     }
 
                     if (ret.dontHide) {
-                        throw new Error('reject');
+                        return false;
                     }
 
                     throw new Error('unknow');
@@ -401,7 +405,7 @@ export class Sapp {
                     });
 
                     if (onCloseResult && onCloseResult.dontClose) {
-                        throw new Error('reject');
+                        return false;
                     }
                 }
 
@@ -426,8 +430,13 @@ export class Sapp {
                 }
 
                 if (this.terminal) {
-                    this.terminal.servkit.destroyTerminal(this.terminal);
+                    const terminal = this.terminal;
                     this.terminal = undefined!;
+                    // The close operation maybe from sapp, need to send back message;
+                    // so lazy the destroy to next tick 
+                    setTimeout(() => {
+                        terminal.servkit.destroyTerminal(terminal);
+                    });
                 }
 
                 this.detachController();
@@ -438,7 +447,8 @@ export class Sapp {
                 this.waitOnStart = undefined;
                 this.waitOnAuth = undefined;
                 this.manager = undefined!;
-                
+
+                return true;
             }));
 
     getService: ServServiceClient['getService'] = function(this: Sapp) {
@@ -661,15 +671,15 @@ export class Sapp {
                 return self.resolveStartData(options);
             }
 
-            show(p?: ServAPIArgs<SappShowParams>): ServAPIRetn {
+            show(p?: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
                 return self.show(p);
             }
 
-            hide(p?: ServAPIArgs<SappHideParams>): ServAPIRetn {
+            hide(p?: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
                 return self.hide(p);
             }
 
-            close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn {
+            close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn<boolean> {
                 return self.close(result);
             }
         };

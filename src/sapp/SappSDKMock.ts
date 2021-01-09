@@ -203,15 +203,15 @@ export class SappSDKMock {
                 return self.resolveStartData();
             }
 
-            show(p?: ServAPIArgs<SappShowParams>): ServAPIRetn {
+            show(p?: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
                 return self.show(p);
             }
 
-            hide(p?: ServAPIArgs<SappHideParams>): ServAPIRetn {
+            hide(p?: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
                 return self.hide(p);
             }
 
-            close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn {
+            close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn<boolean> {
                 return self.close(result);
             }
         };
@@ -290,6 +290,8 @@ export class SappSDKMock {
                             error,
                         };
                     });
+
+                return true;
             }));
 
     protected _hide = DeferredUtil.reEntryGuard(
@@ -321,28 +323,41 @@ export class SappSDKMock {
                             error,
                         };
                     });
+                
+                return true;
             }));
 
     close = DeferredUtil.reEntryGuard(
         this.mutex.lockGuard(
             async (result?: SappCloseResult) => {
                 if (this.isStarted) {
-                    await this._hide({ force: true }, true).catch(() => undefined);
-                    await this.terminal.client.service(Lifecycle).then((service) => {
+                    // await this._hide({ force: true }, true).catch(() => undefined);
+                    const onCloseResult = await this.terminal.client.service(Lifecycle).then((service) => {
                         return service.onClose();
                     }).catch((error) => {
                         asyncThrow(error);
                     });
+
+                    if (onCloseResult && onCloseResult.dontClose) {
+                        return false;
+                    }
                 }
 
                 if (this.terminal) {
-                    this.terminal.servkit.destroyTerminal(this.terminal);
+                    const terminal = this.terminal;
                     this.terminal = undefined!;
+                    // The close operation maybe from sapp, need to send back message;
+                    // so lazy the destroy to next tick 
+                    setTimeout(() => {
+                        terminal.servkit.destroyTerminal(terminal);
+                    });
                 }
 
                 this.sdk = undefined!;
                 this.isStarted = false;
                 this.waitOnStart = undefined;
+
+                return true;
             }));
 
     getService: ServServiceClient['getService'] = function(this: SappSDK) {
