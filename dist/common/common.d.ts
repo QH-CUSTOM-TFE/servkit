@@ -6,13 +6,13 @@ export declare const Env: {
     SAPPSDK_MOCK: boolean;
 };
 export declare const EServConstant: {
-    SERV_APP_SHOW_HIDE_TIMEOUT: number;
     SERV_SAPP_ON_START_TIMEOUT: number;
     SERV_COMMON_RETURN_TIMEOUT: number;
     SERV_API_TIMEOUT: number;
     SERV_SESSION_OPEN_TIMEOUT: number;
     SERV_SESSION_CALL_MESSAGE_TIMEOUT: number;
     SAPP_HIDE_MAX_TIME: number;
+    SAPP_LIFECYCLE_TIMEOUT: number;
 };
 export declare function setServConstant(constans: Partial<typeof EServConstant>): void;
 declare function logSessionImpl(session: ServSession, ...args: any[]): void;

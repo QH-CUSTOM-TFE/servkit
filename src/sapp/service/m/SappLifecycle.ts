@@ -1,4 +1,5 @@
 import { ServService, anno, API_UNSUPPORT, ServAPIRetn, ServAPIArgs } from '../../../service/ServService';
+import { EServConstant } from '../../../common/common';
 
 export interface SappShowParams {
     force?: boolean;
@@ -40,17 +41,23 @@ export class SappLifecycle extends ServService {
         return API_UNSUPPORT();
     }
 
-    @anno.decl.api()
+    @anno.decl.api({
+        timeout: EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+    })
     show(params?: ServAPIArgs<SappShowParams>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }
     
-    @anno.decl.api()
+    @anno.decl.api({
+        timeout: EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+    })
     hide(params?: ServAPIArgs<SappHideParams>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }
 
-    @anno.decl.api()
+    @anno.decl.api({
+        timeout: EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+    })
     close(result?: ServAPIArgs<SappCloseResult>): ServAPIRetn<boolean> {
         return API_UNSUPPORT();
     }

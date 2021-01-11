@@ -21,6 +21,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SappLifecycle = void 0;
 var ServService_1 = require("../../../service/ServService");
+var common_1 = require("../../../common/common");
 var SappLifecycle = /** @class */ (function (_super) {
     __extends(SappLifecycle, _super);
     function SappLifecycle() {
@@ -36,13 +37,19 @@ var SappLifecycle = /** @class */ (function (_super) {
         return ServService_1.API_UNSUPPORT();
     };
     __decorate([
-        ServService_1.anno.decl.api()
+        ServService_1.anno.decl.api({
+            timeout: common_1.EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+        })
     ], SappLifecycle.prototype, "onShow", null);
     __decorate([
-        ServService_1.anno.decl.api()
+        ServService_1.anno.decl.api({
+            timeout: common_1.EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+        })
     ], SappLifecycle.prototype, "onHide", null);
     __decorate([
-        ServService_1.anno.decl.api()
+        ServService_1.anno.decl.api({
+            timeout: common_1.EServConstant.SAPP_LIFECYCLE_TIMEOUT,
+        })
     ], SappLifecycle.prototype, "onClose", null);
     SappLifecycle = __decorate([
         ServService_1.anno.decl({
