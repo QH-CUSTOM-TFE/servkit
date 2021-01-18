@@ -15,4 +15,5 @@ __exportStar(require("./ServServiceClient"), exports);
 __exportStar(require("./ServServiceManager"), exports);
 __exportStar(require("./ServService"), exports);
 __exportStar(require("./event/ServEventerManager"), exports);
+__exportStar(require("./ServServiceServerACLResolver"), exports);
 //# sourceMappingURL=index.js.map
