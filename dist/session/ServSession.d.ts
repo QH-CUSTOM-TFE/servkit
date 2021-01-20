@@ -25,6 +25,7 @@ export interface ServSessionConfig {
 }
 export interface ServSessionOpenOptions {
     timeout?: number;
+    waiting?: Promise<void>;
 }
 export declare type ServSessionPackage = ServMessage;
 export interface ServSessionListener {

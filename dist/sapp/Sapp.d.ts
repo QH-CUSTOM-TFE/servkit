@@ -7,6 +7,7 @@ import { SappMGR } from './SappMGR';
 import { Deferred } from '../common/Deferred';
 import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
+import { SappACLResolver } from './SappACLResolver';
 export declare enum ESappCreatePolicy {
     NONE = 0,
     SINGLETON = 1,
@@ -47,9 +48,10 @@ export interface SappConfig {
     resolveStartShowData?(app: Sapp): Promise<any> | any;
     resolveServiceServerConfig?(app: Sapp): Promise<ServServiceServerConfig> | ServServiceServerConfig;
     resolveServiceClientConfig?(app: Sapp): Promise<ServServiceClientConfig> | ServServiceClientConfig;
-    resolveSessionConfig?(sdk: Sapp): Promise<ServSessionConfig> | ServSessionConfig;
-    resolveTerminalConfig?(sdk: Sapp, config: ServTerminalConfig): Promise<ServTerminalConfig> | ServTerminalConfig | void;
-    afterStart?(sdk: Sapp): Promise<void>;
+    resolveSessionConfig?(app: Sapp): Promise<ServSessionConfig> | ServSessionConfig;
+    resolveTerminalConfig?(app: Sapp, config: ServTerminalConfig): Promise<ServTerminalConfig> | ServTerminalConfig | void;
+    resolveACLResolver?(app: Sapp): SappACLResolver;
+    afterStart?(app: Sapp): Promise<void>;
     startTimeout?: number;
     useTerminalId?: string;
 }

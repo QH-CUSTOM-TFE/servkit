@@ -27,9 +27,19 @@ export class SappPlainPage extends Sapp {
 
             await this.beforeStart(options);
 
+            const asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
+
+            if (this.controller) {
+                await this.controller.doStart();
+            }
+
             await this.beforeInitTerminal();
             await this.initTerminal(options);
             await this.afterInitTerminal();
+
+            if (asyncWorks) {
+                await asyncWorks;
+            }
 
             this.isStarted = true;
 

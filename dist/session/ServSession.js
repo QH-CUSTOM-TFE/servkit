@@ -109,9 +109,14 @@ var ServSession = /** @class */ (function () {
                 });
             }, timeout);
         }) : undefined;
-        var p = this.channel.open({
+        var openPromise = this.channel.open({
             dontWaitSlaveEcho: !pTimeout,
-        }).then(function () {
+        });
+        if (options && options.waiting) {
+            var waiting = options.waiting.catch(function () { return undefined; });
+            openPromise = Promise.all([openPromise, waiting]);
+        }
+        var p = openPromise.then(function () {
             doSafeWork(function () {
                 common_1.logSession(_this, 'OPENNED');
                 _this.status = EServSessionStatus.OPENED;

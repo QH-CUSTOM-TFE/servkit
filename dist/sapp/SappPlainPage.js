@@ -71,7 +71,7 @@ var SappPlainPage = /** @class */ (function (_super) {
     function SappPlainPage() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.start = Deferred_1.DeferredUtil.reEntryGuard(_this.mutex.lockGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
-            var config, showParams, _a, e_1;
+            var config, asyncWorks, showParams, _a, e_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -83,7 +83,7 @@ var SappPlainPage = /** @class */ (function (_super) {
                         }
                         _b.label = 1;
                     case 1:
-                        _b.trys.push([1, 13, , 14]);
+                        _b.trys.push([1, 17, , 18]);
                         config = this.config;
                         if (!config) {
                             throw new Error('[SAPP] Config must be set before start');
@@ -92,47 +92,59 @@ var SappPlainPage = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.beforeStart(options)];
                     case 2:
                         _b.sent();
-                        return [4 /*yield*/, this.beforeInitTerminal()];
+                        asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
+                        if (!this.controller) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.controller.doStart()];
                     case 3:
                         _b.sent();
-                        return [4 /*yield*/, this.initTerminal(options)];
-                    case 4:
-                        _b.sent();
-                        return [4 /*yield*/, this.afterInitTerminal()];
+                        _b.label = 4;
+                    case 4: return [4 /*yield*/, this.beforeInitTerminal()];
                     case 5:
                         _b.sent();
-                        this.isStarted = true;
-                        if (!this.controller) return [3 /*break*/, 7];
-                        return [4 /*yield*/, this.controller.doCreate()];
+                        return [4 /*yield*/, this.initTerminal(options)];
                     case 6:
                         _b.sent();
-                        _b.label = 7;
+                        return [4 /*yield*/, this.afterInitTerminal()];
                     case 7:
-                        if (!!this.config.hideOnStart) return [3 /*break*/, 11];
-                        showParams = {
-                            force: true,
-                        };
-                        if (!this.config.resolveStartShowData) return [3 /*break*/, 9];
-                        _a = showParams;
-                        return [4 /*yield*/, this.config.resolveStartShowData(this)];
+                        _b.sent();
+                        if (!asyncWorks) return [3 /*break*/, 9];
+                        return [4 /*yield*/, asyncWorks];
                     case 8:
-                        _a.data = _b.sent();
+                        _b.sent();
                         _b.label = 9;
-                    case 9: return [4 /*yield*/, this._show(showParams, true)];
+                    case 9:
+                        this.isStarted = true;
+                        if (!this.controller) return [3 /*break*/, 11];
+                        return [4 /*yield*/, this.controller.doCreate()];
                     case 10:
                         _b.sent();
                         _b.label = 11;
-                    case 11: return [4 /*yield*/, this.afterStart()];
+                    case 11:
+                        if (!!this.config.hideOnStart) return [3 /*break*/, 15];
+                        showParams = {
+                            force: true,
+                        };
+                        if (!this.config.resolveStartShowData) return [3 /*break*/, 13];
+                        _a = showParams;
+                        return [4 /*yield*/, this.config.resolveStartShowData(this)];
                     case 12:
+                        _a.data = _b.sent();
+                        _b.label = 13;
+                    case 13: return [4 /*yield*/, this._show(showParams, true)];
+                    case 14:
+                        _b.sent();
+                        _b.label = 15;
+                    case 15: return [4 /*yield*/, this.afterStart()];
+                    case 16:
                         _b.sent();
                         this.started.resolve();
-                        return [3 /*break*/, 14];
-                    case 13:
+                        return [3 /*break*/, 18];
+                    case 17:
                         e_1 = _b.sent();
                         this.started.reject(e_1);
                         this.close();
                         throw e_1;
-                    case 14: return [2 /*return*/];
+                    case 18: return [2 /*return*/];
                 }
             });
         }); }));

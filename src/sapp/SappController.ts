@@ -66,7 +66,21 @@ export abstract class SappController {
                                         : (() => options.startShowData);
         }
 
+        if (options.createACLResolver) {
+            config.resolveACLResolver = () => {
+                return options.createACLResolver!(app);
+            };
+        }
+
         app.setConfig(config);
+    }
+
+    async doStart() {
+        //
+    }
+
+    async doAsyncStart() {
+        //
     }
 
     async doCreate() {
@@ -89,11 +103,11 @@ export abstract class SappController {
         //
     }
 
-    protected beforeStart() {
+    protected async beforeStart() {
         //
     }
 
-    protected afterStart() {
+    protected async afterStart() {
         //
     }
 

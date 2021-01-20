@@ -32,6 +32,7 @@ export interface ServSessionConfig {
 
 export interface ServSessionOpenOptions {
     timeout?: number;
+    waiting?: Promise<void>;
 }
 
 export type ServSessionPackage = ServMessage;
@@ -176,9 +177,15 @@ export class ServSession {
             }, timeout) as any;
         }) : undefined;
 
-        const p = this.channel.open({
+        let openPromise = this.channel.open({
             dontWaitSlaveEcho: !pTimeout,
-        }).then(() => {
+        });
+        if (options && options.waiting) {
+            const waiting = options.waiting.catch(() => undefined);
+            openPromise = Promise.all([openPromise, waiting]) as any as Promise<void>;
+        }
+
+        const p = openPromise.then(() => {
             doSafeWork(() => {
                 logSession(this, 'OPENNED');
                 this.status = EServSessionStatus.OPENED;

@@ -17,4 +17,5 @@ __exportStar(require("./SappSDKMock"), exports);
 __exportStar(require("./SappMGR"), exports);
 __exportStar(require("./SappController"), exports);
 __exportStar(require("./SappDefaultIFrameController"), exports);
+__exportStar(require("./SappACLResolver"), exports);
 //# sourceMappingURL=index.js.map

@@ -128,7 +128,7 @@ var Sapp = /** @class */ (function () {
                             }, timeout_1);
                         }) : undefined;
                         startWork = function () { return __awaiter(_this, void 0, void 0, function () {
-                            var waitOnAuth, waitOnStart, showParams, data;
+                            var waitOnAuth, waitOnStart, asyncWorks, showParams, data;
                             var _this = this;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -144,14 +144,20 @@ var Sapp = /** @class */ (function () {
                                         return [4 /*yield*/, this.beforeStart(newOptions_1)];
                                     case 1:
                                         _a.sent();
-                                        return [4 /*yield*/, this.beforeInitTerminal()];
+                                        asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
+                                        if (!this.controller) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, this.controller.doStart()];
                                     case 2:
                                         _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [4 /*yield*/, this.beforeInitTerminal()];
+                                    case 4:
+                                        _a.sent();
                                         return [4 /*yield*/, this.initTerminal(newOptions_1)];
-                                    case 3:
+                                    case 5:
                                         _a.sent();
                                         return [4 /*yield*/, this.afterInitTerminal()];
-                                    case 4:
+                                    case 6:
                                         _a.sent();
                                         return [4 /*yield*/, waitOnAuth.catch(function (error) {
                                                 if (_this.waitOnAuth) {
@@ -159,7 +165,7 @@ var Sapp = /** @class */ (function () {
                                                 }
                                                 throw error;
                                             })];
-                                    case 5:
+                                    case 7:
                                         _a.sent();
                                         this.waitOnAuth = undefined;
                                         return [4 /*yield*/, waitOnStart.catch(function (error) {
@@ -168,32 +174,38 @@ var Sapp = /** @class */ (function () {
                                                 }
                                                 throw error;
                                             })];
-                                    case 6:
+                                    case 8:
                                         _a.sent();
                                         this.waitOnStart = undefined;
-                                        this.isStarted = true;
-                                        if (!this.controller) return [3 /*break*/, 8];
-                                        return [4 /*yield*/, this.controller.doCreate()];
-                                    case 7:
+                                        if (!asyncWorks) return [3 /*break*/, 10];
+                                        return [4 /*yield*/, asyncWorks];
+                                    case 9:
                                         _a.sent();
-                                        _a.label = 8;
-                                    case 8:
-                                        if (!!this.config.hideOnStart) return [3 /*break*/, 11];
+                                        _a.label = 10;
+                                    case 10:
+                                        this.isStarted = true;
+                                        if (!this.controller) return [3 /*break*/, 12];
+                                        return [4 /*yield*/, this.controller.doCreate()];
+                                    case 11:
+                                        _a.sent();
+                                        _a.label = 12;
+                                    case 12:
+                                        if (!!this.config.hideOnStart) return [3 /*break*/, 15];
                                         showParams = {
                                             force: true,
                                         };
                                         return [4 /*yield*/, this.resolveStartShowData(newOptions_1)];
-                                    case 9:
+                                    case 13:
                                         data = _a.sent();
                                         if (data !== undefined) {
                                             showParams.data = data;
                                         }
                                         return [4 /*yield*/, this._show(showParams, true)];
-                                    case 10:
+                                    case 14:
                                         _a.sent();
-                                        _a.label = 11;
-                                    case 11: return [4 /*yield*/, this.afterStart()];
-                                    case 12:
+                                        _a.label = 15;
+                                    case 15: return [4 /*yield*/, this.afterStart()];
+                                    case 16:
                                         _a.sent();
                                         this.started.resolve();
                                         return [2 /*return*/];
@@ -606,7 +618,7 @@ var Sapp = /** @class */ (function () {
     };
     Sapp.prototype.initTerminal = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, terminalConfig, _a, _b, _c, newTerminalConfig, self, SappLifecycleImpl, timeout;
+            var config, terminalConfig, _a, _b, _c, newTerminalConfig, aclResolver, self, SappLifecycleImpl, timeout;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
@@ -651,6 +663,13 @@ var Sapp = /** @class */ (function () {
                         // Check config validation
                         if (!terminalConfig.id || !terminalConfig.session) {
                             throw new Error('[SAPP] Invalid terminal config');
+                        }
+                        aclResolver = config.resolveACLResolver ? config.resolveACLResolver(this) : undefined;
+                        if (aclResolver) {
+                            if (!terminalConfig.server) {
+                                terminalConfig.server = {};
+                            }
+                            terminalConfig.server.ACLResolver = aclResolver;
                         }
                         // Setup terminal
                         this.terminal = this.getServkit().createTerminal(terminalConfig);
@@ -737,7 +756,7 @@ var Sapp = /** @class */ (function () {
                         timeout = config.startTimeout
                             || this.info.options.startTimeout
                             || common_1.EServConstant.SERV_SAPP_ON_START_TIMEOUT;
-                        return [4 /*yield*/, this.terminal.openSession({ timeout: timeout })];
+                        return [4 /*yield*/, this.terminal.openSession({ timeout: timeout, waiting: aclResolver ? aclResolver.init() : undefined })];
                     case 9:
                         _d.sent();
                         return [2 /*return*/];

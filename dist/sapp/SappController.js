@@ -93,7 +93,26 @@ var SappController = /** @class */ (function () {
                         ? options.startShowData
                         : (function () { return options.startShowData; });
                 }
+                if (options.createACLResolver) {
+                    config.resolveACLResolver = function () {
+                        return options.createACLResolver(app);
+                    };
+                }
                 app.setConfig(config);
+                return [2 /*return*/];
+            });
+        });
+    };
+    SappController.prototype.doStart = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
+    };
+    SappController.prototype.doAsyncStart = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
                 return [2 /*return*/];
             });
         });
@@ -134,10 +153,18 @@ var SappController = /** @class */ (function () {
         });
     };
     SappController.prototype.beforeStart = function () {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.afterStart = function () {
-        //
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
     };
     SappController.prototype.doHideAfterAspect = function () {
         var _this = this;

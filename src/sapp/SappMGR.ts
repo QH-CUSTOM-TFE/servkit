@@ -9,6 +9,7 @@ import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 import { SappDefaultAsyncLoadController } from './SappDefaultAsyncLoadController';
 import { SappPreloader } from './SappPreloader';
 import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { SappACLResolver } from './SappACLResolver';
 
 const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
     create: ESappCreatePolicy.SINGLETON,
@@ -39,6 +40,7 @@ export class SappLayoutOptions {
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
+    createACLResolver?(app: Sapp): SappACLResolver;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
     startShowData?: any | ((app: Sapp) => any);
@@ -51,6 +53,7 @@ export interface SappCreateOptions {
 export interface SappMGRConfig {
     servkit?: Servkit;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
+    createACLResolver?(app: Sapp): SappACLResolver;
     loadAppInfo?(mgr: SappMGR, id: string): Promise<SappInfo | undefined>;
 }
 
@@ -204,7 +207,6 @@ export class SappMGR {
     }
 
     async create(id: string | SappInfo, options?: SappCreateOptions): Promise<Sapp> {
-        options = options || {};
         if (typeof id === 'object') {
             if (!this.addAppInfo(id)) {
                 throw new Error(`[SAPPMGR] App info is invalid`);
@@ -222,6 +224,11 @@ export class SappMGR {
         const info = await this.loadAppInfo(id);
         if (!info) {
             throw new Error(`[SAPPMGR] App ${id} is not exits`);
+        }
+
+        options = options || {};
+        if (!options.createACLResolver && this.config.createACLResolver) {
+            options.createACLResolver = this.config.createACLResolver;
         }
 
         app = this.createApp(this.nextAppUuid(info), info, options);

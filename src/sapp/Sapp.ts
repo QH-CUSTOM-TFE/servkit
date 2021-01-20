@@ -14,6 +14,7 @@ import { Deferred, DeferredUtil } from '../common/Deferred';
 import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
 import { replacePlaceholders } from '../common/query';
+import { SappACLResolver } from './SappACLResolver';
 
 export enum ESappCreatePolicy {
     NONE = 0,
@@ -65,12 +66,14 @@ export interface SappConfig {
 
     resolveServiceClientConfig?(app: Sapp): Promise<ServServiceClientConfig> | ServServiceClientConfig;
 
-    resolveSessionConfig?(sdk: Sapp): Promise<ServSessionConfig> | ServSessionConfig;
+    resolveSessionConfig?(app: Sapp): Promise<ServSessionConfig> | ServSessionConfig;
 
-    resolveTerminalConfig?(sdk: Sapp, config: ServTerminalConfig)
+    resolveTerminalConfig?(app: Sapp, config: ServTerminalConfig)
         : Promise<ServTerminalConfig> | ServTerminalConfig | void;
 
-    afterStart?(sdk: Sapp): Promise<void>;
+    resolveACLResolver?(app: Sapp): SappACLResolver;
+
+    afterStart?(app: Sapp): Promise<void>;
 
     startTimeout?: number;
 
@@ -202,6 +205,12 @@ export class Sapp {
 
                 await this.beforeStart(newOptions);
 
+                const asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
+
+                if (this.controller) {
+                    await this.controller.doStart();
+                }
+
                 await this.beforeInitTerminal();
                 await this.initTerminal(newOptions);
                 await this.afterInitTerminal();
@@ -221,6 +230,10 @@ export class Sapp {
                     throw error;
                 });
                 this.waitOnStart = undefined;
+
+                if (asyncWorks) {
+                    await asyncWorks;
+                }
 
                 this.isStarted = true;
 
@@ -610,6 +623,15 @@ export class Sapp {
             throw new Error('[SAPP] Invalid terminal config');
         }
 
+        // Setup acl resolver
+        const aclResolver = config.resolveACLResolver ? config.resolveACLResolver(this) : undefined;
+        if (aclResolver) {
+            if (!terminalConfig.server) {
+                terminalConfig.server = {};
+            }
+            terminalConfig.server.ACLResolver = aclResolver;
+        }
+
         // Setup terminal
         this.terminal = this.getServkit().createTerminal(terminalConfig);
 
@@ -696,7 +718,7 @@ export class Sapp {
                         || this.info.options.startTimeout
                         || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
 
-        await this.terminal.openSession({ timeout });
+        await this.terminal.openSession({ timeout, waiting: aclResolver ? aclResolver.init() : undefined });
     }
 
     protected async afterInitTerminal(): Promise<void> {

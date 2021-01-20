@@ -4,6 +4,7 @@ import { Servkit } from '../servkit/Servkit';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
+import { SappACLResolver } from './SappACLResolver';
 export declare class SappLayoutOptions {
     container?: string | HTMLElement;
     className?: string;
@@ -18,6 +19,7 @@ export declare class SappLayoutOptions {
 export interface SappCreateOptions {
     dontStartOnCreate?: boolean;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
+    createACLResolver?(app: Sapp): SappACLResolver;
     layout?: SappLayoutOptions | ((app: Sapp) => SappLayoutOptions);
     startData?: any | ((app: Sapp) => any);
     startShowData?: any | ((app: Sapp) => any);
@@ -29,6 +31,7 @@ export interface SappCreateOptions {
 export interface SappMGRConfig {
     servkit?: Servkit;
     createAppController?(mgr: SappMGR, app: Sapp): SappController;
+    createACLResolver?(app: Sapp): SappACLResolver;
     loadAppInfo?(mgr: SappMGR, id: string): Promise<SappInfo | undefined>;
 }
 export declare class SappMGR {

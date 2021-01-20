@@ -12,13 +12,15 @@ export declare abstract class SappController {
     setLayoutOptions(options: SappLayoutOptions): void;
     getLayoutOptions(): SappLayoutOptions | undefined;
     doConfig(options: SappCreateOptions): Promise<void>;
+    doStart(): Promise<void>;
+    doAsyncStart(): Promise<void>;
     doCreate(): Promise<void>;
     doShow(): Promise<void>;
     doHide(): Promise<void>;
     doClose(result?: SappCloseResult): Promise<void>;
     doAuth(params: SappAuthParams): Promise<void>;
-    protected beforeStart(): void;
-    protected afterStart(): void;
+    protected beforeStart(): Promise<void>;
+    protected afterStart(): Promise<void>;
     protected doHideAfterAspect(): void;
     protected doShowBeforeAspect(): void;
     protected doCloseAfterAspect(): void;

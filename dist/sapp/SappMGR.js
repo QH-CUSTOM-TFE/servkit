@@ -204,7 +204,6 @@ var SappMGR = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        options = options || {};
                         if (typeof id === 'object') {
                             if (!this.addAppInfo(id)) {
                                 throw new Error("[SAPPMGR] App info is invalid");
@@ -222,6 +221,10 @@ var SappMGR = /** @class */ (function () {
                         info = _a.sent();
                         if (!info) {
                             throw new Error("[SAPPMGR] App " + id + " is not exits");
+                        }
+                        options = options || {};
+                        if (!options.createACLResolver && this.config.createACLResolver) {
+                            options.createACLResolver = this.config.createACLResolver;
                         }
                         app = this.createApp(this.nextAppUuid(info), info, options);
                         this.addApp(app);
