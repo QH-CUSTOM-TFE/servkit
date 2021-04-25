@@ -3,8 +3,7 @@
   "version": "1.0.11",
   "description": "主-从 应用架构的一种实现，目的是通过主应用提供的标准接口来实现从应用二次开发（二方/三方），以实现主应用的平台性开放能力。",
   "main": "./dist/index.js",
-  "author": "Yang G",
-  "license": "MIT",
+  "author": "QH-CUSTOM-TFE",
   "dependencies": {
     "eventemitter3": "2.0.3"
   },
@@ -48,7 +47,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BuildItNow/servkit"
+    "url": "https://github.com/QH-CUSTOM-TFE/servkit"
   },
   "keywords": [
     "rpc",

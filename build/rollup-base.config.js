@@ -56,8 +56,8 @@ function createEntry(config) {
     ],
     output: {
       banner: `/*!
- * servkit Yang G ${pkg.version}
- * (c) ${new Date().getFullYear()} QunHe
+ * servkit QH-CUSTOM-TFE ${pkg.version}
+ * (c) ${new Date().getFullYear()} QH-CUSTOM-TFE
  * @license MIT
  */`,
       file: `dist/${config.file}`,
