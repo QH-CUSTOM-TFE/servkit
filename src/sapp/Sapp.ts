@@ -1,3 +1,4 @@
+import { Servkit } from '../servkit';
 import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { ServServiceServerConfig, ServServiceServer } from '../service/ServServiceServer';
 import {
@@ -25,7 +26,7 @@ export enum ESappCreatePolicy {
 export enum ESappLifePolicy {
     NONE = 0,
     MANUAL, // Default
-    AUTO,   
+    AUTO,
 }
 
 export enum ESappType {
@@ -87,7 +88,7 @@ export interface SappStartOptions {
 
 export class Sapp {
     static transformContentByInfo(content: string, info: SappInfo) {
-        return replacePlaceholders(content, { version: info.version });   
+        return replacePlaceholders(content, { version: info.version });
     }
 
     uuid: string;
@@ -159,7 +160,7 @@ export class Sapp {
         return this.config;
     }
 
-    getServkit() {
+    getServkit(): Servkit {
         return this.manager ? this.manager.getServkit() : undefined!;
     }
 
@@ -183,7 +184,7 @@ export class Sapp {
             const timeout = config.startTimeout
                             || this.info.options.startTimeout
                             || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
-            
+
             let timer = 0;
             const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
                 timer = setTimeout(() => {
@@ -191,10 +192,10 @@ export class Sapp {
                     reject(new Error('timeout'));
                 }, timeout) as any;
             }) : undefined;
- 
+
             const startWork = async () => {
                 const waitOnAuth = DeferredUtil.create({
-                    rejectIf: pTimeout, 
+                    rejectIf: pTimeout,
                 });
                 this.waitOnAuth = waitOnAuth;
 
@@ -446,7 +447,7 @@ export class Sapp {
                     const terminal = this.terminal;
                     this.terminal = undefined!;
                     // The close operation maybe from sapp, need to send back message;
-                    // so lazy the destroy to next tick 
+                    // so lazy the destroy to next tick
                     setTimeout(() => {
                         terminal.servkit.destroyTerminal(terminal);
                     });
@@ -456,7 +457,7 @@ export class Sapp {
                 this.isStarted = false;
                 this.started = DeferredUtil.reject(new Error('[SAPP] Closed'));
                 this.started.catch(() => undefined);
-                
+
                 this.waitOnStart = undefined;
                 this.waitOnAuth = undefined;
                 this.manager = undefined!;
@@ -655,12 +656,12 @@ export class Sapp {
                         const showParams: SappShowParams = {
                             force: true,
                         };
-    
+
                         const data = await self.resolveStartShowData(options);
                         if (data !== undefined) {
                             showParams.data = data;
                         }
-    
+
                         self._show(showParams, true);
                     });
                 }

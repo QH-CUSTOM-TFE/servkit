@@ -1,5 +1,6 @@
 import { Sapp, SappStartOptions, ESappType } from './Sapp';
-import { DeferredUtil } from '../common/Deferred';
+// do not remove Deferred, prevent .d.ts lazy load Deferred
+import { DeferredUtil, Deferred } from '../common/Deferred';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';
@@ -86,9 +87,9 @@ export class SappPlainPage extends Sapp {
                     } catch (e) {
                         asyncThrow(e);
                     }
-                    
+
                 }
-                
+
                 this.showDone = DeferredUtil.create();
 
                 return true;
@@ -126,7 +127,7 @@ export class SappPlainPage extends Sapp {
                     }
                 }
                 this.isClosed = true;
-                
+
                 if (result) {
                     if (result.error) {
                         this.closed.reject(result.error);
