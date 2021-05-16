@@ -60,9 +60,33 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
     __extends(SappDefaultIFrameController, _super);
     function SappDefaultIFrameController() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.layout = {};
+        _this.layout = { options: {} };
         return _this;
     }
+    SappDefaultIFrameController.prototype.doStart = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var layout;
+            return __generator(this, function (_a) {
+                layout = this.layout;
+                if (layout.doStart) {
+                    layout.doStart(this.app);
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    SappDefaultIFrameController.prototype.doClose = function (result) {
+        return __awaiter(this, void 0, void 0, function () {
+            var layout;
+            return __generator(this, function (_a) {
+                layout = this.layout;
+                if (layout.doClose) {
+                    layout.doClose(this.app);
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
     SappDefaultIFrameController.prototype.doShow = function () {
         return __awaiter(this, void 0, void 0, function () {
             var element, layout, className;
@@ -125,24 +149,19 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
     };
     SappDefaultIFrameController.prototype.doCloseAfterAspect = function () {
         _super.prototype.doCloseAfterAspect.call(this);
-        this.layout = {};
+        this.layout = { options: {} };
     };
-    SappDefaultIFrameController.prototype.resolveSessionChannelConfig = function (options) {
-        var _this = this;
-        var layout = this.layoutOptions || options.layout || {};
-        if (typeof layout === 'function') {
-            layout = layout(this.app);
-        }
+    SappDefaultIFrameController.prototype.resetLayout = function (options) {
         var container = document.body;
-        if (layout.container) {
-            if (typeof layout.container === 'string') {
-                container = document.querySelector(layout.container);
+        if (options.container) {
+            if (typeof options.container === 'string') {
+                container = document.querySelector(options.container);
                 if (!container) {
-                    common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + layout.container));
+                    common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + options.container));
                 }
             }
             else {
-                container = layout.container;
+                container = options.container;
             }
         }
         else if (this.app.info.options.layout) {
@@ -151,8 +170,8 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
                 common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + this.app.info.options.layout));
             }
         }
-        var className = layout.className;
-        var style = layout.style;
+        var className = options.className;
+        var style = options.style;
         if (!className && !style) {
             style = {
                 position: 'absolute',
@@ -164,23 +183,33 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             };
         }
         this.layout = {
-            doShow: layout.doShow,
-            doHide: layout.doHide,
-            showClassName: layout.showClassName,
-            hideClassName: layout.hideClassName,
-            showStyle: layout.showStyle,
-            hideStyle: layout.hideStyle,
+            options: options,
+            container: container,
+            className: className,
+            style: style,
+            doStart: options.doStart,
+            doClose: options.doClose,
+            doShow: options.doShow,
+            doHide: options.doHide,
+            showClassName: options.showClassName,
+            hideClassName: options.hideClassName,
+            showStyle: options.showStyle,
+            hideStyle: options.hideStyle,
         };
-        if (!layout.doShow && !layout.showClassName && !layout.showStyle) {
+        if (!options.doShow && !options.showClassName && !options.showStyle) {
             this.layout.showStyle = {
                 display: 'block',
             };
         }
-        if (!layout.doHide && !layout.hideClassName && !layout.hideStyle) {
+        if (!options.doHide && !options.hideClassName && !options.hideStyle) {
             this.layout.hideStyle = {
                 display: 'none',
             };
         }
+    };
+    SappDefaultIFrameController.prototype.resolveSessionChannelConfig = function (options) {
+        var _this = this;
+        var layout = this.layout;
         return {
             type: ServChannel_1.EServChannel.WINDOW,
             config: {
@@ -193,9 +222,9 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
                     id: this.app.uuid,
                     showPolicy: iframe_1.EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',
-                    container: container,
-                    className: className,
-                    style: style,
+                    container: layout.container,
+                    className: layout.className,
+                    style: layout.style,
                     show: function () {
                         // Do nothing, work in doShow
                     },

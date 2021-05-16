@@ -63,6 +63,12 @@ var SappSDKMock_1 = require("./SappSDKMock");
 var sharedParams_1 = require("../common/sharedParams");
 var Sapp_1 = require("./Sapp");
 var eventemitter3_1 = require("eventemitter3");
+/**
+ * SappSDK生命周期事件
+ *
+ * @export
+ * @enum {number}
+ */
 var ESappSDKLifeCycleEvent;
 (function (ESappSDKLifeCycleEvent) {
     ESappSDKLifeCycleEvent["BEFORE_START"] = "BEFORE_START";
@@ -73,14 +79,21 @@ var ESappSDKLifeCycleEvent;
     ESappSDKLifeCycleEvent["AFTER_START"] = "AFTER_START";
 })(ESappSDKLifeCycleEvent = exports.ESappSDKLifeCycleEvent || (exports.ESappSDKLifeCycleEvent = {}));
 /**
- * SappSDK是为Servkit应用提供的一个SDK
+ * SappSDK是从应用与主应用交互的桥梁，也是从应用自身的抽象；
+ * 主要提供了：
+ * 1：自身生命周期管理
+ * 2：与主应用的交互接口，获取服务API
+ *
+ * @export
+ * @class SappSDK
+ * @extends {EventEmitter}
  */
 var SappSDK = /** @class */ (function (_super) {
     __extends(SappSDK, _super);
     function SappSDK() {
         var _this = _super.call(this) || this;
         /**
-         * 启动SDK
+         * 启动SDK；具有防重入处理；会触发onCreate回调
          *
          * @param {SappSDKStartOptions} [options]
          * @returns {Promise<void>}
@@ -162,10 +175,27 @@ var SappSDK = /** @class */ (function (_super) {
             });
         }); });
         /**
-         * 获取service
+         * 获取主应用提供的Service，同步版本
          *
          * @type {ServServiceClient['getService']}
          * @memberof SappSDK
+         *
+         * @example
+         * ``` ts
+         * // 获取单个服务
+         * const serv = app.getService(CommServiceDecl);
+         * if (serv) {
+         *     serv.func();
+         * }
+         *
+         * or
+         *
+         * // 同时获取多个服务
+         * const { serv } = app.getService({ serv: CommServiceDecl });
+         * if (serv) {
+         *     serv.func();
+         * }
+         * ```
          */
         _this.getService = function () {
             if (!this.isStarted) {
@@ -174,19 +204,30 @@ var SappSDK = /** @class */ (function (_super) {
             return this.terminal.client.getService(arguments[0]);
         };
         /**
-         * 获取service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+         * 获取从应用提供的Service，与getService区别在于，返回值没有保证是否为undefined
          *
          * @type {ServServiceClient['getServiceUnsafe']}
          * @memberof SappSDK
+         *
+         * @example
+         * ``` ts
+         * const serv = app.getServiceUnsafe(CommServiceDecl);
+         * serv.func(); // 没有 undefined 错误提示
+         * ```
          */
         _this.getServiceUnsafe = function () {
             return this.getService.apply(this, arguments);
         };
         /**
-         * 获取service，promise形式；如果某个service不存在，promise将reject
+         * 获取从应用提供的Service，异步版本
          *
          * @type {ServServiceClient['service']}
          * @memberof SappSDK
+         *
+         * @example
+         * ``` ts
+         * const serv = await app.service(CommServiceDecl);
+         * ```
          */
         _this.service = function () {
             if (!this.isStarted) {
@@ -195,10 +236,16 @@ var SappSDK = /** @class */ (function (_super) {
             return this.terminal.client.service.apply(this.terminal.client, arguments);
         };
         /**
-         * 获取service，callback形式；如果某个service不存在，callback将得不到调用
+         * 获取从应用提供的Service，回调版本
          *
          * @type {ServServiceClient['serviceExec']}
          * @memberof SappSDK
+         *
+         * @example
+         * ``` ts
+         * app.serviceExec(CommServiceDecl, (serv) => {
+         *     serv.func();
+         * });
          */
         _this.serviceExec = function () {
             if (!this.isStarted) {
@@ -207,7 +254,7 @@ var SappSDK = /** @class */ (function (_super) {
             return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
         };
         /**
-         * 获取server提供的service
+         * 获取从应用向主应用提供的服务
          *
          * @type {ServServiceServer['getService']}
          * @memberof SappSDK
@@ -219,7 +266,7 @@ var SappSDK = /** @class */ (function (_super) {
             return this.terminal.server.getService(arguments[0]);
         };
         /**
-         * 获取server提供的service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+         * 获取从应用向主应用提供的服务
          *
          * @type {ServServiceServer['getServiceUnsafe']}
          * @memberof SappSDK
@@ -228,7 +275,7 @@ var SappSDK = /** @class */ (function (_super) {
             return this.getServerService.apply(this, arguments);
         };
         /**
-         * 获取server提供的service，promise形式；如果某个service不存在，promise将reject
+         * 获取从应用向主应用提供的服务
          *
          * @type {ServServiceServer['service']}
          * @memberof SappSDK
@@ -240,7 +287,7 @@ var SappSDK = /** @class */ (function (_super) {
             return this.terminal.server.service.apply(this.terminal.server, arguments);
         };
         /**
-         * 获取server提供的service，callback形式；如果某个service不存在，callback将得不到调用
+         * 获取从应用向主应用提供的服务
          *
          * @type {ServServiceServer['serviceExec']}
          * @memberof SappSDK
@@ -291,6 +338,13 @@ var SappSDK = /** @class */ (function (_super) {
     SappSDK.prototype.getServkit = function () {
         return this.config.servkit || Servkit_1.servkit;
     };
+    /**
+     * 显式，会触发onShow回调
+     *
+     * @param {ShowParams} [params]
+     * @returns
+     * @memberof SappSDK
+     */
     SappSDK.prototype.show = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -300,6 +354,13 @@ var SappSDK = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     * 隐藏，会触发onHide回调
+     *
+     * @param {HideParams} [params]
+     * @returns
+     * @memberof SappSDK
+     */
     SappSDK.prototype.hide = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -622,12 +683,39 @@ var SappSDK = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     * 获取应用类型
+     *
+     * @returns {ESappType}
+     * @memberof SappSDK
+     */
     SappSDK.prototype.getAppType = function () {
         return Sapp_1.ESappType.IFRAME;
     };
     SappSDK.prototype.getDefaultStartParams = function () {
         return query_1.parseServQueryParams();
     };
+    /**
+     * 项目SappMGR中声明一个SappType.ASYNC_LOADD应用；必须在从应用加载阶段声明
+     *
+     * @static
+     * @param {string} appId
+     * @param {SappSDKAsyncLoadDeclParams} params
+     * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * SappSDK.declAsyncLoad('com.servkit.example', {
+     *     bootstrap: (sdk) => {
+     *         sdk.setConfig({
+     *             onCreate: () => { ... },
+     *             onClose: () => { ... },
+     *         });
+     *         sdk.start();
+     *     },
+     * };
+     * ```
+     */
     SappSDK.declAsyncLoad = function (appId, params) {
         var sdk = undefined;
         var bootstrap = function () {
@@ -638,6 +726,14 @@ var SappSDK = /** @class */ (function (_super) {
             params.bootstrap(sdk);
         };
         var deBootstrap = function () {
+            try {
+                if (params.deBootstrap) {
+                    params.deBootstrap(sdk);
+                }
+            }
+            catch (e) {
+                common_1.asyncThrow(e);
+            }
             sdk = undefined;
         };
         sharedParams_1.putAsyncLoadDeclContext(appId, {
@@ -656,6 +752,13 @@ var SappSDK = /** @class */ (function (_super) {
     return SappSDK;
 }(eventemitter3_1.EventEmitter));
 exports.SappSDK = SappSDK;
+/**
+ * SappType.ASYNC_LOAD应用的SDK
+ *
+ * @export
+ * @class SappAsyncLoadSDK
+ * @extends {SappSDK}
+ */
 var SappAsyncLoadSDK = /** @class */ (function (_super) {
     __extends(SappAsyncLoadSDK, _super);
     function SappAsyncLoadSDK(appId) {
@@ -682,5 +785,8 @@ try {
 catch (e) {
     common_1.asyncThrow(e);
 }
+/**
+ * 全局SappSDK
+ */
 exports.sappSDK = sInstance;
 //# sourceMappingURL=SappSDK.js.map

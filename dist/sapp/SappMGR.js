@@ -56,34 +56,99 @@ var DEFAULT_APP_INFO = {
     url: '',
     options: DEFAULT_APP_INFO_OPTIONS,
 };
+/**
+ * Sapp布局配置项
+ *
+ * @export
+ * @class SappLayoutOptions
+ *
+ * @example
+ * ``` ts
+ * // layout管理容器元素
+ * const container = document.createElement('div');
+ * // some code to config container class and style
+ * ...
+ * // 实际的layout options
+ * const layout = {
+ *     container,
+ *     onStart: () => { document.body.appendChild(container); },
+ *     onClose: () => { document.body.removeChild(container); }
+ * };
+ *
+ * ```
+ */
 var SappLayoutOptions = /** @class */ (function () {
     function SappLayoutOptions() {
     }
     return SappLayoutOptions;
 }());
 exports.SappLayoutOptions = SappLayoutOptions;
+/**
+ * 应用管理器，主要提供了：
+ * 1：Sapp管理
+ * 2：全局服务管理
+ *
+ * @export
+ * @class SappMGR
+ */
 var SappMGR = /** @class */ (function () {
     function SappMGR() {
+        /**
+         * 获取全局服务，参见Sapp.getService
+         *
+         * @type {ServGlobalServiceManager['getService']}
+         * @memberof SappMGR
+         */
         this.getService = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.getService.apply(serviceManager, arguments);
         };
+        /**
+         * 获取全局服务，参见Sapp.getServiceUnsafe
+         *
+         * @type {ServGlobalServiceManager['getServiceUnsafe']}
+         * @memberof SappMGR
+         */
         this.getServiceUnsafe = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.getServiceUnsafe.apply(serviceManager, arguments);
         };
+        /**
+         * 获取全局服务，参见Sapp.service
+         *
+         * @type {ServGlobalServiceManager['service']}
+         * @memberof SappMGR
+         */
         this.service = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.service.apply(serviceManager, arguments);
         };
+        /**
+         * 获取全局服务，参见Sapp.serviceExec
+         *
+         * @type {ServGlobalServiceManager['serviceExec']}
+         * @memberof SappMGR
+         */
         this.serviceExec = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.serviceExec.apply(serviceManager, arguments);
         };
+        /**
+         * 添加服务到全局服务中，全局服务可以被任意从应用使用
+         *
+         * @type {ServGlobalServiceManager['addServices']}
+         * @memberof SappMGR
+         */
         this.addServices = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.addServices.apply(serviceManager, arguments);
         };
+        /**
+         * 移除全局服务
+         *
+         * @type {ServGlobalServiceManager['remServices']}
+         * @memberof SappMGR
+         */
         this.remServices = function () {
             var serviceManager = this.getServkit().service;
             return serviceManager.remServices.apply(serviceManager, arguments);
@@ -102,15 +167,43 @@ var SappMGR = /** @class */ (function () {
     SappMGR.prototype.getConfig = function () {
         return this.config;
     };
+    /**
+     * 根据id获取Sapp实例
+     *
+     * @param {string} id
+     * @returns
+     * @memberof SappMGR
+     */
     SappMGR.prototype.getApp = function (id) {
         return this.getApps(id)[0];
     };
+    /**
+     * 根据id获取所有的Sapp实例
+     *
+     * @param {string} id
+     * @returns
+     * @memberof SappMGR
+     */
     SappMGR.prototype.getApps = function (id) {
         return this.apps[id] || [];
     };
+    /**
+     * 根据id获取SappInfo
+     *
+     * @param {string} id
+     * @returns
+     * @memberof SappMGR
+     */
     SappMGR.prototype.getAppInfo = function (id) {
         return this.infos[id];
     };
+    /**
+     * 添加SappInfo到管理器中
+     *
+     * @param {SappInfo} info
+     * @returns {(SappInfo | undefined)}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.addAppInfo = function (info) {
         if (!info.id) {
             return;
@@ -126,6 +219,13 @@ var SappMGR = /** @class */ (function () {
         this.infos[info.id] = info;
         return info;
     };
+    /**
+     * 根据id移除SappInfo
+     *
+     * @param {string} id
+     * @returns
+     * @memberof SappMGR
+     */
     SappMGR.prototype.remAppInfo = function (id) {
         var info = this.infos[id];
         if (!info) {
@@ -134,6 +234,13 @@ var SappMGR = /** @class */ (function () {
         delete this.infos[id];
         return info;
     };
+    /**
+     * 根据id获取SappInfo，如果SappMGR.getAppInfo不能获取，则尝试通过SappConfig.loadAppInfo进行加载
+     *
+     * @param {string} id
+     * @returns {(Promise<SappInfo | undefined>)}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.loadAppInfo = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var info;
@@ -157,6 +264,13 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 预加载一个应用，只有SappType.ASYNC_LOAD应用才能够预加载
+     *
+     * @param {(string | SappInfo)} id
+     * @returns {Promise<boolean>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.preload = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var info, app;
@@ -197,6 +311,14 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 根据id或者info创建一个应用；默认应用会自动start，可通过options.dontStartOnCreate控制是否自动start应用
+     *
+     * @param {(string | SappInfo)} id
+     * @param {SappCreateOptions} [options]
+     * @returns {Promise<Sapp>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.create = function (id, options) {
         return __awaiter(this, void 0, void 0, function () {
             var app, info;
@@ -244,6 +366,14 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 根据id显示应用
+     *
+     * @param {string} id
+     * @param {SappShowParams} [params]
+     * @returns {Promise<Sapp>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.show = function (id, params) {
         return __awaiter(this, void 0, void 0, function () {
             var app;
@@ -262,6 +392,14 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 根据id隐藏应用
+     *
+     * @param {string} id
+     * @param {SappHideParams} [params]
+     * @returns {Promise<Sapp>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.hide = function (id, params) {
         return __awaiter(this, void 0, void 0, function () {
             var app;
@@ -280,6 +418,14 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 根据id关闭应用
+     *
+     * @param {string} id
+     * @param {SappCloseResult} [result]
+     * @returns {Promise<Sapp>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.close = function (id, result) {
         return __awaiter(this, void 0, void 0, function () {
             var app;
@@ -298,6 +444,14 @@ var SappMGR = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 根据id创建或者显示应用；如果应用不存在则创建应用，如果应用已经存在则隐藏应用
+     *
+     * @param {string} id
+     * @param {SappCreateOptions} [options]
+     * @returns {Promise<Sapp>}
+     * @memberof SappMGR
+     */
     SappMGR.prototype.createOrShow = function (id, options) {
         return __awaiter(this, void 0, void 0, function () {
             var app, params;
@@ -372,6 +526,19 @@ var SappMGR = /** @class */ (function () {
             ? new SappDefaultAsyncLoadController_1.SappDefaultAsyncLoadController(app)
             : new SappDefaultIFrameController_1.SappDefaultIFrameController(app);
     };
+    /**
+     * 创建SappMGR实例
+     *
+     * @static
+     * @param {SappMGRConfig} [config={}]
+     * @returns {SappMGR}
+     * @memberof SappMGR
+     */
+    SappMGR.create = function (config) {
+        var mgr = new SappMGR();
+        mgr.setConfig(config);
+        return mgr;
+    };
     return SappMGR;
 }());
 exports.SappMGR = SappMGR;
@@ -382,5 +549,8 @@ try {
 catch (e) {
     common_1.asyncThrow(e);
 }
+/**
+ * 全局SappMGR实例
+ */
 exports.sappMGR = sInstance;
 //# sourceMappingURL=SappMGR.js.map

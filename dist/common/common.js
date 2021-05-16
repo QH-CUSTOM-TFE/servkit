@@ -8,7 +8,8 @@ exports.Env = {
 };
 try {
     if (window.__$$servkit) {
-        asyncThrowMessage('\n\nNOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nYOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT, AND THIS WILL PRODUCE ERROR.\n\nPLEASE FIX IT.\n');
+        // tslint:disable-next-line:no-console
+        console.warn('\n\nSERVKIT WARNING!\n\nYOU HAVE MULTIPLE VERSIONS OF SERVKIT INSTALLED IN YOUR PROJECT!\n');
     }
     var LOCAL_ENV_1 = '__$$servkit';
     var __$$servkit_1 = {

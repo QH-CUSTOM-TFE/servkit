@@ -69,34 +69,90 @@ var SappLifecycle_2 = require("./service/s/SappLifecycle");
 var Deferred_1 = require("../common/Deferred");
 var AsyncMutex_1 = require("../common/AsyncMutex");
 var query_1 = require("../common/query");
+/**
+ * Sapp创建策略，当应用重复创建时，使用该枚举值进行控制
+ */
 var ESappCreatePolicy;
 (function (ESappCreatePolicy) {
     ESappCreatePolicy[ESappCreatePolicy["NONE"] = 0] = "NONE";
+    /**
+     * 单例模式，重复创建应用会失败；默认值
+     */
     ESappCreatePolicy[ESappCreatePolicy["SINGLETON"] = 1] = "SINGLETON";
+    /**
+     * 无限模式，可以创建任意多应用实例
+     */
     ESappCreatePolicy[ESappCreatePolicy["INFINITE"] = 2] = "INFINITE";
 })(ESappCreatePolicy = exports.ESappCreatePolicy || (exports.ESappCreatePolicy = {}));
+/**
+ * Sapp在隐藏时的生命管理策略；对于一些加载敏感的应用，可以使用显示/隐藏来提高应用的加载体验；而如果应用占优资源较多，隐藏时间过长时，则可以基于该枚举来控制是否直接关闭应用而释放资源
+ */
 var ESappLifePolicy;
 (function (ESappLifePolicy) {
     ESappLifePolicy[ESappLifePolicy["NONE"] = 0] = "NONE";
+    /**
+     * 手动模式，在隐藏后，需要显式关闭应用；默认值
+     */
     ESappLifePolicy[ESappLifePolicy["MANUAL"] = 1] = "MANUAL";
+    /**
+     * 自动模式，在隐藏超过lifeMaxHideTime时间后，应用自动被关闭
+     */
     ESappLifePolicy[ESappLifePolicy["AUTO"] = 2] = "AUTO";
 })(ESappLifePolicy = exports.ESappLifePolicy || (exports.ESappLifePolicy = {}));
+/**
+ * Sapp类型
+ */
 var ESappType;
 (function (ESappType) {
+    /**
+     * 基于IFrame的应用，应用运行在一个IFrame Web上下文，与主应用运行环境完全隔离；默认值
+     */
     ESappType["IFRAME"] = "IFRAME";
+    /**
+     * 基于异步机制的应用，应用与主应用运行在同一个Web环境；
+     */
     ESappType["ASYNC_LOAD"] = "ASYNC_LOAD";
 })(ESappType = exports.ESappType || (exports.ESappType = {}));
+/**
+ * Sapp信息
+ */
 var SappInfo = /** @class */ (function () {
     function SappInfo() {
     }
     return SappInfo;
 }());
 exports.SappInfo = SappInfo;
+/**
+ * 在主应用中，从应用抽象类；可通过Sapp实例操作从应用，并与从应用进行同行；
+ *
+ * Sapp主要提供：
+ * 1：应用信息、生命周期状态
+ * 2：生命周期操作API：start、show、hide、close
+ * 3：服务通信
+ *
+ * 可通过SappController对Sapp做更多定制化控制
+ *
+ * @export
+ * @class Sapp
+ */
 var Sapp = /** @class */ (function () {
+    /**
+     * 构造函数
+     * @param {string} uuid 应用唯一ID
+     * @param {SappInfo} info 应用信息
+     * @param {SappMGR} manager 应用所属管理器
+     * @memberof Sapp
+     */
     function Sapp(uuid, info, manager) {
         var _this = this;
         this.mutex = new AsyncMutex_1.AsyncMutex();
         this.showHideMutex = new AsyncMutex_1.AsyncMutex();
+        /**
+         * 启动应用；具有防重入处理，重复的调用会得到第一次调用返回的Promise对象
+         *
+         * @param {SappStartOptions} options
+         * @memberof Sapp
+         */
         this.start = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (options) { return __awaiter(_this, void 0, void 0, function () {
             var config, newOptions_1, timeout_1, timer_1, pTimeout_1, startWork, pWork, pDone, e_1;
             var _this = this;
@@ -352,6 +408,12 @@ var Sapp = /** @class */ (function () {
                 }
             });
         }); }));
+        /**
+         * 隐藏应用；具有防重入处理；result将会传递给SappSDK onClose回调；
+         *
+         * @param {SappCloseResult} result
+         * @memberof Sapp
+         */
         this.close = Deferred_1.DeferredUtil.reEntryGuard(this.mutex.lockGuard(function (result) { return __awaiter(_this, void 0, void 0, function () {
             var onCloseResult, e_4, terminal_1;
             return __generator(this, function (_a) {
@@ -415,42 +477,124 @@ var Sapp = /** @class */ (function () {
                 }
             });
         }); }));
+        /**
+         * 获取从应用提供的Service，同步版本
+         *
+         * @type {ServServiceClient['getService']}
+         * @memberof Sapp
+         * @example
+         * ``` ts
+         * // 获取单个服务
+         * const serv = app.getService(CommServiceDecl);
+         * if (serv) {
+         *     serv.func();
+         * }
+         *
+         * or
+         *
+         * // 同时获取多个服务
+         * const { serv } = app.getService({ serv: CommServiceDecl });
+         * if (serv) {
+         *     serv.func();
+         * }
+         * ```
+         */
         this.getService = function () {
             if (!this.isStarted) {
                 return;
             }
             return this.terminal.client.getService(arguments[0]);
         };
+        /**
+         * 获取从应用提供的Service，与getService区别在于，返回值没有保证是否为undefined
+         *
+         * @type {ServServiceClient['getServiceUnsafe']}
+         * @memberof Sapp
+         *
+         * @example
+         * ``` ts
+         * const serv = app.getServiceUnsafe(CommServiceDecl);
+         * serv.func(); // 没有 undefined 错误提示
+         * ```
+         */
         this.getServiceUnsafe = function () {
             return this.getService.apply(this, arguments);
         };
+        /**
+         * 获取从应用提供的Service，异步版本
+         *
+         * @type {ServServiceClient['service']}
+         * @memberof Sapp
+         *
+         * @example
+         * ``` ts
+         * const serv = await app.service(CommServiceDecl);
+         * ```
+         */
         this.service = function () {
             if (!this.isStarted) {
                 return Promise.reject(new Error('[SAPP] Sapp is not started'));
             }
             return this.terminal.client.service.apply(this.terminal.client, arguments);
         };
+        /**
+         * 获取从应用提供的Service，回调版本
+         *
+         * @type {ServServiceClient['serviceExec']}
+         * @memberof Sapp
+         *
+         * @example
+         * ``` ts
+         * app.serviceExec(CommServiceDecl, (serv) => {
+         *     serv.func();
+         * });
+         * ```
+         */
         this.serviceExec = function () {
             if (!this.isStarted) {
                 return null;
             }
             return this.terminal.client.serviceExec.apply(this.terminal.client, arguments);
         };
+        /**
+         * 获取主应用向从应用提供的服务
+         *
+         * @type {ServServiceServer['getService']}
+         * @memberof Sapp
+         */
         this.getServerService = function () {
             if (!this.isStarted) {
                 return;
             }
             return this.terminal.server.getService(arguments[0]);
         };
+        /**
+         * 获取主应用向从应用提供的服务
+         *
+         * @type {ServServiceServer['getServiceUnsafe']}
+         * @memberof Sapp
+         */
         this.getServerServiceUnsafe = function () {
             return this.getServerService.apply(this, arguments);
         };
+        /**
+         * 获取主应用向从应用提供的服务
+         *
+         * @type {ServServiceServer['service']}
+         * @memberof Sapp
+         */
         this.serverService = function () {
             if (!this.isStarted) {
                 return Promise.reject(new Error('[SAPP] Sapp is not started'));
             }
             return this.terminal.server.service.apply(this.terminal.server, arguments);
         };
+        /**
+         * 获取主应用向从应用提供的服务
+         *
+         * @type {ServServiceServer['serviceExec']}
+         * @memberof Sapp
+         */
         this.serverServiceExec = function () {
             if (!this.isStarted) {
                 return null;
@@ -488,6 +632,12 @@ var Sapp = /** @class */ (function () {
             this.controller = undefined;
         }
     };
+    /**
+     * 获取应用关联的Controller
+     *
+     * @returns
+     * @memberof Sapp
+     */
     Sapp.prototype.getController = function () {
         return this.controller;
     };
@@ -501,9 +651,22 @@ var Sapp = /** @class */ (function () {
     Sapp.prototype.getServkit = function () {
         return this.manager ? this.manager.getServkit() : undefined;
     };
+    /**
+     * 获取应用类型
+     *
+     * @returns {ESappType}
+     * @memberof Sapp
+     */
     Sapp.prototype.getAppType = function () {
         return this.info.type || ESappType.IFRAME;
     };
+    /**
+     * 显示应用，params.data会传递给SappSDK onShow回调
+     *
+     * @param {SappShowParams} [params]
+     * @returns
+     * @memberof Sapp
+     */
     Sapp.prototype.show = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -511,6 +674,13 @@ var Sapp = /** @class */ (function () {
             });
         });
     };
+    /**
+     * 隐藏应用，params.data会传递给SappSDK onHide回调
+     *
+     * @param {SappHideParams} [params]
+     * @returns
+     * @memberof Sapp
+     */
     Sapp.prototype.hide = function (params) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -771,6 +941,12 @@ var Sapp = /** @class */ (function () {
             });
         });
     };
+    /**
+     * servkit底层API，获取terminal id
+     *
+     * @returns
+     * @memberof Sapp
+     */
     Sapp.prototype.getTerminalId = function () {
         if (this.terminal) {
             return this.terminal.id;

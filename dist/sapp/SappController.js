@@ -48,10 +48,15 @@ var SappController = /** @class */ (function () {
         aspect_1.aspectAfter(this, 'doClose', this.doCloseAfterAspect);
     }
     SappController.prototype.setLayoutOptions = function (options) {
-        this.layoutOptions = options;
-    };
-    SappController.prototype.getLayoutOptions = function () {
-        return this.layoutOptions;
+        if (options === void 0) { options = {}; }
+        if (this.app.isStarted || this.app.start.deferred || this.app.isClosed) {
+            common_1.asyncThrowMessage('App has started, can\'t set layout');
+            return;
+        }
+        if (typeof options === 'function') {
+            options = options(this.app);
+        }
+        this.resetLayout(options);
     };
     SappController.prototype.doConfig = function (options) {
         return __awaiter(this, void 0, void 0, function () {
@@ -59,6 +64,7 @@ var SappController = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 app = this.app;
+                this.setLayoutOptions(options.layout);
                 config = {
                     beforeStart: function () { return __awaiter(_this, void 0, void 0, function () {
                         return __generator(this, function (_a) {

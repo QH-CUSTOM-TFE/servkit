@@ -16,6 +16,12 @@ import { EventEmitter } from 'eventemitter3';
 export interface SappSDKStartParams {
     uuid?: string;
 }
+/**
+ * SappSDK生命周期事件
+ *
+ * @export
+ * @enum {number}
+ */
 export declare enum ESappSDKLifeCycleEvent {
     BEFORE_START = "BEFORE_START",
     ON_CREATE = "ON_CREATE",
@@ -24,11 +30,41 @@ export declare enum ESappSDKLifeCycleEvent {
     ON_CLOSE = "ON_CLOSE",
     AFTER_START = "AFTER_START"
 }
+/**
+ * 对于SappType.ASYNC_LOAD应用的启动参数
+ *
+ * @export
+ * @interface SappSDKAsyncLoadStartParams
+ * @extends {SappSDKStartParams}
+ */
 export interface SappSDKAsyncLoadStartParams extends SappSDKStartParams {
+    /**
+     * 应用容器元素
+     *
+     * @type {HTMLElement}
+     * @memberof SappSDKAsyncLoadStartParams
+     */
     container?: HTMLElement;
 }
+/**
+ * SappType.ASYNC_LOAD应用boostrap声明参数
+ *
+ * @export
+ * @interface SappSDKAsyncLoadDeclParams
+ */
 export interface SappSDKAsyncLoadDeclParams {
+    /**
+     * 应用启动方法；在主应用Sapp.start中会被调用；
+     * 对于SappType.ASYNC_LOAD应该显式的分为 加载 和 启动 两个阶段，否则将不能使用预加载功能；
+     *
+     * @memberof SappSDKAsyncLoadDeclParams
+     */
     bootstrap: (sdk: SappAsyncLoadSDK) => void;
+    /**
+     * 应用退出方法；在主应用Sapp.close中会被调用；
+     *
+     * @memberof SappSDKAsyncLoadDeclParams
+     */
     deBootstrap?: (sdk: SappAsyncLoadSDK) => void;
 }
 export interface SappSDKAsyncLoadDeclContext {
@@ -134,7 +170,19 @@ export interface SappSDKConfig {
      * @memberof SappSDKConfig
      */
     mock?: SappSDKMockConfig;
+    /**
+     * 从应用向主应用提供的服务
+     *
+     * @type {ServServiceConfig['services']}
+     * @memberof SappSDKConfig
+     */
     services?: ServServiceConfig['services'];
+    /**
+     * 从应用向主应用提供的服务，通过引用全局服务进行提供；
+     *
+     * @type {ServServiceReferPattern}
+     * @memberof SappSDKConfig
+     */
     serviceRefer?: ServServiceReferPattern;
 }
 /**
@@ -144,7 +192,14 @@ export interface SappSDKStartOptions {
     params?: SappSDKStartParams | SappSDKConfig['resolveStartParams'];
 }
 /**
- * SappSDK是为Servkit应用提供的一个SDK
+ * SappSDK是从应用与主应用交互的桥梁，也是从应用自身的抽象；
+ * 主要提供了：
+ * 1：自身生命周期管理
+ * 2：与主应用的交互接口，获取服务API
+ *
+ * @export
+ * @class SappSDK
+ * @extends {EventEmitter}
  */
 export declare class SappSDK extends EventEmitter {
     /**
@@ -169,7 +224,7 @@ export declare class SappSDK extends EventEmitter {
      */
     terminal: ServTerminal;
     /**
-     *
+     * SDK mock
      *
      * @type {SappSDKMock}
      * @memberof SappSDK
@@ -200,7 +255,7 @@ export declare class SappSDK extends EventEmitter {
      */
     getServkit(): Servkit;
     /**
-     * 启动SDK
+     * 启动SDK；具有防重入处理；会触发onCreate回调
      *
      * @param {SappSDKStartOptions} [options]
      * @returns {Promise<void>}
@@ -209,60 +264,108 @@ export declare class SappSDK extends EventEmitter {
     start: ((options?: SappSDKStartOptions | undefined) => Promise<void>) & {
         deferred: Deferred<void> | undefined;
     };
+    /**
+     * 显式，会触发onShow回调
+     *
+     * @param {ShowParams} [params]
+     * @returns
+     * @memberof SappSDK
+     */
     show(params?: ShowParams): Promise<boolean>;
+    /**
+     * 隐藏，会触发onHide回调
+     *
+     * @param {HideParams} [params]
+     * @returns
+     * @memberof SappSDK
+     */
     hide(params?: HideParams): Promise<boolean>;
     close(): Promise<boolean>;
     /**
-     * 获取service
+     * 获取主应用提供的Service，同步版本
      *
      * @type {ServServiceClient['getService']}
      * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * // 获取单个服务
+     * const serv = app.getService(CommServiceDecl);
+     * if (serv) {
+     *     serv.func();
+     * }
+     *
+     * or
+     *
+     * // 同时获取多个服务
+     * const { serv } = app.getService({ serv: CommServiceDecl });
+     * if (serv) {
+     *     serv.func();
+     * }
+     * ```
      */
     getService: ServServiceClient['getService'];
     /**
-     * 获取service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+     * 获取从应用提供的Service，与getService区别在于，返回值没有保证是否为undefined
      *
      * @type {ServServiceClient['getServiceUnsafe']}
      * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * const serv = app.getServiceUnsafe(CommServiceDecl);
+     * serv.func(); // 没有 undefined 错误提示
+     * ```
      */
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'];
     /**
-     * 获取service，promise形式；如果某个service不存在，promise将reject
+     * 获取从应用提供的Service，异步版本
      *
      * @type {ServServiceClient['service']}
      * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * const serv = await app.service(CommServiceDecl);
+     * ```
      */
     service: ServServiceClient['service'];
     /**
-     * 获取service，callback形式；如果某个service不存在，callback将得不到调用
+     * 获取从应用提供的Service，回调版本
      *
      * @type {ServServiceClient['serviceExec']}
      * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * app.serviceExec(CommServiceDecl, (serv) => {
+     *     serv.func();
+     * });
      */
     serviceExec: ServServiceClient['serviceExec'];
     /**
-     * 获取server提供的service
+     * 获取从应用向主应用提供的服务
      *
      * @type {ServServiceServer['getService']}
      * @memberof SappSDK
      */
     getServerService: ServServiceServer['getService'];
     /**
-     * 获取server提供的service；返回类型没有保证service一定存在，但类型上没有做强制处理，因此为unsafe形式
+     * 获取从应用向主应用提供的服务
      *
      * @type {ServServiceServer['getServiceUnsafe']}
      * @memberof SappSDK
      */
     getServerServiceUnsafe: ServServiceServer['getServiceUnsafe'];
     /**
-     * 获取server提供的service，promise形式；如果某个service不存在，promise将reject
+     * 获取从应用向主应用提供的服务
      *
      * @type {ServServiceServer['service']}
      * @memberof SappSDK
      */
     serverService: ServServiceServer['service'];
     /**
-     * 获取server提供的service，callback形式；如果某个service不存在，callback将得不到调用
+     * 获取从应用向主应用提供的服务
      *
      * @type {ServServiceServer['serviceExec']}
      * @memberof SappSDK
@@ -281,10 +384,44 @@ export declare class SappSDK extends EventEmitter {
     protected onShow(params: SappShowParams): Promise<void | SappOnShowResult>;
     protected onHide(params: SappHideParams): Promise<void | SappOnHideResult>;
     protected onClose(): Promise<void | SappOnCloseResult>;
+    /**
+     * 获取应用类型
+     *
+     * @returns {ESappType}
+     * @memberof SappSDK
+     */
     getAppType(): ESappType;
     getDefaultStartParams(): SappSDKStartParams | undefined;
+    /**
+     * 项目SappMGR中声明一个SappType.ASYNC_LOADD应用；必须在从应用加载阶段声明
+     *
+     * @static
+     * @param {string} appId
+     * @param {SappSDKAsyncLoadDeclParams} params
+     * @memberof SappSDK
+     *
+     * @example
+     * ``` ts
+     * SappSDK.declAsyncLoad('com.servkit.example', {
+     *     bootstrap: (sdk) => {
+     *         sdk.setConfig({
+     *             onCreate: () => { ... },
+     *             onClose: () => { ... },
+     *         });
+     *         sdk.start();
+     *     },
+     * };
+     * ```
+     */
     static declAsyncLoad(appId: string, params: SappSDKAsyncLoadDeclParams): void;
 }
+/**
+ * SappType.ASYNC_LOAD应用的SDK
+ *
+ * @export
+ * @class SappAsyncLoadSDK
+ * @extends {SappSDK}
+ */
 export declare class SappAsyncLoadSDK extends SappSDK {
     protected appId: string;
     constructor(appId: string);
@@ -292,4 +429,7 @@ export declare class SappAsyncLoadSDK extends SappSDK {
     getAppType(): ESappType;
     getDefaultStartParams(): SappSDKAsyncLoadStartParams | undefined;
 }
+/**
+ * 全局SappSDK
+ */
 export declare const sappSDK: SappSDK;
