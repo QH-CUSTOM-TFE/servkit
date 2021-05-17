@@ -6,17 +6,12 @@ import { ServGlobalServiceConfig, ServGlobalServiceManager } from './ServGlobalS
 
 export interface ServkitConfig {
     service?: ServGlobalServiceConfig;
-    server?: ServServiceServerConfig;
-    client?: ServServiceClientConfig;
 }
 
 export class Servkit  {
     namespace: string;
 
     service: ServGlobalServiceManager;
-
-    server: ServServiceServer;
-    client: ServServiceClient;
 
     protected terminals: ServTerminal[];
 
@@ -31,8 +26,6 @@ export class Servkit  {
         
         this.service = new ServGlobalServiceManager();
         this.service.init(config && config.service);
-
-        this.initGlobalTerminals(config);
     }
 
     release() {
@@ -72,42 +65,6 @@ export class Servkit  {
         if (i >= 0) {
             this.terminals.splice(i, 1);
         }
-    }
-
-    protected initGlobalTerminals(config: ServkitConfig) {
-        const id = 'com.servkit.global.' + parseInt((Math.random() * 10000) + '', 10) + Date.now();
-
-        const serverTerminal = this.createTerminal({
-            id,
-            type: EServTerminal.MASTER, 
-            session: {
-                channel: {
-                    type: EServChannel.EVENT,
-                },
-            },
-            server: {
-                ...config.server,
-                serviceRefer: /.*/,
-            },
-        });
-
-        const clientTerminal = this.createTerminal({
-            id,
-            type: EServTerminal.SLAVE,
-                
-            session: {
-                channel: {
-                    type: EServChannel.EVENT,
-                },
-            },
-            client: config.client,
-        });
-
-        serverTerminal.openSession();
-        clientTerminal.openSession();
-
-        this.server = serverTerminal.server;
-        this.client = clientTerminal.client;
     }
 }
 

@@ -4,15 +4,14 @@ import { ServServiceClientConfig } from '../service/ServServiceClient';
 import { ServServiceServerConfig } from '../service/ServServiceServer';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
-import { EServConstant } from '../common/common';
+import { EServConstant, asyncThrowMessage } from '../common/common';
 import { aspectAfter, aspectBefore } from '../common/aspect';
 
 export abstract class SappController {
     app: Sapp;
 
     protected cleanHideLifeChecker?: () => void;
-    protected layoutOptions?: SappLayoutOptions;
-
+    
     constructor(app: Sapp) {
         app.attachController(this);
 
@@ -21,16 +20,26 @@ export abstract class SappController {
         aspectAfter(this, 'doClose', this.doCloseAfterAspect);
     }
 
-    setLayoutOptions(options: SappLayoutOptions) {
-        this.layoutOptions = options;
+    setLayoutOptions(options: SappCreateOptions['layout'] = {}) {
+        if (this.app.isStarted || this.app.start.deferred || this.app.isClosed) {
+            asyncThrowMessage('App has started, can\'t set layout');
+            return;
+        }
+
+        if (typeof options === 'function') {
+            options = options(this.app);
+        }
+
+        this.resetLayout(options);
     }
 
-    getLayoutOptions() {
-        return this.layoutOptions;
-    }
+    protected abstract resetLayout(options: SappLayoutOptions): void;
 
     async doConfig(options: SappCreateOptions) {
         const app = this.app;
+
+        this.setLayoutOptions(options.layout);
+
         const config: SappConfig = {
             beforeStart: async () => {
                 return this.beforeStart();

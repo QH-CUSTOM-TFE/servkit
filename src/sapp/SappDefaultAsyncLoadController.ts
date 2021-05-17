@@ -8,9 +8,13 @@ import { SappSDKAsyncLoadStartParams } from './SappSDK';
 import { delAsyncLoadStartParams, putAsyncLoadStartParams, getAsyncLoadDeclContext } from '../common/sharedParams';
 import { SappPreloader } from './SappPreloader';
 import { LoadUtil } from '../load/load';
+import { SappCloseResult } from './service/m/SappLifecycle';
 
 interface LayoutShowHide {
+    options: SappLayoutOptions;
     container: HTMLElement;
+    doStart?: ((app: Sapp) => void);
+    doClose?: ((app: Sapp) => void);
     doShow?: ((app: Sapp) => void);
     doHide?: ((app: Sapp) => void);
     showClassName?: string;
@@ -21,6 +25,20 @@ interface LayoutShowHide {
 
 export class SappDefaultAsyncLoadController extends SappController {
     protected layout?: LayoutShowHide;
+
+    async doStart() {
+        const layout = this.layout;
+        if (layout && layout.doStart) {
+            layout.doStart(this.app);
+        }
+    }
+
+    async doClose(result?: SappCloseResult) {
+        const layout = this.layout;
+        if (layout && layout.doClose) {
+            layout.doClose(this.app);
+        }
+    }
 
     async doShow() {
         const layout = this.layout;
@@ -85,21 +103,16 @@ export class SappDefaultAsyncLoadController extends SappController {
         delete this.layout;
     }
 
-    protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'] {
-        let layout = this.layoutOptions || options.layout || {};
-        if (typeof layout === 'function') {
-            layout = layout(this.app);
-        }
-
+    protected resetLayout(options: SappLayoutOptions) {
         let container: HTMLElement = undefined!;
-        if (layout.container) {
-            if (typeof layout.container === 'string') {
-                container = document.querySelector(layout.container) as HTMLElement;
+        if (options.container) {
+            if (typeof options.container === 'string') {
+                container = document.querySelector(options.container) as HTMLElement;
                 if (!container) {
-                    asyncThrow(new Error(`[SAPP] Can't query container with selector ${layout.container}`));
+                    asyncThrow(new Error(`[SAPP] Can't query container with selector ${options.container}`));
                 }
             } else {
-                container = layout.container;
+                container = options.container;
             }
         } else if (this.app.info.options.layout) {
             container = document.querySelector(this.app.info.options.layout) as HTMLElement;
@@ -109,42 +122,34 @@ export class SappDefaultAsyncLoadController extends SappController {
         }
 
         if (container) {
-            const className = layout.className;
-            let style: SappLayoutOptions['style'] = layout.style;
-            if (!className && !style) {
-                style = {
-                    position: 'absolute',
-                    left: '0',
-                    top: '0',
-                    width: '100%',
-                    height: '100%',
-                    zIndex: '10000',
-                };
-            }
-
             this.layout = {
+                options,
                 container,
-                doShow: layout.doShow,
-                doHide: layout.doHide,
-                showClassName: layout.showClassName,
-                hideClassName: layout.hideClassName,
-                showStyle: layout.showStyle,
-                hideStyle: layout.hideStyle,
+                doStart: options.doStart,
+                doClose: options.doClose,
+                doShow: options.doShow,
+                doHide: options.doHide,
+                showClassName: options.showClassName,
+                hideClassName: options.hideClassName,
+                showStyle: options.showStyle,
+                hideStyle: options.hideStyle,
             };
 
-            if (!layout.doShow && !layout.showClassName && !layout.showStyle) {
+            if (!options.doShow && !options.showClassName && !options.showStyle) {
                 this.layout.showStyle = {
                     display: 'block',
                 };
             }
 
-            if (!layout.doHide && !layout.hideClassName && !layout.hideStyle) {
+            if (!options.doHide && !options.hideClassName && !options.hideStyle) {
                 this.layout.hideStyle = {
                     display: 'none',
                 };
             }
         }
+    }
 
+    protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'] {
         return {
             type: EServChannel.EVENT_LOADER,
             config: {

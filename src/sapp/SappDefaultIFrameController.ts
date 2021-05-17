@@ -7,19 +7,40 @@ import { asyncThrow } from '../common/common';
 import { ServSessionConfig } from '../session/ServSession';
 import { wrapServQueryParams } from '../common/query';
 import { SappSDKStartParams } from './SappSDK';
+import { SappCloseResult } from './service/m/SappLifecycle';
 
 interface LayoutShowHide {
+    options: SappLayoutOptions;
+    container?: HTMLElement;
+    doStart?: ((app: Sapp) => void);
+    doClose?: ((app: Sapp) => void);
     doShow?: ((app: Sapp) => void);
     doHide?: ((app: Sapp) => void);
     showClassName?: string;
     showStyle?: Partial<HTMLElement['style']>;
     hideClassName?: string;
     hideStyle?: Partial<HTMLElement['style']>;
+    className?: string;
+    style?: SappLayoutOptions['style'];
 }
 
 export class SappDefaultIFrameController extends SappController {
     protected windowInfo: ServIFrameWindowInfo;
-    protected layout: LayoutShowHide = {};
+    protected layout: LayoutShowHide = { options: {} };
+
+    async doStart() {
+        const layout = this.layout;
+        if (layout.doStart) {
+            layout.doStart(this.app);
+        }
+    }
+
+    async doClose(result?: SappCloseResult) {
+        const layout = this.layout;
+        if (layout.doClose) {
+            layout.doClose(this.app);
+        }
+    }
 
     async doShow() {
         const element = this.windowInfo.element;
@@ -76,24 +97,19 @@ export class SappDefaultIFrameController extends SappController {
 
     protected doCloseAfterAspect() {
         super.doCloseAfterAspect();
-        this.layout = {};
+        this.layout = { options: {} };
     }
 
-    protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'] {
-        let layout = this.layoutOptions || options.layout || {};
-        if (typeof layout === 'function') {
-            layout = layout(this.app);
-        }
-
+    protected resetLayout(options: SappLayoutOptions) {
         let container: HTMLElement = document.body;
-        if (layout.container) {
-            if (typeof layout.container === 'string') {
-                container = document.querySelector(layout.container) as HTMLElement;
+        if (options.container) {
+            if (typeof options.container === 'string') {
+                container = document.querySelector(options.container) as HTMLElement;
                 if (!container) {
-                    asyncThrow(new Error(`[SAPP] Can't query container with selector ${layout.container}`));
+                    asyncThrow(new Error(`[SAPP] Can't query container with selector ${options.container}`));
                 }
             } else {
-                container = layout.container;
+                container = options.container;
             }
         } else if (this.app.info.options.layout) {
             container = document.querySelector(this.app.info.options.layout) as HTMLElement;
@@ -102,8 +118,8 @@ export class SappDefaultIFrameController extends SappController {
             }
         }
 
-        const className = layout.className;
-        let style: SappLayoutOptions['style'] = layout.style;
+        const className = options.className;
+        let style: SappLayoutOptions['style'] = options.style;
         if (!className && !style) {
             style = {
                 position: 'absolute',
@@ -116,26 +132,36 @@ export class SappDefaultIFrameController extends SappController {
         }
 
         this.layout = { 
-            doShow: layout.doShow,
-            doHide: layout.doHide,
-            showClassName: layout.showClassName,
-            hideClassName: layout.hideClassName,
-            showStyle: layout.showStyle,
-            hideStyle: layout.hideStyle,
+            options,
+            container,
+            className,
+            style,
+            doStart: options.doStart,
+            doClose: options.doClose,
+            doShow: options.doShow,
+            doHide: options.doHide,
+            showClassName: options.showClassName,
+            hideClassName: options.hideClassName,
+            showStyle: options.showStyle,
+            hideStyle: options.hideStyle,
         };
 
-        if (!layout.doShow && !layout.showClassName && !layout.showStyle) {
+        if (!options.doShow && !options.showClassName && !options.showStyle) {
             this.layout.showStyle = {
                 display: 'block',
             };
         }
 
-        if (!layout.doHide && !layout.hideClassName && !layout.hideStyle) {
+        if (!options.doHide && !options.hideClassName && !options.hideStyle) {
             this.layout.hideStyle = {
                 display: 'none',
             };
         }
-   
+    }
+
+    protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'] {
+        const layout = this.layout;
+
         return {
             type: EServChannel.WINDOW,
             config: {
@@ -148,9 +174,9 @@ export class SappDefaultIFrameController extends SappController {
                     id: this.app.uuid,
                     showPolicy: EServIFrameShowPolicy.HIDE,
                     postOrigin: '*',
-                    container,
-                    className,
-                    style,
+                    container: layout.container,
+                    className: layout.className,
+                    style: layout.style,
                     show: () => {
                         // Do nothing, work in doShow
                     },
