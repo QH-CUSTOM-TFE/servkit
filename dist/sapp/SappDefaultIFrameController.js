@@ -151,7 +151,7 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
         _super.prototype.doCloseAfterAspect.call(this);
         this.layout = { options: {} };
     };
-    SappDefaultIFrameController.prototype.resetLayout = function (options) {
+    SappDefaultIFrameController.prototype.setupLayout = function (options) {
         var container = document.body;
         if (options.container) {
             if (typeof options.container === 'string') {
@@ -162,12 +162,6 @@ var SappDefaultIFrameController = /** @class */ (function (_super) {
             }
             else {
                 container = options.container;
-            }
-        }
-        else if (this.app.info.options.layout) {
-            container = document.querySelector(this.app.info.options.layout);
-            if (!container) {
-                common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + this.app.info.options.layout));
             }
         }
         var className = options.className;

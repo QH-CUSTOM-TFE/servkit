@@ -35,14 +35,14 @@ export declare class SappLayoutOptions {
      */
     container?: string | HTMLElement;
     /**
-     * 应用容器节点class
+     * iframe节点class；只对ESappType.IFRAME有效
      *
      * @type {string}
      * @memberof SappLayoutOptions
      */
     className?: string;
     /**
-     * 应用容器节点style
+     * iframe节点style；只对ESappType.IFRAME有效
      *
      * @type {string}
      * @memberof SappLayoutOptions

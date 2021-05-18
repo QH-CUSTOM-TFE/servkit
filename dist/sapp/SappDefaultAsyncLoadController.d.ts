@@ -23,7 +23,7 @@ export declare class SappDefaultAsyncLoadController extends SappController {
     doShow(): Promise<void>;
     doHide(): Promise<void>;
     protected doCloseAfterAspect(): void;
-    protected resetLayout(options: SappLayoutOptions): void;
+    protected setupLayout(options: SappLayoutOptions): void;
     protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'];
     protected resolveSharedParams(options: SappCreateOptions): SappSDKAsyncLoadStartParams;
     protected generateLoadCreator(options: SappCreateOptions): {

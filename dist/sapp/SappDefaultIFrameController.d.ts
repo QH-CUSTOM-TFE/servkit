@@ -27,7 +27,7 @@ export declare class SappDefaultIFrameController extends SappController {
     doShow(): Promise<void>;
     doHide(): Promise<void>;
     protected doCloseAfterAspect(): void;
-    protected resetLayout(options: SappLayoutOptions): void;
+    protected setupLayout(options: SappLayoutOptions): void;
     protected resolveSessionChannelConfig(options: SappCreateOptions): ServSessionConfig['channel'];
     protected resolveQueryParams(options: SappCreateOptions): SappSDKStartParams;
 }

@@ -7,9 +7,10 @@ import { SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
 export declare abstract class SappController {
     app: Sapp;
     protected cleanHideLifeChecker?: () => void;
+    private layoutOptions?;
     constructor(app: Sapp);
     setLayoutOptions(options?: SappCreateOptions['layout']): void;
-    protected abstract resetLayout(options: SappLayoutOptions): void;
+    protected abstract setupLayout(options: SappLayoutOptions): void;
     doConfig(options: SappCreateOptions): Promise<void>;
     doStart(): Promise<void>;
     doAsyncStart(): Promise<void>;
@@ -20,6 +21,7 @@ export declare abstract class SappController {
     doAuth(params: SappAuthParams): Promise<void>;
     protected beforeStart(): Promise<void>;
     protected afterStart(): Promise<void>;
+    protected beforeStartBeforeAspect(): void;
     protected doHideAfterAspect(): void;
     protected doShowBeforeAspect(): void;
     protected doCloseAfterAspect(): void;
