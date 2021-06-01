@@ -43,6 +43,7 @@ var aspect_1 = require("../common/aspect");
 var SappController = /** @class */ (function () {
     function SappController(app) {
         app.attachController(this);
+        aspect_1.aspectBefore(this, 'beforeStart', this.beforeStartBeforeAspect);
         aspect_1.aspectBefore(this, 'doShow', this.doShowBeforeAspect);
         aspect_1.aspectAfter(this, 'doHide', this.doHideAfterAspect);
         aspect_1.aspectAfter(this, 'doClose', this.doCloseAfterAspect);
@@ -56,7 +57,7 @@ var SappController = /** @class */ (function () {
         if (typeof options === 'function') {
             options = options(this.app);
         }
-        this.resetLayout(options);
+        this.layoutOptions = options;
     };
     SappController.prototype.doConfig = function (options) {
         return __awaiter(this, void 0, void 0, function () {
@@ -171,6 +172,10 @@ var SappController = /** @class */ (function () {
                 return [2 /*return*/];
             });
         });
+    };
+    SappController.prototype.beforeStartBeforeAspect = function () {
+        this.setupLayout(this.layoutOptions || {});
+        this.layoutOptions = undefined;
     };
     SappController.prototype.doHideAfterAspect = function () {
         var _this = this;

@@ -11,10 +11,12 @@ export abstract class SappController {
     app: Sapp;
 
     protected cleanHideLifeChecker?: () => void;
+    private layoutOptions?: SappLayoutOptions;
     
     constructor(app: Sapp) {
         app.attachController(this);
 
+        aspectBefore(this, 'beforeStart', this.beforeStartBeforeAspect);
         aspectBefore(this, 'doShow', this.doShowBeforeAspect);
         aspectAfter(this, 'doHide', this.doHideAfterAspect);
         aspectAfter(this, 'doClose', this.doCloseAfterAspect);
@@ -30,10 +32,10 @@ export abstract class SappController {
             options = options(this.app);
         }
 
-        this.resetLayout(options);
+        this.layoutOptions = options;
     }
 
-    protected abstract resetLayout(options: SappLayoutOptions): void;
+    protected abstract setupLayout(options: SappLayoutOptions): void;
 
     async doConfig(options: SappCreateOptions) {
         const app = this.app;
@@ -118,6 +120,11 @@ export abstract class SappController {
 
     protected async afterStart() {
         //
+    }
+
+    protected beforeStartBeforeAspect() {
+        this.setupLayout(this.layoutOptions || {});
+        this.layoutOptions = undefined;
     }
 
     protected doHideAfterAspect() {

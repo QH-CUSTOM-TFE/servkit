@@ -154,7 +154,7 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
         _super.prototype.doCloseAfterAspect.call(this);
         delete this.layout;
     };
-    SappDefaultAsyncLoadController.prototype.resetLayout = function (options) {
+    SappDefaultAsyncLoadController.prototype.setupLayout = function (options) {
         var container = undefined;
         if (options.container) {
             if (typeof options.container === 'string') {
@@ -165,12 +165,6 @@ var SappDefaultAsyncLoadController = /** @class */ (function (_super) {
             }
             else {
                 container = options.container;
-            }
-        }
-        else if (this.app.info.options.layout) {
-            container = document.querySelector(this.app.info.options.layout);
-            if (!container) {
-                common_1.asyncThrow(new Error("[SAPP] Can't query container with selector " + this.app.info.options.layout));
             }
         }
         if (container) {

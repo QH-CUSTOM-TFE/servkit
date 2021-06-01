@@ -100,7 +100,7 @@ export class SappDefaultIFrameController extends SappController {
         this.layout = { options: {} };
     }
 
-    protected resetLayout(options: SappLayoutOptions) {
+    protected setupLayout(options: SappLayoutOptions) {
         let container: HTMLElement = document.body;
         if (options.container) {
             if (typeof options.container === 'string') {
@@ -110,11 +110,6 @@ export class SappDefaultIFrameController extends SappController {
                 }
             } else {
                 container = options.container;
-            }
-        } else if (this.app.info.options.layout) {
-            container = document.querySelector(this.app.info.options.layout) as HTMLElement;
-            if (!container) {
-                asyncThrow(new Error(`[SAPP] Can't query container with selector ${this.app.info.options.layout}`));
             }
         }
 
