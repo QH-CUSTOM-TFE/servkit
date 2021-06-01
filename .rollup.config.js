@@ -3,7 +3,7 @@
  */
 module.exports = {
   ts: true,
-  dts: false,
+  dts: true,
   tsconfigOverride: {
     compilerOptions: {
       module: "ES2015"
