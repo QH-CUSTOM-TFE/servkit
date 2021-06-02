@@ -268,7 +268,7 @@ export class SappMGR {
         return this;
     }
 
-    getServkit() {
+    getServkit(): Servkit {
         return this.config.servkit || servkit;
     }
 
@@ -395,7 +395,7 @@ export class SappMGR {
         if (info.type === ESappType.ASYNC_LOAD) {
             info.options.create = ESappCreatePolicy.SINGLETON;
         }
-        
+
         this.infos[info.id] = info;
 
         return info;
@@ -457,7 +457,7 @@ export class SappMGR {
         }
 
         const app = this.getApp(id);
-        if (app && app.isStarted) {  // Has Create 
+        if (app && app.isStarted) {  // Has Create
             return true;
         }
 
@@ -469,7 +469,7 @@ export class SappMGR {
         } else {
             info = await this.loadAppInfo(id).catch(() => undefined);
         }
-        
+
         if (!info) {
             return false;
         }
@@ -504,7 +504,7 @@ export class SappMGR {
         let app = this.getApp(id);
         if (app) {
             if (!app.info.options.create || app.info.options.create === ESappCreatePolicy.SINGLETON) {
-                throw new Error('singleton'); 
+                throw new Error('singleton');
             }
         }
 

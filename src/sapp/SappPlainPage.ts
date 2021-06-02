@@ -86,9 +86,9 @@ export class SappPlainPage extends Sapp {
                     } catch (e) {
                         asyncThrow(e);
                     }
-                    
+
                 }
-                
+
                 this.showDone = DeferredUtil.create();
 
                 return true;
@@ -126,7 +126,7 @@ export class SappPlainPage extends Sapp {
                     }
                 }
                 this.isClosed = true;
-                
+
                 if (result) {
                     if (result.error) {
                         this.closed.reject(result.error);
