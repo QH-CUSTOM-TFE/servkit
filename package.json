@@ -6,6 +6,10 @@
   "dependencies": {
     "eventemitter3": "2.0.3"
   },
+  "publishConfig": {
+    "registry": "http://registry.npmjs.org",
+    "access": "public"
+  },
   "devDependencies": {
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
@@ -59,6 +63,7 @@
     "test": "jest",
     "precommit": "npm run tslint && npm run test"
   },
+  "homepage": "https://github.com/QH-CUSTOM-TFE/servkit/tree/master/#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/QH-CUSTOM-TFE/servkit"
