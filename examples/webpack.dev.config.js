@@ -40,7 +40,8 @@ module.exports = {
 
     resolve: {
         alias: {
-            'servkit': path.resolve(__dirname, '../src/index.ts'),
+            'servkit': path.resolve(__dirname, '../src'),
+            '@example/first-example-decl': path.resolve(__dirname, 'packages/first-example-decl'),
         },
         extensions: ['.js', '.ts', '.d.ts', '.tsx', '.css'],
     },

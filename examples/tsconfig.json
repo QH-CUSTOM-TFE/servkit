@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "servkit": [
+        "../src"
+      ],
+      "servkit/*": [
+        "../src/*"
+      ],
+      "@example/first-example-decl": ["packages/first-example-decl"],
+      "@example/first-example-decl/*": ["packages/first-example-decl/src/*"]
+    }
+  }
+}
