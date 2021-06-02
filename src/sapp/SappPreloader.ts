@@ -1,6 +1,5 @@
 import { LoadContext, LoadUtil } from "../load/load";
 import { SappInfo, ESappType, Sapp } from './Sapp';
-import { asyncThrow } from '../common/common';
 
 export interface SappPreloadContext {
     loadContext: LoadContext;
@@ -27,7 +26,7 @@ export class SappPreloader {
         if (!context) {
             return;
         }
-        
+
         return context ? context.loadContext.loaded : undefined;
     }
 

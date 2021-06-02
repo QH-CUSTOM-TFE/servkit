@@ -8,4 +8,5 @@ npm-debug.log
 .yarnclean
 *.bat
 .history
+/dist
 
