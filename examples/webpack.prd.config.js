@@ -7,7 +7,7 @@ module.exports = {
     devtool: 'source-map',
     entry: fs.readdirSync(__dirname).reduce((entries, dir) => {
         const fullDir = path.join(__dirname, dir);
-        const entry = path.join(fullDir, 'app.ts');
+        const entry = path.join(fullDir, 'index.ts');
         if (fs.statSync(fullDir).isDirectory() && fs.existsSync(entry)) {
             entries[dir] = [entry];
         }
@@ -25,10 +25,10 @@ module.exports = {
     module: {
         rules: [
             { test: /\.js$/, exclude: /node_modules/, use: ['babel-loader'] },
-            { test: /\.css$/, use: ['css-loader'] },
+            { test: /\.css$/, use: ['style-loader', 'css-loader'] },
             {
                 test: /\.less$/,
-                use: ['css-loader', 'less-loader'],
+                use: ['style-loader', 'css-loader', 'less-loader'],
             },
             { test: /\.tsx?$/, exclude: /node_modules/, use: ['ts-loader'] },
         ],

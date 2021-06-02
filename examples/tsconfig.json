@@ -2,6 +2,8 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "paths": {
       "servkit": [
         "../src"
@@ -11,6 +13,7 @@
       ],
       "@example/first-example-decl": ["packages/first-example-decl"],
       "@example/first-example-decl/*": ["packages/first-example-decl/src/*"]
-    }
+    },
+    "jsx": "react"
   }
 }
