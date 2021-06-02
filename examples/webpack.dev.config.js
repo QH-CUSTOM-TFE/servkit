@@ -28,13 +28,13 @@ module.exports = {
 
     module: {
         rules: [
-            { test: /\.js$/, exclude: /node_modules/, use: ['babel-loader'] },
-            { test: /\.css$/, use: [ 'style-loader', 'css-loader'] },
+            { test: /\.js$/, exclude: /node_modules/, use: ['cache-loader', 'babel-loader'] },
+            { test: /\.css$/, use: [ 'cache-loader', 'style-loader', 'css-loader'] },
             {
                 test: /\.less$/,
-                use: ['style-loader', 'css-loader', 'less-loader'],
+                use: ['cache-loader', 'style-loader', 'css-loader', 'less-loader'],
             },
-            { test: /\.tsx?$/, exclude: /node_modules/, use: ['ts-loader'] },
+            { test: /\.tsx?$/, exclude: /node_modules/, use: ['cache-loader', 'ts-loader'] },
         ],
     },
 
