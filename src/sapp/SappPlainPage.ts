@@ -1,6 +1,5 @@
 import { Sapp, SappStartOptions, ESappType } from './Sapp';
-// do not remove Deferred, prevent .d.ts lazy load Deferred
-import { DeferredUtil, Deferred } from '../common/Deferred';
+import { DeferredUtil } from '../common/Deferred';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
 import { EServChannel } from '../session/channel/ServChannel';

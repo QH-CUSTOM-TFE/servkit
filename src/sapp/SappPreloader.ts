@@ -1,4 +1,3 @@
-import { Deferred } from '../common';
 import { LoadContext, LoadUtil } from "../load/load";
 import { SappInfo, ESappType, Sapp } from './Sapp';
 
@@ -22,7 +21,7 @@ export class SappPreloader {
         this.contexts = {};
     }
 
-    getPreloadDeferred(id: string): void | Deferred<void> {
+    getPreloadDeferred(id: string) {
         const context = this.contexts[id];
         if (!context) {
             return;
@@ -31,7 +30,7 @@ export class SappPreloader {
         return context ? context.loadContext.loaded : undefined;
     }
 
-    load(info: SappInfo): Deferred<void> {
+    load(info: SappInfo) {
         if (info.type !== ESappType.ASYNC_LOAD) {
             throw new Error(`[SAPPMGR] Only async load app support preload`);
         }
