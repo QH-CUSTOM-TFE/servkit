@@ -37,7 +37,9 @@ module.exports = {
             { test: /\.tsx?$/, exclude: /node_modules/, use: ['cache-loader', 'ts-loader'] },
         ],
     },
-
+    /*externals: {
+        'servkit': 'servkit',
+    },*/
     resolve: {
         alias: {
             'servkit': path.resolve(__dirname, '../src'),

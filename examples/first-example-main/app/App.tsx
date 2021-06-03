@@ -12,7 +12,7 @@ export function App() {
             <Layout.Sider theme={'light'} className="app-layout-left">
                 <h2>功能区</h2>
                 <div>
-                    <Button type="primary">打开窗口</Button>
+                    <Button type="primary" onClick={}>打开窗口</Button>
                 </div>
             </Layout.Sider>
             <Layout.Content >
