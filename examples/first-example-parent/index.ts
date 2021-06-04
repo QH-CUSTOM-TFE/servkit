@@ -1,2 +1,5 @@
 import {servkit } from 'servkit';
-import { TestDec } from '@example/first-example-decl';
+import bootView from './main';
+import 'antd/dist/antd.css';
+
+bootView();
