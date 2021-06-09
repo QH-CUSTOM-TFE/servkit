@@ -1,8 +1,21 @@
-import './app.less';
 import { Button, Layout, Space } from 'antd';
-import React from 'react';
+import React, { useRef } from 'react';
+import { EServChannel, EServIFrameShowPolicy, EServTerminal, IFrameUtil, servkit } from 'servkit';
+import './app.less';
 
 export function App() {
+    const ref = useRef<any>();
+
+    const openApp = () => {
+        /*servkit.createTerminal({
+            id: '',
+            type: EServTerminal.SLAVE,
+            session: {
+                channel: EServChannel.WINDOW,
+            },
+        });*/
+    };
+
     return (
         <Layout className="app-layout">
             <Layout.Sider theme={'light'} className="app-layout-left">
@@ -10,14 +23,16 @@ export function App() {
                 <Space direction='vertical'>
                     <Button
                         type="primary"
-                    >打开小程序1</Button>
-                    <Button
-                        type="primary"
-                    >打开小程序2</Button>
+                        onClick={openApp}
+                    >打开主体</Button>
+                </Space>
+                <h2>远程调用方法</h2>
+                <Space direction='vertical'>
+                    <Button>弹出提示</Button>
                 </Space>
             </Layout.Sider>
-            <Layout.Content className="app-layout-content">
-                <iframe style={{width: '100%', height: '100%', border: 'none'}} src="/first-example-main" ></iframe>
+            <Layout.Content itemRef={'aaaa'} className="app-layout-content">
+                <div ref={ref} className="app-framework-container"></div>
             </Layout.Content>
         </Layout >
     );

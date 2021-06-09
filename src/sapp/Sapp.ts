@@ -44,7 +44,7 @@ export enum ESappLifePolicy {
     /**
      * 自动模式，在隐藏超过lifeMaxHideTime时间后，应用自动被关闭
      */
-    AUTO,   
+    AUTO,
 }
 
 /**
@@ -110,14 +110,14 @@ export class SappInfo {
     url: string;
     /**
      * 对于SappType.ASYNC_LOAD应用，有时候一个简单的script entry链接可能是不够的，这个时候需要以的html来整合应用的entry信息；
-     * 
+     *
      * 注意：
      * 1：与SappInfo.url不能同时存在
      * 2：只对SappType.ASYNC_LOAD应用生效
      *
      * @type {string}
      * @memberof SappInfo
-     * 
+     *
      * @example
      * ``` ts
      * html:
@@ -331,12 +331,12 @@ export interface SappStartOptions {
 
 /**
  * 在主应用中，从应用抽象类；可通过Sapp实例操作从应用，并与从应用进行同行；
- * 
+ *
  * Sapp主要提供：
  * 1：应用信息、生命周期状态
  * 2：生命周期操作API：start、show、hide、close
  * 3：服务通信
- * 
+ *
  * 可通过SappController对Sapp做更多定制化控制
  *
  * @export
@@ -344,7 +344,7 @@ export interface SappStartOptions {
  */
 export class Sapp {
     static transformContentByInfo(content: string, info: SappInfo) {
-        return replacePlaceholders(content, { version: info.version });   
+        return replacePlaceholders(content, { version: info.version });
     }
 
     /**
@@ -354,7 +354,7 @@ export class Sapp {
      * @memberof Sapp
      */
     uuid: string;
-    
+
     /**
      * 应用信息
      *
@@ -377,7 +377,7 @@ export class Sapp {
      *
      * @type {Deferred}
      * @memberof Sapp
-     * 
+     *
      * @example
      * ``` ts
      * app.started
@@ -399,7 +399,7 @@ export class Sapp {
      *
      * @type {Deferred<any>}
      * @memberof Sapp
-     * 
+     *
      * @example
      * ``` ts
      * // 应用启动
@@ -510,7 +510,7 @@ export class Sapp {
     /**
      * 启动应用；具有防重入处理，重复的调用会得到第一次调用返回的Promise对象
      *
-     * @param {SappStartOptions} options 
+     * @param {SappStartOptions} options
      * @memberof Sapp
      */
     start = DeferredUtil.reEntryGuard(this.mutex.lockGuard(async (options?: SappStartOptions): Promise<void> => {
@@ -533,7 +533,7 @@ export class Sapp {
             const timeout = config.startTimeout
                             || this.info.options.startTimeout
                             || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
-            
+
             let timer = 0;
             const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
                 timer = setTimeout(() => {
@@ -541,10 +541,10 @@ export class Sapp {
                     reject(new Error('timeout'));
                 }, timeout) as any;
             }) : undefined;
- 
+
             const startWork = async () => {
                 const waitOnAuth = DeferredUtil.create({
-                    rejectIf: pTimeout, 
+                    rejectIf: pTimeout,
                 });
                 this.waitOnAuth = waitOnAuth;
 
@@ -779,7 +779,7 @@ export class Sapp {
     /**
      * 隐藏应用；具有防重入处理；result将会传递给SappSDK onClose回调；
      *
-     * @param {SappCloseResult} result 
+     * @param {SappCloseResult} result
      * @memberof Sapp
      */
     close = DeferredUtil.reEntryGuard(
@@ -822,7 +822,7 @@ export class Sapp {
                     const terminal = this.terminal;
                     this.terminal = undefined!;
                     // The close operation maybe from sapp, need to send back message;
-                    // so lazy the destroy to next tick 
+                    // so lazy the destroy to next tick
                     setTimeout(() => {
                         terminal.servkit.destroyTerminal(terminal);
                     });
@@ -832,7 +832,7 @@ export class Sapp {
                 this.isStarted = false;
                 this.started = DeferredUtil.reject(new Error('[SAPP] Closed'));
                 this.started.catch(() => undefined);
-                
+
                 this.waitOnStart = undefined;
                 this.waitOnAuth = undefined;
                 this.manager = undefined!;
@@ -852,9 +852,9 @@ export class Sapp {
      * if (serv) {
      *     serv.func();
      * }
-     * 
-     * or 
-     * 
+     *
+     * or
+     *
      * // 同时获取多个服务
      * const { serv } = app.getService({ serv: CommServiceDecl });
      * if (serv) {
@@ -875,11 +875,11 @@ export class Sapp {
      *
      * @type {ServServiceClient['getServiceUnsafe']}
      * @memberof Sapp
-     * 
+     *
      * @example
      * ``` ts
      * const serv = app.getServiceUnsafe(CommServiceDecl);
-     * serv.func(); // 没有 undefined 错误提示 
+     * serv.func(); // 没有 undefined 错误提示
      * ```
      */
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'] = function(this: Sapp) {
@@ -891,7 +891,7 @@ export class Sapp {
      *
      * @type {ServServiceClient['service']}
      * @memberof Sapp
-     * 
+     *
      * @example
      * ``` ts
      * const serv = await app.service(CommServiceDecl);
@@ -910,7 +910,7 @@ export class Sapp {
      *
      * @type {ServServiceClient['serviceExec']}
      * @memberof Sapp
-     * 
+     *
      * @example
      * ``` ts
      * app.serviceExec(CommServiceDecl, (serv) => {
@@ -1113,12 +1113,12 @@ export class Sapp {
                         const showParams: SappShowParams = {
                             force: true,
                         };
-    
+
                         const data = await self.resolveStartShowData(options);
                         if (data !== undefined) {
                             showParams.data = data;
                         }
-    
+
                         self._show(showParams, true);
                     });
                 }
