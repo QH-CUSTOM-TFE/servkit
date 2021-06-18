@@ -8,3 +8,4 @@ export * from './SappDefaultIFrameController';
 export { SappShowParams as SappSDKShowParams, SappHideParams as SappSDKHideParams } from './service/s/SappLifecycle';
 export { SappShowParams, SappHideParams, SappAuthParams, SappCloseResult } from './service/m/SappLifecycle';
 export * from './SappACLResolver';
+export * from './SappHelper';
