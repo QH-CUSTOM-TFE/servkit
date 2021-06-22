@@ -44,6 +44,7 @@ module.exports = {
         alias: {
             'servkit': path.resolve(__dirname, '../src'),
             '@example/first-example-decl': path.resolve(__dirname, 'packages/first-example-decl'),
+            '@example/first-children-decl': path.resolve(__dirname, 'packages/first-children-decl'),
         },
         extensions: ['.js', '.ts', '.d.ts', '.tsx', '.css'],
     },

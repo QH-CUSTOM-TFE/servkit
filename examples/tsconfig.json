@@ -12,7 +12,9 @@
         "../src/*"
       ],
       "@example/first-example-decl": ["packages/first-example-decl"],
-      "@example/first-example-decl/*": ["packages/first-example-decl/src/*"]
+      "@example/first-example-decl/*": ["packages/first-example-decl/*"],
+      "@example/first-children-decl": ["packages/first-children-decl"],
+      "@example/first-children-decl/*": ["packages/first-children-decl/*"]
     },
     "jsx": "react"
   }

@@ -35,7 +35,6 @@ export function App() {
 
     const showMessage = async () => {
         const service = terminal!.server.getService(MessageService);
-        debugger
         service?.info('aaaa');
     };
 

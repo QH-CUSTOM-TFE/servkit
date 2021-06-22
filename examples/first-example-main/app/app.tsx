@@ -1,3 +1,4 @@
+import { AlertService } from '@example/first-children-decl';
 import React, { useState, useRef } from 'react';
 import { Button, Layout, message, Row, Space } from 'antd';
 import { sappMGR } from 'servkit';
@@ -31,15 +32,24 @@ export function App() {
         });
     };
 
+    const onClick = async () => {
+        const service = sappMGR.getApp(CHILD_FIRST_APP_ID).getServiceUnsafe(AlertService);
+        await service.alert('show alert!');
+    };
+
+    const firstAppIsOpened = findIndex(apps, {id: CHILD_FIRST_APP_ID}) !== -1;
+
     return (
         <Layout className="app-layout">
             <Layout.Sider theme={'light'} className="app-layout-left">
                 <h2>功能区</h2>
                 <Space direction='vertical'>
                     <Button
-                        disabled={findIndex(apps, {id: CHILD_FIRST_APP_ID}) !== -1}
+                        disabled={firstAppIsOpened}
                         type="primary" onClick={bootstrapMiniApp.bind(null, CHILD_FIRST_APP_ID)}
                     >打开小程序1</Button>
+
+                    {firstAppIsOpened && (<Button onClick={onClick}>调用小程序1的方法</Button>)}
 
                     <Button
                         disabled={findIndex(apps, {id: CHILD_SECOND_APP_ID}) !== -1}
