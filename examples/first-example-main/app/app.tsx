@@ -5,6 +5,7 @@ import { sappMGR } from 'servkit';
 import { CHILD_FIRST_APP_ID, CHILD_SECOND_APP_ID } from '../constants';
 import SappContainer from './sapp-container';
 import { findIndex } from 'lodash';
+import { MessageService } from '@example/first-example-parent-decl';
 
 export interface ISappInState {
     id: string;
@@ -37,6 +38,15 @@ export function App() {
         await service.alert('show alert!');
     };
 
+    const closeSelf = () => {
+        sappMGR.closeHost();
+    };
+
+    const hostTips = () => {
+        const service = sappMGR.getHost()!.getServiceUnsafe(MessageService);
+        service.info('Hello Host!');
+    };
+
     const firstAppIsOpened = findIndex(apps, {id: CHILD_FIRST_APP_ID}) !== -1;
 
     return (
@@ -44,6 +54,18 @@ export function App() {
             <Layout.Sider theme={'light'} className="app-layout-left">
                 <h2>功能区</h2>
                 <Space direction='vertical'>
+                    {
+                        sappMGR.isInHostEnv() &&
+                        <Button
+                            type="primary" onClick={closeSelf}
+                        >关闭自己</Button>
+                    }   
+                    {
+                        sappMGR.isInHostEnv() &&
+                        <Button
+                            type="primary" onClick={hostTips}
+                        >Host弹出提示</Button>
+                    } 
                     <Button
                         disabled={firstAppIsOpened}
                         type="primary" onClick={bootstrapMiniApp.bind(null, CHILD_FIRST_APP_ID)}

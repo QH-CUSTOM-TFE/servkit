@@ -63,6 +63,8 @@ export const EServConstant = {
     SERV_SESSION_CALL_MESSAGE_TIMEOUT: 30000,
     SAPP_HIDE_MAX_TIME: 600000,
     SAPP_LIFECYCLE_TIMEOUT: 120000,
+    SHOST_TERMINAL_ID: 'SHOST_TERMINAL_ID',
+    SHOST_CREATE_TIMEOUT: 30000,
 };
 
 export function setServConstant(constans: Partial<typeof EServConstant>) {
@@ -147,4 +149,36 @@ export function safeExec<T extends (...args: any) => any>(func: T): ReturnType<T
     }
 
     return undefined as any;
+}
+
+export function doWithTimeout<T = any>(
+    timeout: number, 
+    work: (pTimeout: Promise<void> | undefined) => Promise<T>,
+): Promise<T> {
+    let timer = 0;
+    const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
+        timer = setTimeout(() => {
+            timer = 0;
+            reject(new Error('timeout'));
+        }, timeout) as any;
+    }) : undefined;
+
+    const pWork = work(pTimeout);
+    let pDone = pWork;
+    if (pTimeout) {
+        pDone = Promise.race([pWork, pTimeout]).then(() => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = 0;
+            }
+        }, (error) => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = 0;
+            }
+            throw error;
+        }) as any as Promise<T>;
+    }
+
+    return pDone;
 }

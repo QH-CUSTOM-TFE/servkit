@@ -1,40 +1,43 @@
 import { MessageService } from '@example/first-example-decl';
 import { Button, Layout, Space } from 'antd';
 import React, { useRef } from 'react';
-import {
-    EServChannel,
-    EServIFrameShowPolicy,
-    EServTerminal,
-    IFrameUtil,
-    SappHelper,
-    servkit,
-    ServTerminal,
-} from 'servkit';
 import './app.less';
+import { shostSDK } from 'servkit';
+import { MessageService as ParentMessageService } from '@example/first-example-parent-decl';
+import { MessageServiceImpl } from '../core/impl/message.service.impl';
+
+shostSDK.setConfig({
+    resolveContentPageUrl: () => {
+        return '/first-example-main';
+    },
+    services: [
+        {
+            decl: ParentMessageService,
+            impl: MessageServiceImpl,
+        },
+    ],
+});
 
 export function App() {
     const ref = useRef<any>();
 
-    let terminal: ServTerminal | undefined;
-
     const openApp = async () => {
-        /*servkit.createTerminal({
-            id: '',
-            type: EServTerminal.SLAVE,
-            session: {
-                channel: EServChannel.WINDOW,
+        shostSDK.start({
+            layout: {
+                container: ref.current,
             },
-        });*/
-        terminal = await SappHelper.create({
-            terminalId: 'test-terminal-id',
-            services: [],
-            url: '/first-example-main',
-            container: ref.current,
         });
     };
 
+    const exitApp = async () => {
+        const closed = await shostSDK.close();
+        if (!closed) {
+            alert('被主应用打断关闭操作');
+        }
+    };
+
     const showMessage = async () => {
-        const service = terminal!.server.getService(MessageService);
+        const service = shostSDK.getService(MessageService);
         service?.info('aaaa');
     };
 
@@ -47,6 +50,10 @@ export function App() {
                         type="primary"
                         onClick={openApp}
                     >打开主体</Button>
+                    <Button
+                        type="primary"
+                        onClick={exitApp}
+                    >退出主体</Button>
                 </Space>
                 <h2>远程调用方法</h2>
                 <Space direction='vertical'>

@@ -8,3 +8,15 @@ sappMGR.setConfig({
         return find(ALL_APP_INFOS, {id})!;
     },
 }).addServices(ALL_SERVICE, {lazy: true});
+
+sappMGR.createHost({
+    onCloseHandle: async () => {
+        const dontClose = Math.random() > 0.5;
+        if (dontClose) {
+            alert('打断关闭操作');
+        }
+        return {
+            dontClose,
+        };
+    },
+});
