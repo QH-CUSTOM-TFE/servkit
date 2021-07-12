@@ -552,9 +552,13 @@ export class SappMGR {
      * @returns SappHostPage
      * @memberof SappMGR
      */
-    createHost(options?: SappHostCreateOptions): SappHostPage {
+    createHost(options?: SappHostCreateOptions): SappHostPage | undefined {
         if (this.hostApp) {
             return this.hostApp;
+        }
+
+        if (!this.isInHostEnv()) {
+            return;
         }
 
         options = options || {};
