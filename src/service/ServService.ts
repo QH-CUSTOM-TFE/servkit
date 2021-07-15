@@ -64,7 +64,7 @@ export const API_ERROR = (error?: any) => Promise.reject(error || new Error('unk
 export function API_SUCCEED(): Promise<any>;
 export function API_SUCCEED<T>(data: Promise<T>): Promise<T>;
 export function API_SUCCEED<T>(data: T): Promise<T>;
-export function API_SUCCEED(data?: any) { 
+export function API_SUCCEED(data?: any) {
     return Promise.resolve(data);
 }
 
@@ -188,7 +188,7 @@ function api(options?: ServAPIOptions) {
                 asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
             }
-    
+
             const apis = metas.apis;
             for (let i = 0, iz = apis.length; i < iz; ++i) {
                 if (apis[i].name === propKey) {
@@ -205,7 +205,7 @@ function api(options?: ServAPIOptions) {
             if (options) {
                 item.options = options;
             }
-    
+
             apis.push(item);
         } catch (e) {
             asyncThrow(e);
@@ -221,7 +221,7 @@ function notify(options?: ServNotifyOptions) {
                 asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
             }
-    
+
             const apis = metas.apis;
             for (let i = 0, iz = apis.length; i < iz; ++i) {
                 if (apis[i].name === propKey) {
@@ -239,7 +239,7 @@ function notify(options?: ServNotifyOptions) {
                 item.options = options;
                 item.options.dontRetn = true;
             }
-    
+
             apis.push(item);
         } catch (e) {
             asyncThrow(e);
@@ -255,7 +255,7 @@ function event(options?: ServEventerOptions) {
                 asyncThrowMessage(`Can't get meta in event [${propKey}].`);
                 return;
             }
-    
+
             const events = metas.evts;
             for (let i = 0, iz = events.length; i < iz; ++i) {
                 if (events[i].name === propKey) {
@@ -272,7 +272,7 @@ function event(options?: ServEventerOptions) {
             if (options) {
                 item.options = options;
             }
-    
+
             events.push(item);
         } catch (e) {
             asyncThrow(e);
@@ -289,12 +289,18 @@ function meta(obj: typeof ServService | ServService, create?: boolean): ServServ
 
         if (typeof obj === 'function') {
             ret = (obj.prototype as any)[META];
-            if (!ret && create) {
+            if (create && !obj.prototype.hasOwnProperty(META)) {
+                let apis: ServAPIMeta[] = [];
+                let evts: ServEventerMeta[] = [];
+                if (ret) {
+                    apis = [...ret.apis];
+                    evts = [...ret.evts];
+                }
                 ret = {
                     id: '',
                     version: '',
-                    apis: [],
-                    evts: [],
+                    apis,
+                    evts,
                 };
 
                 (obj.prototype as any)[META] = ret;
