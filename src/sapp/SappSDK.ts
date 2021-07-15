@@ -858,6 +858,9 @@ export class SappSDK extends EventEmitter {
             //
         }
     }
+
+    // tslint:disable-next-line:no-empty
+    destroy() {}
 }
 
 /**

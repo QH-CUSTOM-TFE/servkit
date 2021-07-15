@@ -62,8 +62,10 @@ export class ServServiceClient {
             this.services[id] = service;
         }
 
-        this.checkServiceVersion(metas);
-
+        if (!metas.noVersionCheck) {
+            this.checkServiceVersion(metas);
+        }
+        
         return service as InstanceType<T>;
     }
 
@@ -152,7 +154,9 @@ export class ServServiceClient {
     }
 
     protected checkServiceVersion(service: ServServiceMeta) {
-        this.sendCommonMessageForReturn(ServServiceMessageCreator.create(EServServiceMessage.GET_VERSION, service.id))
+        this.sendCommonMessageForReturn(
+            ServServiceMessageCreator.create(EServServiceMessage.GET_VERSION, service.id),
+            -1)
         .then((curVersion) => {
             const version = service.version;
             if (curVersion !== version) {
