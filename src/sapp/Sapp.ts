@@ -15,6 +15,7 @@ import { AsyncMutex } from '../common/AsyncMutex';
 import { SappController } from './SappController';
 import { replacePlaceholders } from '../common/query';
 import { SappACLResolver } from './SappACLResolver';
+import { doWithTimeout } from '../common/common';
 
 /**
  * Sapp创建策略，当应用重复创建时，使用该枚举值进行控制
@@ -59,6 +60,7 @@ export enum ESappType {
      * 基于异步机制的应用，应用与主应用运行在同一个Web环境；
      */
     ASYNC_LOAD = 'ASYNC_LOAD',
+    HOST_PAGE = 'HOST_PAGE',
 }
 
 /**
@@ -534,99 +536,74 @@ export class Sapp {
                             || this.info.options.startTimeout
                             || EServConstant.SERV_SAPP_ON_START_TIMEOUT;
 
-            let timer = 0;
-            const pTimeout = timeout > 0 ? new Promise<void>((resolve, reject) => {
-                timer = setTimeout(() => {
-                    timer = 0;
-                    reject(new Error('timeout'));
-                }, timeout) as any;
-            }) : undefined;
+            await doWithTimeout(
+                timeout,
+                async (pTimeout) => {
+                    const waitOnAuth = DeferredUtil.create({
+                        rejectIf: pTimeout,
+                    });
+                    this.waitOnAuth = waitOnAuth;
 
-            const startWork = async () => {
-                const waitOnAuth = DeferredUtil.create({
-                    rejectIf: pTimeout,
-                });
-                this.waitOnAuth = waitOnAuth;
+                    const waitOnStart = DeferredUtil.create({
+                        rejectIf: waitOnAuth,
+                    });
+                    this.waitOnStart = waitOnStart;
 
-                const waitOnStart = DeferredUtil.create({
-                    rejectIf: waitOnAuth,
-                });
-                this.waitOnStart = waitOnStart;
+                    await this.beforeStart(newOptions);
 
-                await this.beforeStart(newOptions);
+                    const asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
 
-                const asyncWorks = this.controller ? this.controller.doAsyncStart() : undefined;
-
-                if (this.controller) {
-                    await this.controller.doStart();
-                }
-
-                await this.beforeInitTerminal();
-                await this.initTerminal(newOptions);
-                await this.afterInitTerminal();
-
-                await waitOnAuth.catch((error) => {
-                    if (this.waitOnAuth) {
-                        asyncThrow(new Error('[SAPP] App auth failed'));
-                    }
-                    throw error;
-                });
-                this.waitOnAuth = undefined;
-
-                await waitOnStart.catch((error) => {
-                    if (this.waitOnStart) {
-                        asyncThrow(new Error('[SAPP] App start timeout'));
-                    }
-                    throw error;
-                });
-                this.waitOnStart = undefined;
-
-                if (asyncWorks) {
-                    await asyncWorks;
-                }
-
-                this.isStarted = true;
-
-                if (this.controller) {
-                    await this.controller.doCreate();
-                }
-
-                if (!this.config.hideOnStart) {
-                    const showParams: SappShowParams = {
-                        force: true,
-                    };
-
-                    const data = await this.resolveStartShowData(newOptions);
-                    if (data !== undefined) {
-                        showParams.data = data;
+                    if (this.controller) {
+                        await this.controller.doStart();
                     }
 
-                    await this._show(showParams, true);
-                }
+                    await this.beforeInitTerminal();
+                    await this.initTerminal(newOptions);
+                    await this.afterInitTerminal();
 
-                await this.afterStart();
+                    await waitOnAuth.catch((error) => {
+                        if (this.waitOnAuth) {
+                            asyncThrow(new Error('[SAPP] App auth failed'));
+                        }
+                        throw error;
+                    });
+                    this.waitOnAuth = undefined;
 
-                this.started.resolve();
-            };
+                    await waitOnStart.catch((error) => {
+                        if (this.waitOnStart) {
+                            asyncThrow(new Error('[SAPP] App start timeout'));
+                        }
+                        throw error;
+                    });
+                    this.waitOnStart = undefined;
 
-            const pWork = startWork();
-            let pDone = pWork;
-            if (pTimeout) {
-                pDone = Promise.race([pWork, pTimeout]).then(() => {
-                    if (timer) {
-                        clearTimeout(timer);
-                        timer = 0;
+                    if (asyncWorks) {
+                        await asyncWorks;
                     }
-                }, (error) => {
-                    if (timer) {
-                        clearTimeout(timer);
-                        timer = 0;
+
+                    this.isStarted = true;
+
+                    if (this.controller) {
+                        await this.controller.doCreate();
                     }
-                    throw error;
+
+                    if (!this.config.hideOnStart) {
+                        const showParams: SappShowParams = {
+                            force: true,
+                        };
+
+                        const data = await this.resolveStartShowData(newOptions);
+                        if (data !== undefined) {
+                            showParams.data = data;
+                        }
+
+                        await this._show(showParams, true);
+                    }
+
+                    await this.afterStart();
+
+                    this.started.resolve();
                 });
-            }
-
-            await pDone;
         } catch (e) {
             this.started.reject(e);
             this.close();

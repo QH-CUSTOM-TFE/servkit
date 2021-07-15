@@ -14,6 +14,7 @@
       "@example/first-example-decl": ["packages/first-example-decl"],
       "@example/first-example-decl/*": ["packages/first-example-decl/*"],
       "@example/first-children-decl": ["packages/first-children-decl"],
+      "@example/first-example-parent-decl": ["packages/first-children-parent-decl"],
       "@example/first-children-decl/*": ["packages/first-children-decl/*"]
     },
     "jsx": "react"

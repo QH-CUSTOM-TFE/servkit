@@ -3,13 +3,15 @@ import { SappController } from './SappController';
 import { Servkit, servkit } from '../servkit/Servkit';
 import { SappDefaultIFrameController } from './SappDefaultIFrameController';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
-import { nextUUID, asyncThrow } from '../common/common';
+import { nextUUID, asyncThrow, EServConstant } from '../common/common';
 import { SappPlainPage } from './SappPlainPage';
 import { ServGlobalServiceManager } from '../servkit/ServGlobalServiceManager';
 import { SappDefaultAsyncLoadController } from './SappDefaultAsyncLoadController';
 import { SappPreloader } from './SappPreloader';
 import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServiceManager';
 import { SappACLResolver } from './SappACLResolver';
+import { SappHostPage, SappHostOnCloseHandle } from './SappHostPage';
+import { SappDefaultHostPageController } from './SappDefaultHostPageController';
 
 const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
     create: ESappCreatePolicy.SINGLETON,
@@ -120,6 +122,62 @@ export class SappLayoutOptions {
      * @memberof SappLayoutOptions
      */
     hideStyle?: Partial<HTMLElement['style']>;
+}
+
+/**
+ * SappMGR createHost参数
+ */
+export interface SappHostCreateOptions {
+    /**
+     * create时不要自动启动应用；即不要调用Sapp.start
+     *
+     * @type {boolean}
+     * @memberof SappHostCreateOptions
+     */
+     dontStartOnCreate?: boolean;
+     /**
+      * 应用Controller创建回调；默认会自动创建一个Default Controller
+      *
+      * @param {SappMGR} mgr
+      * @param {Sapp} app
+      * @returns {SappController}
+      * @memberof SappHostCreateOptions
+      */
+     createAppController?(mgr: SappMGR, app: Sapp): SappController;
+     /**
+      * 应用 Service ACL 权限管理创建回调；默认无ACL权限管理
+      *
+      * @param {Sapp} app
+      * @returns {SappACLResolver}
+      * @memberof SappHostCreateOptions
+      */
+     createACLResolver?(app: Sapp): SappACLResolver;
+     
+    /**
+     * 配置主应用向从应用提供的服务
+     *
+     * @type {ServServiceConfig['services']}
+     * @memberof SappHostCreateOptions
+     */
+    services?: ServServiceConfig['services'];
+
+    /**
+     * 配置主应用向从应用提供的引用型服务；引用型服务由Global Service Manager提供；
+     *
+     * @type {ServServiceReferPattern}
+     * @memberof SappHostCreateOptions
+     */
+     serviceRefer?: ServServiceReferPattern;
+
+     /**
+      * Host应用在关闭前的拦截函数，在这里面可以进行完成：
+      * 1：关闭处理逻辑
+      * 2：或者打断关闭逻辑，通过返回值 SappHostOnCloseResult.dontClose 进行控制
+      *
+      * @type {SappHostOnCloseHandle}
+      * @memberof SappHostCreateOptions
+      */
+     onCloseHandle?: SappHostOnCloseHandle;
 }
 
 /**
@@ -255,6 +313,7 @@ export class SappMGR {
     protected infos: { [key: string]: SappInfo };
     protected apps: { [key: string]: Sapp[] };
     protected config: SappMGRConfig;
+    protected hostApp?: SappHostPage;
 
     constructor() {
         this.infos = {};
@@ -266,6 +325,10 @@ export class SappMGR {
         this.config = config;
 
         return this;
+    }
+
+    getConfig() {
+        return this.config;
     }
 
     getServkit(): Servkit {
@@ -337,10 +400,6 @@ export class SappMGR {
         const serviceManager = this.getServkit().service;
         return serviceManager.remServices.apply(serviceManager, arguments);
     };
-
-    getConfig() {
-        return this.config;
-    }
 
     /**
      * 根据id获取Sapp实例
@@ -483,6 +542,103 @@ export class SappMGR {
         }, () => {
             return false;
         });
+    }
+
+    /**
+     * 创建host应用，host应用是host页面的抽象，可通过host应用与host页面进行交互通信；
+     * host应用将在host页面中以IFrame方式嵌入。
+     *
+     * @param {SappHostCreateOptions} [options]
+     * @returns SappHostPage
+     * @memberof SappMGR
+     */
+    createHost(options?: SappHostCreateOptions): SappHostPage | undefined {
+        if (this.hostApp) {
+            return this.hostApp;
+        }
+
+        if (!this.isInHostEnv()) {
+            return;
+        }
+
+        options = options || {};
+
+        const info = {
+            id: EServConstant.SHOST_TERMINAL_ID,
+            version: '1.0.0',
+            type: ESappType.HOST_PAGE,
+            url: '',
+            options: {},
+        };
+    
+        const appOptions = {
+            ...options,
+            startTimeout: EServConstant.SHOST_CREATE_TIMEOUT,
+        };
+
+        if (!appOptions.createACLResolver && this.config.createACLResolver) {
+            appOptions.createACLResolver = this.config.createACLResolver;
+        }
+
+        const app = this.createApp(this.nextAppUuid(info), info, appOptions) as SappHostPage;
+        this.hostApp = app;
+
+        app.getController()!.doConfig(appOptions);
+
+        if (options.onCloseHandle) {
+            app.setOnCloseHandle(options.onCloseHandle);
+        }
+
+        if (!options.dontStartOnCreate) {
+            // createHost need sync, no await here
+            app.start();
+        }
+        
+        return app;
+    }
+
+    /**
+     * 获取host应用
+     *
+     * @returns {(SappHostPage | undefined)}
+     * @memberof SappMGR
+     */
+    getHost(): SappHostPage | undefined {
+        return this.hostApp;
+    }
+
+    /**
+     * 关闭host应用
+     *
+     * @returns
+     * @memberof SappMGR
+     */
+    closeHost() {
+        if (!this.hostApp) {
+            return;
+        }
+
+        return this.hostApp.close();
+    }
+
+    /**
+     * 返回是否在host页面环境
+     *
+     * @returns boolean
+     * @memberof SappMGR
+     */
+    isInHostEnv() {
+        return SappHostPage.isInHostEnv();
+    }
+
+    /**
+     * 返回host应用是否已经连接到host页面
+     *
+     * @returns
+     * @memberof SappMGR
+     */
+    isHostConnected() {
+        return this.hostApp && this.hostApp.isStarted; 
     }
 
     /**
@@ -657,7 +813,9 @@ export class SappMGR {
     }
 
     protected createApp(uuid: string, info: SappInfo, options: SappCreateOptions): Sapp {
-        const app = info.options.isPlainPage ? new SappPlainPage(uuid, info, this) : new Sapp(uuid, info, this);
+        const app = info.type === ESappType.HOST_PAGE ? new SappHostPage(uuid, info, this) 
+                    : info.options.isPlainPage ? new SappPlainPage(uuid, info, this)
+                    : new Sapp(uuid, info, this);
         this.createAppController(app, options);
 
         return app;
@@ -676,8 +834,8 @@ export class SappMGR {
     }
 
     protected createDefaultAppController(app: Sapp): SappController {
-        return app.info.type === ESappType.ASYNC_LOAD
-            ? new SappDefaultAsyncLoadController(app)
+        return app.info.type === ESappType.ASYNC_LOAD ? new SappDefaultAsyncLoadController(app)
+            : app.info.type === ESappType.HOST_PAGE ? new SappDefaultHostPageController(app)
             : new SappDefaultIFrameController(app);
     }
 

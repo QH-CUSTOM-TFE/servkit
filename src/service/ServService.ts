@@ -8,6 +8,7 @@ export interface ServDeclOptions {
     version: string;
     ACL?: ServACL;
     EXT?: ServEXT;
+    noVersionCheck?: boolean;
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -94,6 +95,7 @@ export interface ServServiceMeta {
     EXT?: ServEXT;
     apis: ServAPIMeta[];
     evts: ServEventerMeta[];
+    noVersionCheck?: boolean;
 }
 
 export class ServService {
@@ -148,7 +150,9 @@ const decl: ServAnnoDecl = ((options: ServDeclOptions) => {
             metas.version = options.version;
             metas.ACL = options.ACL;
             metas.EXT = options.EXT;
-
+            if (options.noVersionCheck) {
+                metas.noVersionCheck = true;
+            }
         } catch (e) {
             asyncThrow(e);
         }
