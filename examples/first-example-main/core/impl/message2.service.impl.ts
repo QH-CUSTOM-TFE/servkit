@@ -1,57 +1,37 @@
-import { IMessageOption, ImessageServiceType, Message2Service } from '@example/first-example-decl';
+import { ImessageServiceType, Message2Service } from '@example/first-example-decl';
 import { anno, ServAPIRetn } from 'servkit';
-import { message as antdMessage } from 'antd';
-import { isString } from 'lodash';
-import { defer } from '../../util/promise';
+import { showAntdMessage } from './message.service.impl';
 
-function transformMessage(content: ImessageServiceType): IMessageOption {
-    if (isString(content)) {
-        return {
-            content,
-        };
-    }
-    return content;
-}
-
-function showAntdMessage(content: ImessageServiceType, type: 'info' | 'success' | 'error' | 'warning' | 'warn' | 'loading') {
-    const option = transformMessage(content);
-    let onClose: undefined | (() => void) ;
-    const deferObj = defer();
-    if (option.waitingClose) {
-        onClose = () => {
-            deferObj.resolve();
-        };
-    } else {
-        deferObj.resolve();
-    }
-    antdMessage[type](option.content + 'message2', option.duration, onClose);
-    return deferObj.promise;
-}
+const message2Prefix = 'message2';
 
 @anno.impl()
 export class Message2ServiceImpl extends Message2Service {
 
     info(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'info');
+        return showAntdMessage(content, 'info', message2Prefix);
+    }
+
+    info2(content: ImessageServiceType): ServAPIRetn<void> {
+        return showAntdMessage(content + 'info2', 'info', message2Prefix);
     }
 
     success(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'success');
+        return showAntdMessage(content, 'success', message2Prefix);
     }
 
     error(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'error');
+        return showAntdMessage(content, 'error', message2Prefix);
     }
 
     warning(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'warning');
+        return showAntdMessage(content, 'warning', message2Prefix);
     }
 
     warn(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'warn');
+        return showAntdMessage(content, 'warn', message2Prefix);
     }
 
     loading(content: ImessageServiceType): ServAPIRetn<void> {
-        return showAntdMessage(content, 'loading');
+        return showAntdMessage(content, 'loading', message2Prefix);
     }
 }

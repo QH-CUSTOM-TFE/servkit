@@ -187,30 +187,24 @@ const impl: ServAnnoImpl = ((options?: ServImplOptions) => {
 function api(options?: ServAPIOptions) {
     return function(proto: any, propKey: string) {
         try {
-            const metas = meta(proto, true);
+            const metas = meta(proto.constructor, true);
             if (!metas) {
                 asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
             }
 
             const apis = metas.apis;
-            for (let i = 0, iz = apis.length; i < iz; ++i) {
-                if (apis[i].name === propKey) {
-                    asyncThrowMessage(`Api conflicts [${propKey}].`);
-                    return;
-                }
+
+            let item = apis.find((evt) => evt.name === propKey);
+            if (!item) {
+                item = {
+                    name: propKey,
+                    options: DEFAULT_SERV_API_OPTIONS,
+                };
+                apis.push(item);
             }
 
-            const item: ServAPIMeta = {
-                name: propKey,
-                options: DEFAULT_SERV_API_OPTIONS,
-            };
-
-            if (options) {
-                item.options = options;
-            }
-
-            apis.push(item);
+            item.options = options ?? DEFAULT_SERV_API_OPTIONS;
         } catch (e) {
             asyncThrow(e);
         }
@@ -220,31 +214,23 @@ function api(options?: ServAPIOptions) {
 function notify(options?: ServNotifyOptions) {
     return function(proto: any, propKey: string) {
         try {
-            const metas = meta(proto, true);
+            const metas = meta(proto.constructor, true);
             if (!metas) {
                 asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
             }
 
             const apis = metas.apis;
-            for (let i = 0, iz = apis.length; i < iz; ++i) {
-                if (apis[i].name === propKey) {
-                    asyncThrowMessage(`Api conflicts [${propKey}].`);
-                    return;
-                }
+            let item = apis.find((evt) => evt.name === propKey);
+            if (!item) {
+                item = {
+                    name: propKey,
+                    options: DEFAULT_NOTIFY_API_OPTIONS,
+                };
+                apis.push(item);
             }
 
-            const item: ServAPIMeta = {
-                name: propKey,
-                options: DEFAULT_NOTIFY_API_OPTIONS,
-            };
-
-            if (options) {
-                item.options = options;
-                item.options.dontRetn = true;
-            }
-
-            apis.push(item);
+            item.options = options ?? DEFAULT_NOTIFY_API_OPTIONS;
         } catch (e) {
             asyncThrow(e);
         }
@@ -254,30 +240,25 @@ function notify(options?: ServNotifyOptions) {
 function event(options?: ServEventerOptions) {
     return function(proto: any, propKey: string) {
         try {
-            const metas = meta(proto, true);
+            const metas = meta(proto.constructor, true);
             if (!metas) {
                 asyncThrowMessage(`Can't get meta in event [${propKey}].`);
                 return;
             }
 
             const events = metas.evts;
-            for (let i = 0, iz = events.length; i < iz; ++i) {
-                if (events[i].name === propKey) {
-                    asyncThrowMessage(`Event conflicts [${propKey}].`);
-                    return;
-                }
+
+            let item = events.find((evt) => evt.name === propKey);
+            if (!item) {
+                item = {
+                    name: propKey,
+                    options: DEFAULT_SERV_EVENTER_OPTIONS,
+                };
+                events.push(item);
             }
 
-            const item: ServEventerMeta = {
-                name: propKey,
-                options: DEFAULT_SERV_EVENTER_OPTIONS,
-            };
+            item.options = options ?? DEFAULT_SERV_EVENTER_OPTIONS;
 
-            if (options) {
-                item.options = options;
-            }
-
-            events.push(item);
         } catch (e) {
             asyncThrow(e);
         }
