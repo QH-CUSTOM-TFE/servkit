@@ -52,7 +52,8 @@ export function App() {
     return (
         <Layout className="app-layout">
             <Layout.Sider theme={'light'} className="app-layout-left">
-                <h2>功能区</h2>
+                <a href="/">返回</a>
+                <h2>主应用</h2>
                 <Space direction='vertical'>
                     {
                         sappMGR.isInHostEnv() &&
@@ -64,7 +65,7 @@ export function App() {
                         sappMGR.isInHostEnv() &&
                         <Button
                             type="primary" onClick={hostTips}
-                        >Host弹出提示</Button>
+                        >Host中弹出提示</Button>
                     } 
                     <Button
                         disabled={firstAppIsOpened}

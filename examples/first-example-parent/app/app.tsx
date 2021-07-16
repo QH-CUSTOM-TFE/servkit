@@ -44,20 +44,21 @@ export function App() {
     return (
         <Layout className="app-layout">
             <Layout.Sider theme={'light'} className="app-layout-left">
-                <h2>功能区</h2>
+                <a href="/">返回</a>
+                <h2>HOST环境</h2>
                 <Space direction='vertical'>
                     <Button
                         type="primary"
                         onClick={openApp}
-                    >打开主体</Button>
+                    >打开主应用</Button>
                     <Button
                         type="primary"
                         onClick={exitApp}
-                    >退出主体</Button>
+                    >退出主应用</Button>
                 </Space>
                 <h2>远程调用方法</h2>
                 <Space direction='vertical'>
-                    <Button onClick={showMessage}>弹出提示</Button>
+                    <Button onClick={showMessage}>主应用中弹出提示</Button>
                 </Space>
             </Layout.Sider>
             <Layout.Content className="app-layout-content">

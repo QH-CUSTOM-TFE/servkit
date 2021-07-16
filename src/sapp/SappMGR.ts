@@ -12,6 +12,7 @@ import { ServServiceConfig, ServServiceReferPattern } from '../service/ServServi
 import { SappACLResolver } from './SappACLResolver';
 import { SappHostPage, SappHostOnCloseHandle } from './SappHostPage';
 import { SappDefaultHostPageController } from './SappDefaultHostPageController';
+import { Deferred, DeferredUtil } from '../common/Deferred';
 
 const DEFAULT_APP_INFO_OPTIONS: SappInfo['options'] = {
     create: ESappCreatePolicy.SINGLETON,
@@ -314,6 +315,44 @@ export class SappMGR {
     protected apps: { [key: string]: Sapp[] };
     protected config: SappMGRConfig;
     protected hostApp?: SappHostPage;
+    private _hostAppStarted?: Deferred;
+    private _hostAppClosed?: Deferred;
+
+    /**
+     * hostApp started deferred，可通过该deferred监测hostApp启动时机
+     *
+     * @readonly
+     * @memberof SappMGR
+     */
+    get hostAppStarted() {
+        if (!this._hostAppStarted) {
+            if (this.hostApp) {
+                this._hostAppStarted = this.hostApp.started;
+            } else {
+                this._hostAppStarted = DeferredUtil.create();
+            }
+        }
+
+        return this._hostAppStarted;
+    }
+
+    /**
+     * hostApp closed deferred，可通过该deferred监测hostApp关闭时机
+     *
+     * @readonly
+     * @memberof SappMGR
+     */
+    get hostAppClosed() {
+        if (!this._hostAppClosed) {
+            if (this.hostApp) {
+                this._hostAppClosed = this.hostApp.closed;
+            } else {
+                this._hostAppClosed = DeferredUtil.create();
+            }
+        }
+
+        return this._hostAppClosed;
+    }
 
     constructor() {
         this.infos = {};
@@ -582,6 +621,22 @@ export class SappMGR {
 
         const app = this.createApp(this.nextAppUuid(info), info, appOptions) as SappHostPage;
         this.hostApp = app;
+
+        if (this._hostAppStarted) {
+            app.started.then(() => {
+                this._hostAppStarted!.resolve();
+            }, (e) => {
+                this._hostAppStarted!.reject(e);
+            });
+        }
+
+        if (this._hostAppClosed) {
+            app.closed.then(() => {
+                this._hostAppClosed!.resolve();
+            }, (e) => {
+                this._hostAppClosed!.reject(e);
+            });
+        }
 
         app.getController()!.doConfig(appOptions);
 

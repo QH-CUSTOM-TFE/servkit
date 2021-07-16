@@ -5368,6 +5368,18 @@ onetime@^5.1.0:
   dependencies:
     mimic-fn "^2.1.0"
 
+open-browser-webpack-plugin@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.npm.taobao.org/open-browser-webpack-plugin/download/open-browser-webpack-plugin-0.0.5.tgz#5e6dc6f8b8797331e212985de218572d84c0521f"
+  integrity sha1-Xm3G+Lh5czHiEphd4hhXLYTAUh8=
+  dependencies:
+    open "0.0.5"
+
+open@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.nlark.com/open/download/open-0.0.5.tgz#42c3e18ec95466b6bf0dc42f3a2945c3f0cad8fc"
+  integrity sha1-QsPhjslUZra/DcQvOilFw/DK2Pw=
+
 opencollective-postinstall@^2.0.2:
   version "2.0.3"
   resolved "https://registry.npm.taobao.org/opencollective-postinstall/download/opencollective-postinstall-2.0.3.tgz#7a0fff978f6dbfa4d006238fbac98ed4198c3259"
