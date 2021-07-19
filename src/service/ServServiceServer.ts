@@ -227,12 +227,10 @@ export class ServServiceServer {
             if (typeof service[api] !== 'function') {
                 retnPromise = Promise.reject(`Unknown api [${api}] in service ${id}`);
             } else {
-                if (!service.hasOwnProperty('getContext')) {
-                    const self = this;
-                    service.getContext = function() {
-                        return self.terminal.context;
-                    };
-                }
+                const self = this;
+                service.getContext = function() {
+                    return self.terminal.context;
+                };
                 try {
                     if (this.ACLResolver) {
                         if (!this.ACLResolver.canAccessService(this, meta)) {
