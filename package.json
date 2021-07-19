@@ -1,6 +1,6 @@
 {
   "name": "servkit",
-  "version": "1.0.14-alpha.2",
+  "version": "1.0.14-alpha.3",
   "description": "主-从 应用架构的一种实现，目的是通过主应用提供的标准接口来实现从应用二次开发（二方/三方），以实现主应用的平台性开放能力。",
   "author": "QH-CUSTOM-TFE",
   "dependencies": {
@@ -48,7 +48,7 @@
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-dts": "^3.0.2",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.27.3",
+    "rollup-plugin-typescript2": "^0.30.0",
     "style-loader": "~1.3.0",
     "ts-loader": "^6.2.2",
     "tslib": "~2.1.0",

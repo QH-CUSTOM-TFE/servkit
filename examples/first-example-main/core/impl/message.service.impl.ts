@@ -4,17 +4,25 @@ import { message as antdMessage } from 'antd';
 import { isString } from 'lodash';
 import { defer } from '../../util/promise';
 
-function transformMessage(content: ImessageServiceType): IMessageOption {
-    if (isString(content)) {
-        return {
-            content,
-        };
-    }
-    return content;
+export function applyPrefix(content: string, prefix?: string) {
+    return `${prefix ? prefix + ': ' : ''}${content}`;
 }
 
-function showAntdMessage(content: ImessageServiceType, type: 'info' | 'success' | 'error' | 'warning' | 'warn' | 'loading') {
-    const option = transformMessage(content);
+export function transformMessage(content: ImessageServiceType, prefix = ''): IMessageOption {
+    if (isString(content)) {
+        const newContent = applyPrefix(content, prefix);
+        return {
+            content: newContent,
+        };
+    }
+    return {
+        ...content,
+        content: applyPrefix(content.content, prefix),
+    };
+}
+
+export function showAntdMessage(content: ImessageServiceType, type: 'info' | 'success' | 'error' | 'warning' | 'warn' | 'loading', prefix = 'message1') {
+    const option = transformMessage(content, prefix);
     let onClose: undefined | (() => void) ;
     const deferObj = defer();
     if (option.waitingClose) {
