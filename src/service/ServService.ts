@@ -187,7 +187,7 @@ const impl: ServAnnoImpl = ((options?: ServImplOptions) => {
 function api(options?: ServAPIOptions) {
     return function(proto: any, propKey: string) {
         try {
-            const metas = meta(proto.constructor, true);
+            const metas = meta(proto, true);
             if (!metas) {
                 asyncThrowMessage(`Can't get meta in api [${propKey}].`);
                 return;
@@ -212,35 +212,18 @@ function api(options?: ServAPIOptions) {
 }
 
 function notify(options?: ServNotifyOptions) {
-    return function(proto: any, propKey: string) {
-        try {
-            const metas = meta(proto.constructor, true);
-            if (!metas) {
-                asyncThrowMessage(`Can't get meta in api [${propKey}].`);
-                return;
-            }
-
-            const apis = metas.apis;
-            let item = apis.find((evt) => evt.name === propKey);
-            if (!item) {
-                item = {
-                    name: propKey,
-                    options: DEFAULT_NOTIFY_API_OPTIONS,
-                };
-                apis.push(item);
-            }
-
-            item.options = options ?? DEFAULT_NOTIFY_API_OPTIONS;
-        } catch (e) {
-            asyncThrow(e);
-        }
-    };
+    let option = DEFAULT_NOTIFY_API_OPTIONS;
+    if (options) {
+        option = options;
+        option.dontRetn = true;
+    }
+    return api(option);
 }
 
 function event(options?: ServEventerOptions) {
     return function(proto: any, propKey: string) {
         try {
-            const metas = meta(proto.constructor, true);
+            const metas = meta(proto, true);
             if (!metas) {
                 asyncThrowMessage(`Can't get meta in event [${propKey}].`);
                 return;
@@ -267,46 +250,37 @@ function event(options?: ServEventerOptions) {
 
 function meta(obj: typeof ServService | ServService, create?: boolean): ServServiceMeta | undefined {
     try {
-        let ret = (obj as any)[META] as ServServiceMeta;
-        if (ret) {
-            return ret;
+        let objProto: object | undefined;
+        if (typeof obj === 'object') {
+            if ((obj as any).IS_SERV_SERVICE) {
+                objProto = obj;
+            }
+        } else {
+            objProto = obj.prototype;
         }
 
-        if (typeof obj === 'function') {
-            ret = (obj.prototype as any)[META];
-            if (create && !obj.prototype.hasOwnProperty(META)) {
-                let apis: ServAPIMeta[] = [];
-                let evts: ServEventerMeta[] = [];
-                if (ret) {
-                    apis = [...ret.apis];
-                    evts = [...ret.evts];
-                }
-                ret = {
-                    id: '',
-                    version: '',
-                    apis,
-                    evts,
-                };
-
-                (obj.prototype as any)[META] = ret;
+        if (!objProto) {
+            asyncThrowMessage('Get meta from an invalid serv target!');
+            return ;
+        }
+        let ret = (objProto as any)[META] as ServServiceMeta;
+        if (create && !objProto.hasOwnProperty(META)) {
+            let apis: ServAPIMeta[] = [];
+            let evts: ServEventerMeta[] = [];
+            if (ret) {
+                apis = [...ret.apis];
+                evts = [...ret.evts];
             }
-
-            return ret;
-        } else if (create && typeof obj === 'object' && (obj as any).IS_SERV_SERVICE) {
-            // Prototype of Interface
             ret = {
                 id: '',
                 version: '',
-                apis: [],
-                evts: [],
+                apis,
+                evts,
             };
-
-            (obj as any)[META] = ret;
-
-            return ret;
+            (objProto as any)[META] = ret;
         }
 
-        asyncThrowMessage('Get meta from an invalid serv target!');
+        return ret;
     } catch (e) {
         asyncThrow(e);
     }
