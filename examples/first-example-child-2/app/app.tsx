@@ -6,7 +6,7 @@ import { sappSDK } from 'servkit';
 export function App() {
 
     const showMessage = async () => {
-        const message = await sappSDK.getService(MessageService);
+        const message = sappSDK.getService(MessageService);
         await message!.info('点击弹出成功！');
     };
 

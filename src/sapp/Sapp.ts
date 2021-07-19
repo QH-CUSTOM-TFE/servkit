@@ -1029,6 +1029,9 @@ export class Sapp {
             id: this.getTerminalId(),
             type: EServTerminal.MASTER,
             session: undefined!,
+            context: {
+                info: this.info,
+            },
         };
 
         if (config.resolveServiceClientConfig) {
