@@ -32,9 +32,8 @@ function showAntdMessage(content: ImessageServiceType, type: 'info' | 'success' 
 export class MessageServiceImpl extends MessageService {
 
     info(content: ImessageServiceType): ServAPIRetn<void> {
-        const result = this.getContext();
-        console.log(result);
-        return showAntdMessage(content, 'info');
+        const context = this.getContext();
+        return showAntdMessage(`${content}, context: ${JSON.stringify(context, null, 2)}`, 'info');
     }
 
     success(content: ImessageServiceType): ServAPIRetn<void> {
