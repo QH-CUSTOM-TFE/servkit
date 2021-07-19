@@ -9,13 +9,15 @@ export enum EServTerminal {
     SLAVE,
 }
 
-export interface ServTerminalConfig {
+export interface ServTerminalConfig<T = any> {
     id: string;
     type: EServTerminal;
 
     client?: ServServiceClientConfig;
     server?: ServServiceServerConfig;
     session: ServSessionConfig;
+
+    context?: T;
 }
 
 export class ServTerminal  {
@@ -27,6 +29,8 @@ export class ServTerminal  {
     client: ServServiceClient;
     server: ServServiceServer;
     session: ServSession;
+
+    context: null | any;
 
     constructor(servkit: Servkit) {
         this.servkit = servkit;
@@ -43,6 +47,7 @@ export class ServTerminal  {
         this.session.init(config.session);
         this.server.init(config.server);
         this.client.init(config.client);
+        this.context = config.context ?? null;
     }
 
     isMaster() {

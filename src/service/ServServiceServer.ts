@@ -88,7 +88,7 @@ export class ServServiceServer {
             for (let i = 0, iz = keys.length; i < iz; ++i) {
                 services[keys[i]] = this._getService(decls[keys[i]]);
             }
-            
+
             return services;
         }
     }
@@ -138,7 +138,7 @@ export class ServServiceServer {
             if (!service) {
                 return null;
             }
-    
+
             return exec(service);
         } else {
             const keys = Object.keys(decls);
@@ -150,7 +150,7 @@ export class ServServiceServer {
                 }
                 services[keys[i]] = service;
             }
-            
+
             return exec.call(window, services);
         }
     }
@@ -202,7 +202,7 @@ export class ServServiceServer {
         const servMessage = message as ServServiceMessage;
         if (ServServiceMessageCreator.isAPIMessage(servMessage)) {
             return this.handleAPIMessage(servMessage as ServServiceAPIMessage);
-        } 
+        }
 
         if (ServServiceMessageCreator.isGetVersionMessage(servMessage)) {
             return this.handleGetVesionMessage(servMessage);
@@ -216,7 +216,7 @@ export class ServServiceServer {
         const service = this.getServiceByID<ServService>(id);
 
         let retnPromise: Promise<any>;
-        
+
         if (!service) {
             retnPromise = Promise.reject(`Unknown service [${id}]`);
         } else {
@@ -227,6 +227,12 @@ export class ServServiceServer {
             if (typeof service[api] !== 'function') {
                 retnPromise = Promise.reject(`Unknown api [${api}] in service ${id}`);
             } else {
+                if (!service.hasOwnProperty('getContext')) {
+                    const self = this;
+                    service.getContext = function() {
+                        return self.terminal.context;
+                    };
+                }
                 try {
                     if (this.ACLResolver) {
                         if (!this.ACLResolver.canAccessService(this, meta)) {
@@ -239,7 +245,7 @@ export class ServServiceServer {
                             throw `Access api ${api} denied in service ${id}`;
                         }
                     }
-                    
+
                     let args = message.args;
                     if (apiMeta && apiMeta.options && apiMeta.options.onCallTransform) {
                         args = apiMeta.options.onCallTransform.recv(args);
@@ -271,14 +277,14 @@ export class ServServiceServer {
         const service = this.getServiceByID<ServService>(id);
 
         let retnPromise: Promise<any>;
-        
+
         if (!service) {
             retnPromise = Promise.reject(`Unknown service [${id}]`);
         } else {
             const meta = service.meta()!;
             retnPromise = Promise.resolve(meta.version);
         }
-            
+
         this.sendReturnMessage(retnPromise, message, (origin, data, error) => {
             return ServServiceMessageCreator.createReturn(origin, EServServiceMessage.GET_VERSION_RETURN, data, error);
         });

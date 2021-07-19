@@ -12,7 +12,7 @@ export interface ServServiceOptions {
     lazy?: boolean;
 }
 
-export type ServServiceReferPattern = 
+export type ServServiceReferPattern =
     RegExp |
     string |
     ((service: string) => boolean) |
@@ -203,7 +203,7 @@ export class ServServiceManager {
             for (let i = 0, iz = keys.length; i < iz; ++i) {
                 services[keys[i]] = this._getService(decls[keys[i]]);
             }
-            
+
             return services;
         }
     }
@@ -253,7 +253,7 @@ export class ServServiceManager {
             if (!service) {
                 return null;
             }
-    
+
             return exec(service);
         } else {
             const keys = Object.keys(decls);
@@ -265,7 +265,7 @@ export class ServServiceManager {
                 }
                 services[keys[i]] = service;
             }
-            
+
             return exec.call(window, services);
         }
     }
@@ -295,7 +295,7 @@ export class ServServiceManager {
             let info = this.serviceInfos[meta.id];
             if (info) {
                 asyncThrowMessage(`${meta.id} has added`);
-                
+
                 return false;
             }
 
