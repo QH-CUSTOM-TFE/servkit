@@ -647,11 +647,14 @@ function meta(obj: typeof ServService | ServService, create?: boolean): ServServ
         }
         let ret = (objProto as any)[META] as ServServiceMeta;
         if (create && !objProto.hasOwnProperty(META)) {
-            let apis: ServAPIMeta[] = [];
-            let evts: ServEventerMeta[] = [];
+            let apis: ServAPIMeta[];
+            let evts: ServEventerMeta[];
             if (ret) {
-                apis = [...ret.apis];
-                evts = [...ret.evts];
+                apis = ret.apis.slice();
+                evts = ret.evts.slice();
+            } else {
+                apis = [];
+                evts = [];
             }
             ret = {
                 id: '',

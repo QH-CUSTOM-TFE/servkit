@@ -4,7 +4,7 @@ import { ServMessageContextManager } from '../message/ServMessageContextManager'
 import { ServMessage, ServServiceEventMessage, ServServiceMessage, ServServiceReturnMessage, EServServiceMessage } from '../message/type';
 import { ServTerminal } from '../terminal/ServTerminal';
 import { ServEventerManager } from './event/ServEventerManager';
-import { ServAPI, ServAPIMeta, ServServiceMeta, ServEventerMeta, ServService } from './ServService';
+import { ServAPI, ServAPIMeta, ServServiceMeta, ServEventerMeta, ServService, ServAPICallOptions } from './ServService';
 
 // tslint:disable-next-line:no-empty-interface
 export interface ServServiceClientConfig {
@@ -189,7 +189,7 @@ export class ServServiceClient {
 
     private generateServiceAPI(service: string, meta: ServAPIMeta) {
         const self = this;
-        const ret: ServAPI<any> = function(args, options) {
+        const ret: ServAPI<any> = function(args, options?: ServAPICallOptions) {
             if (meta.options && meta.options.onCallTransform) {
                 args = meta.options.onCallTransform.send(args);
             }
