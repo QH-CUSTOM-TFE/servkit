@@ -462,7 +462,7 @@ export class ShostSDK extends EventEmitter {
         const config = this.config;
 
         const terminalConfig: ServTerminalConfig = {
-            id: EServConstant.SHOST_TERMINAL_ID,
+            id: EServConstant.SHOST_APP_ID,
             type: EServTerminal.MASTER,
             session: undefined!,
         };

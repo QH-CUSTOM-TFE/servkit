@@ -4,7 +4,7 @@ import {
     asyncThrow,
     EServConstant,
 } from '../common/common';
-import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, API_ERROR } from '../service/ServService';
+import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, API_ERROR, ServAPICallContext } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
@@ -340,6 +340,17 @@ export interface SappStartOptions {
 export interface SappTerminalExtData {
     app: Sapp;
     info: SappInfo;
+}
+
+/**
+ * 基于Sapp机制的RPC API上下文
+ *
+ * @export
+ * @interface SappAPICallContext
+ * @extends {ServAPICallContext}
+ */
+export interface SappAPICallContext extends ServAPICallContext {
+    extData: SappTerminalExtData;
 }
 
 /**

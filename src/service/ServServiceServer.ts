@@ -20,13 +20,25 @@ import {
     ServServiceRefer,
     ServServiceReferPattern,
 } from './ServServiceManager';
-import { EServkitEvent } from '../servkit/Servkit';
 
-// tslint:disable-next-line:no-empty-interface
 export interface ServServiceServerConfig {
     service?: ServServiceConfig;
     serviceRefer?: ServServiceReferPattern;
     ACLResolver?: ServServiceServerACLResolver;
+}
+
+/**
+ * Service RPC 相关事件
+ *
+ * @export
+ * @enum {number}
+ */
+export enum EServRPCEvent {
+    /**
+     * RPC处理事件；
+     * 事件传递参数：API Return Promise，API Args，API Name，ServService，ServTerminal，Servkit 
+     */
+    CALL = 'SERV_RPC_CALL',
 }
 
 export class ServServiceServer {
@@ -270,7 +282,7 @@ export class ServServiceServer {
             if (!meta.noRPCCallEvent) {
                 try {
                     this.terminal.servkit.emit(
-                        EServkitEvent.RPC_CALL,
+                        EServRPCEvent.CALL,
                         retnPromise,
                         args,
                         api,

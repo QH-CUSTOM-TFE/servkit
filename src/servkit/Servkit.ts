@@ -18,21 +18,6 @@ export interface ServkitConfig {
      */
     service?: ServGlobalServiceConfig;
 }
-
-/**
- * Servkit相关事件
- *
- * @export
- * @enum {number}
- */
-export enum EServkitEvent {
-    /**
-     * RPC处理事件；
-     * 事件传递参数：API Return Promise，API Args，API Name，ServService，ServTerminal，Servkit 
-     */
-    RPC_CALL = 'RPC_CALL',
-}
-
 export class Servkit extends EventEmitter {
     namespace: string;
 

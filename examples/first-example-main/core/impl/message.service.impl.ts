@@ -1,5 +1,5 @@
 import { IMessageOption, ImessageServiceType, MessageService } from '@example/first-example-decl';
-import { anno, ServAPIRetn } from 'servkit';
+import { anno, ServAPIRetn, SappAPICallContext } from 'servkit';
 import { message as antdMessage } from 'antd';
 import { isString } from 'lodash';
 import { defer } from '../../util/promise';
@@ -36,10 +36,16 @@ export function showAntdMessage(content: ImessageServiceType, type: 'info' | 'su
     return deferObj.promise;
 }
 
-@anno.impl()
+@anno.impl({
+    needCallContext: true,
+})
 export class MessageServiceImpl extends MessageService {
 
-    info(content: ImessageServiceType): ServAPIRetn<void> {
+    info(content: ImessageServiceType, context?: SappAPICallContext): ServAPIRetn<void> {
+        if (context) {
+            // tslint:disable-next-line:no-console
+            console.log("RPC执行上下文", context.extData.info.id, context);
+        }
         return showAntdMessage(content, 'info');
     }
 

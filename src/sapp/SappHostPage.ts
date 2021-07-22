@@ -11,6 +11,8 @@ import { anno } from '../service/ServService';
 export type SappHostOnCloseHandle = (app: SappHostPage) => Promise<SappHostOnCloseResult>;
 
 export class SappHostPage extends Sapp {
+    static APP_ID = EServConstant.SHOST_APP_ID;
+
     static isInHostEnv() {
         return window.parent !== window;
     }
@@ -181,7 +183,7 @@ export class SappHostPage extends Sapp {
         const config = this.config;
         
         let terminalConfig: ServTerminalConfig = {
-            id: EServConstant.SHOST_TERMINAL_ID,
+            id: EServConstant.SHOST_APP_ID,
             type: EServTerminal.SLAVE,
             session: {
                 channel: {
