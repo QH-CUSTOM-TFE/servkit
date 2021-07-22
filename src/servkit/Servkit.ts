@@ -1,14 +1,39 @@
 import { asyncThrow } from '../common/common';
-import { ServServiceClient, ServServiceClientConfig, ServServiceServer, ServServiceServerConfig } from '../service';
-import { EServChannel } from '../session';
-import { ServTerminal, ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
+import { ServTerminal, ServTerminalConfig } from '../terminal/ServTerminal';
 import { ServGlobalServiceConfig, ServGlobalServiceManager } from './ServGlobalServiceManager';
+import { EventEmitter } from 'eventemitter3';
 
+/**
+ * Servkit配置
+ *
+ * @export
+ * @interface ServkitConfig
+ */
 export interface ServkitConfig {
+    /**
+     * 全局服务，也可在servkit初始化后，手动添加
+     *
+     * @type {ServGlobalServiceConfig}
+     * @memberof ServkitConfig
+     */
     service?: ServGlobalServiceConfig;
 }
 
-export class Servkit  {
+/**
+ * Servkit相关事件
+ *
+ * @export
+ * @enum {number}
+ */
+export enum EServkitEvent {
+    /**
+     * RPC处理事件；
+     * 事件传递参数：API Return Promise，API Args，API Name，ServService，ServTerminal，Servkit 
+     */
+    RPC_CALL = 'RPC_CALL',
+}
+
+export class Servkit extends EventEmitter {
     namespace: string;
 
     service: ServGlobalServiceManager;
@@ -16,6 +41,8 @@ export class Servkit  {
     protected terminals: ServTerminal[];
 
     constructor(namespace?: string) {
+        super();
+
         this.namespace = namespace || '';
     }
 

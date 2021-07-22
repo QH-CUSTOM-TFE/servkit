@@ -1,4 +1,4 @@
-import { logACL } from '../common/common';
+import { logACL, asyncThrow } from '../common/common';
 import { ServServiceMessageCreator } from '../message/creator';
 import {
     ServMessage,
@@ -20,6 +20,7 @@ import {
     ServServiceRefer,
     ServServiceReferPattern,
 } from './ServServiceManager';
+import { EServkitEvent } from '../servkit/Servkit';
 
 // tslint:disable-next-line:no-empty-interface
 export interface ServServiceServerConfig {
@@ -220,6 +221,7 @@ export class ServServiceServer {
         if (!service) {
             retnPromise = Promise.reject(`Unknown service [${id}]`);
         } else {
+            let args = message.args;
             const api = message.api;
             const meta = service.meta()!;
             const apiMeta = meta.apis.find((item) => item.name === api)!;
@@ -239,7 +241,6 @@ export class ServServiceServer {
                         }
                     }
                     
-                    let args = message.args;
                     if (apiMeta && apiMeta.options && apiMeta.options.onCallTransform) {
                         args = apiMeta.options.onCallTransform.recv(args);
                     }
@@ -252,6 +253,7 @@ export class ServServiceServer {
                             extData: this.terminal.getExtData(),
                         };
                     }
+                    
                     retnPromise = Promise.resolve(service[api](args, context));
                     if (apiMeta && apiMeta.options && apiMeta.options.onRetnTransform) {
                         retnPromise = retnPromise.then((data) => {
@@ -261,6 +263,22 @@ export class ServServiceServer {
                     }
                 } catch (e) {
                     retnPromise = Promise.reject(e);
+                }
+            }
+
+            // Trigger servkit rpc event
+            if (!meta.noRPCCallEvent) {
+                try {
+                    this.terminal.servkit.emit(
+                        EServkitEvent.RPC_CALL,
+                        retnPromise,
+                        args,
+                        api,
+                        service,
+                        this.terminal,
+                        this.terminal.servkit);
+                } catch (e) {
+                    asyncThrow(e);
                 }
             }
 

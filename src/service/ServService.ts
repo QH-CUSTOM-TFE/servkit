@@ -50,6 +50,7 @@ export interface ServDeclOptions {
      * @memberof ServDeclOptions
      */
     noVersionCheck?: boolean;
+    noRPCCallEvent?: boolean;
 }
 
 /**
@@ -285,6 +286,7 @@ export interface ServServiceMeta {
     apis: ServAPIMeta[];
     evts: ServEventerMeta[];
     noVersionCheck?: boolean;
+    noRPCCallEvent?: boolean;
 }
 
 /**
@@ -492,6 +494,9 @@ const decl: ServAnnoDecl = ((options: ServDeclOptions) => {
             metas.EXT = options.EXT;
             if (options.noVersionCheck) {
                 metas.noVersionCheck = true;
+            }
+            if (options.noRPCCallEvent) {
+                metas.noRPCCallEvent = true;
             }
         } catch (e) {
             asyncThrow(e);

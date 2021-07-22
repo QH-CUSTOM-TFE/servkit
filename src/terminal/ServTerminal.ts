@@ -8,7 +8,6 @@ export enum EServTerminal {
     MASTER,
     SLAVE,
 }
-
 export interface ServTerminalConfig {
     id: string;
     type: EServTerminal;
@@ -18,7 +17,7 @@ export interface ServTerminalConfig {
     session: ServSessionConfig;
 }
 
-export class ServTerminal  {
+export class ServTerminal {
     id: string;
     type: EServTerminal;
 
