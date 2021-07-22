@@ -10,7 +10,7 @@ import {
 } from '../message/type';
 
 import { ServTerminal } from '../terminal/ServTerminal';
-import { ServService } from './ServService';
+import { ServService, ServAPICallContext } from './ServService';
 import { ServServiceServerACLResolver } from './ServServiceServerACLResolver';
 import {
     ServServiceConfig,
@@ -223,7 +223,6 @@ export class ServServiceServer {
             const api = message.api;
             const meta = service.meta()!;
             const apiMeta = meta.apis.find((item) => item.name === api)!;
-
             if (typeof service[api] !== 'function') {
                 retnPromise = Promise.reject(`Unknown api [${api}] in service ${id}`);
             } else {
@@ -244,7 +243,16 @@ export class ServServiceServer {
                     if (apiMeta && apiMeta.options && apiMeta.options.onCallTransform) {
                         args = apiMeta.options.onCallTransform.recv(args);
                     }
-                    retnPromise = Promise.resolve(service[api](args));
+
+                    const implMeta = service.implMeta();
+                    let context: ServAPICallContext = undefined!;
+                    if (implMeta && implMeta.needCallContext) {
+                        context = {
+                            terminal: this.terminal,
+                            extData: this.terminal.getExtData(),
+                        };
+                    }
+                    retnPromise = Promise.resolve(service[api](args, context));
                     if (apiMeta && apiMeta.options && apiMeta.options.onRetnTransform) {
                         retnPromise = retnPromise.then((data) => {
                             data = apiMeta.options!.onRetnTransform!.send(data);

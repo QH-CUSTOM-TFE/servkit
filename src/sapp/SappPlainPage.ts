@@ -1,4 +1,4 @@
-import { Sapp, SappStartOptions, ESappType } from './Sapp';
+import { Sapp, SappStartOptions, ESappType, SappTerminalExtData } from './Sapp';
 import { DeferredUtil } from '../common/Deferred';
 import { SappShowParams, SappHideParams, SappCloseResult } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
@@ -197,7 +197,11 @@ export class SappPlainPage extends Sapp {
         }
 
         // Setup terminal
-        this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
+        this.terminal = this.getServkit().createTerminal(terminalConfig);
+        this.terminal.setExtData<SappTerminalExtData>({
+            app: this,
+            info: this.info,
+        });
 
         await this.terminal.openSession();
     }

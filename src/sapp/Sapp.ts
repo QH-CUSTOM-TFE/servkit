@@ -332,6 +332,17 @@ export interface SappStartOptions {
 }
 
 /**
+ * Sapp在Terminal中的扩展数据，该数据可以在needCallContext的service中拿到
+ *
+ * @export
+ * @interface SappTerminalExtData
+ */
+export interface SappTerminalExtData {
+    app: Sapp;
+    info: SappInfo;
+}
+
+/**
  * 在主应用中，从应用抽象类；可通过Sapp实例操作从应用，并与从应用进行同行；
  *
  * Sapp主要提供：
@@ -1069,6 +1080,10 @@ export class Sapp {
 
         // Setup terminal
         this.terminal = this.getServkit().createTerminal(terminalConfig);
+        this.terminal.setExtData<SappTerminalExtData>({
+            app: this,
+            info: this.info,
+        });
 
         // Setup lifecycle
         const self = this;

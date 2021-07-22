@@ -1,4 +1,4 @@
-import { Sapp, SappStartOptions } from './Sapp';
+import { Sapp, SappStartOptions, SappTerminalExtData } from './Sapp';
 import { DeferredUtil } from '../common/Deferred';
 import { SappShowParams, SappHideParams } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
@@ -227,7 +227,11 @@ export class SappHostPage extends Sapp {
         }
 
         // Setup terminal
-        this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
+        this.terminal = this.getServkit().createTerminal(terminalConfig);
+        this.terminal.setExtData<SappTerminalExtData>({
+            app: this,
+            info: this.info,
+        });
 
         // Setup host service
         const self = this;

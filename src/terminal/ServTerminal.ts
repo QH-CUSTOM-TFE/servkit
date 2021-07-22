@@ -28,6 +28,8 @@ export class ServTerminal  {
     server: ServServiceServer;
     session: ServSession;
 
+    protected extData: any;
+
     constructor(servkit: Servkit) {
         this.servkit = servkit;
     }
@@ -53,6 +55,16 @@ export class ServTerminal  {
         this.client.release();
         this.server.release();
         this.session.release();
+
+        delete this.extData;
+    }
+
+    setExtData<T = any>(data: T) {
+        this.extData = data;
+    }
+
+    getExtData<T = any>(): T {
+        return this.extData;
     }
 
     openSession(options?: ServSessionOpenOptions) {
