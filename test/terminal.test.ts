@@ -1,7 +1,7 @@
 import { createMasterTerminal, destroyTerminal } from './terminal/create';
 import { EServChannel } from '../src';
-import { Test, Test1, Test2 } from './service/decl/service';
-import { TestImpl, Test1Impl } from './service/impl/service';
+import { Test, Test1, Test2, TestCallContext, TestCallContext1 } from './service/decl/service';
+import { TestImpl, Test1Impl, TestCallContextImpl, TestCallContextImpl1 } from './service/impl/service';
 import { ServTerminal } from '../src/terminal/ServTerminal';
 import * as tEvent from './terminal/event';
 import * as tMessage from './terminal/message';
@@ -96,6 +96,28 @@ const serviceAPITimeoutTest = async (
     });
 
     expect(ret).not.toBeNull();
+};
+
+const serviceCallTextTest = async (
+    { master, slave }: { master: ServTerminal, slave: ServTerminal },
+) => {
+    const extData = { data: 'Hello Ext Data' };
+    master.setExtData(extData);
+    {
+        const decl = TestCallContext;
+        const ret = await (await slave.client.service(decl)).checkContext(); 
+
+        expect(ret.data).toBe(extData.data);
+    }
+
+    {
+        const decl = TestCallContext1;
+        const ret = await (await slave.client.service(decl)).checkContext(); 
+
+        expect(ret).toBeUndefined();
+    }
+
+    master.setExtData(undefined);
 };
 
 const serviceUnknowServiceTest = async (
@@ -271,6 +293,8 @@ const testTerminal = async (port: typeof tEvent) => {
 
     await serviceAPITimeoutTest(datas);
 
+    await serviceCallTextTest(datas);
+
     await delay(800);
 
     datas.destroy();
@@ -280,6 +304,12 @@ test('Terminal Service', async () => {
     servkit.service.addServices([
         {
             decl: Test1, impl: Test1Impl,
+        },
+        {
+            decl: TestCallContext, impl: TestCallContextImpl,
+        },
+        {
+            decl: TestCallContext1, impl: TestCallContextImpl1,
         },
     ]);
     await testTerminal(tEvent);

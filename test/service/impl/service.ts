@@ -4,8 +4,9 @@ import {
     ServAPIArgs,
     ServAPIRetn,
     ServEventer,
+    ServAPICallContext,
 } from '../../../src';
-import { Test, Test1, ApiACLTest, ServACLTest } from '../decl/service';
+import { Test, Test1, ApiACLTest, ServACLTest, TestCallContext, TestCallContext1 } from '../decl/service';
 import { STRING_VALUE } from '../../util';
 
 @anno.impl()
@@ -133,5 +134,21 @@ export class ServACLTestImpl extends ServACLTest {
 
     publicAPI(): ServAPIRetn {
         return API_SUCCEED();
+    }
+}
+
+@anno.impl({
+    needCallContext: true,
+})
+export class TestCallContextImpl extends TestCallContext {
+    checkContext(args: void, context?: ServAPICallContext): ServAPIRetn {
+        return context?.extData;
+    }
+}
+
+@anno.impl()
+export class TestCallContextImpl1 extends TestCallContext1 {
+    checkContext(args: void, context?: ServAPICallContext): ServAPIRetn {
+        return context?.extData;
     }
 }
