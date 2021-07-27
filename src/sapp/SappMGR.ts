@@ -868,10 +868,13 @@ export class SappMGR {
             return options.useTerminalId;
         }
         const sappOption = info.options;
-        if (sappOption.useTerminalId) {
-            return sappOption.useTerminalId;
+        const {
+            useTerminalId,
+            create,
+        } = sappOption;
+        if (useTerminalId) {
+            return useTerminalId;
         }
-        const create = sappOption.create;
         if (create === undefined || create === ESappCreatePolicy.SINGLETON) {
             return info.id;
         }
