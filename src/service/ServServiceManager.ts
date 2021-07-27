@@ -1,6 +1,6 @@
 import { asyncThrow, asyncThrowMessage } from '../common/common';
 import { ServEventerManager, ServEventerOnEmitListener } from './event/ServEventerManager';
-import { EServImplInject, ServService, ServServiceMeta, util } from './ServService';
+import { ServService, ServServiceMeta } from './ServService';
 
 interface ServServiceInfo {
     meta: ServServiceMeta;
@@ -125,11 +125,47 @@ export class ServServiceManager {
     protected services: { [key: string]: ServService };
     protected serviceInfos: { [key: string]: ServServiceInfo };
     protected refers: ServServiceRefer[];
+    protected serviceInjects?: {
+        getService: ServServiceManager['getService'];
+        getServiceUnsafe: ServServiceManager['getServiceUnsafe'];
+        service: ServServiceManager['service'];
+        serviceExec: ServServiceManager['serviceExec'];
+        getServiceByID: ServServiceManager['getServiceByID'];
+        serviceExecByID: ServServiceManager['serviceExecByID'];
+    };
+    
     onEvnterEmit?: ServServiceOnEmitListener;
 
     init(config?: ServServiceConfig) {
         this.services = {};
         this.serviceInfos = {};
+        const self = this;
+        this.serviceInjects = {
+            // tslint:disable-next-line:object-literal-shorthand
+            getService: function() {
+                return self.getService.apply(self, arguments);
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            getServiceUnsafe: function() {
+                return self.getServiceUnsafe.apply(self, arguments);
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            service: function() {
+                return self.service.apply(self, arguments);
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            serviceExec: function() {
+                return self.serviceExec.apply(self, arguments);
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            getServiceByID: function() {
+                return self.getServiceByID.apply(self, arguments);
+            },
+            // tslint:disable-next-line:object-literal-shorthand
+            serviceExecByID: function() {
+                return self.serviceExecByID.apply(self, arguments);
+            },
+        };
 
         this.eventerManager = new ServEventerManager();
         this.eventerManager.init(this._onEventerEmit);
@@ -148,6 +184,7 @@ export class ServServiceManager {
         });
         this.refers = [];
         this.eventerManager.release();
+        this.serviceInjects = undefined;
         this.services = {};
         this.serviceInfos = {};
     }
@@ -374,22 +411,15 @@ export class ServServiceManager {
             (obj as any)[item.name] = this.generateServiceEvent(info.meta.id, item.name);
         });
 
-        const implMeta = util.implMeta(info.impl);
-        if (implMeta) {
-            const keys = Object.keys(implMeta.injects);
+        // Inject service apis
+        if (this.serviceInjects) {
+            const keys = Object.keys(this.serviceInjects);
             for (let i = 0, iz = keys.length; i < iz; ++i) {
-                const injInfo = implMeta.injects[keys[i]];
-                if (injInfo.type === EServImplInject.GET_SERVICE) {
-                    (obj as any)[injInfo.name] = this.injGetService;
-                }
+                obj[keys[i]] = this.serviceInjects[keys[i]];
             }
         }
 
         return obj;
-    }
-
-    private injGetService = (decl: typeof ServService): ServService | undefined => {
-        return this._getService(decl);
     }
 
     private generateServiceEvent(service: string, event: string) {

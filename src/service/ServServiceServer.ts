@@ -1,4 +1,4 @@
-import { logACL } from '../common/common';
+import { logACL, asyncThrow } from '../common/common';
 import { ServServiceMessageCreator } from '../message/creator';
 import {
     ServMessage,
@@ -10,7 +10,7 @@ import {
 } from '../message/type';
 
 import { ServTerminal } from '../terminal/ServTerminal';
-import { ServService } from './ServService';
+import { ServService, ServAPICallContext } from './ServService';
 import { ServServiceServerACLResolver } from './ServServiceServerACLResolver';
 import {
     ServServiceConfig,
@@ -21,11 +21,24 @@ import {
     ServServiceReferPattern,
 } from './ServServiceManager';
 
-// tslint:disable-next-line:no-empty-interface
 export interface ServServiceServerConfig {
     service?: ServServiceConfig;
     serviceRefer?: ServServiceReferPattern;
     ACLResolver?: ServServiceServerACLResolver;
+}
+
+/**
+ * Service RPC 相关事件
+ *
+ * @export
+ * @enum {number}
+ */
+export enum EServRPCEvent {
+    /**
+     * RPC处理事件；
+     * 事件传递参数：API Return Promise，API Args，API Name，ServService，ServTerminal，Servkit 
+     */
+    CALL = 'SERV_RPC_CALL',
 }
 
 export class ServServiceServer {
@@ -220,10 +233,10 @@ export class ServServiceServer {
         if (!service) {
             retnPromise = Promise.reject(`Unknown service [${id}]`);
         } else {
+            let args = message.args;
             const api = message.api;
             const meta = service.meta()!;
             const apiMeta = meta.apis.find((item) => item.name === api)!;
-
             if (typeof service[api] !== 'function') {
                 retnPromise = Promise.reject(`Unknown api [${api}] in service ${id}`);
             } else {
@@ -240,11 +253,20 @@ export class ServServiceServer {
                         }
                     }
                     
-                    let args = message.args;
                     if (apiMeta && apiMeta.options && apiMeta.options.onCallTransform) {
                         args = apiMeta.options.onCallTransform.recv(args);
                     }
-                    retnPromise = Promise.resolve(service[api](args));
+
+                    const implMeta = service.implMeta();
+                    let context: ServAPICallContext = undefined!;
+                    if (implMeta && implMeta.needCallContext) {
+                        context = {
+                            terminal: this.terminal,
+                            extData: this.terminal.getExtData(),
+                        };
+                    }
+                    
+                    retnPromise = Promise.resolve(service[api](args, context));
                     if (apiMeta && apiMeta.options && apiMeta.options.onRetnTransform) {
                         retnPromise = retnPromise.then((data) => {
                             data = apiMeta.options!.onRetnTransform!.send(data);
@@ -253,6 +275,22 @@ export class ServServiceServer {
                     }
                 } catch (e) {
                     retnPromise = Promise.reject(e);
+                }
+            }
+
+            // Trigger servkit rpc event
+            if (!meta.noRPCCallEvent) {
+                try {
+                    this.terminal.servkit.emit(
+                        EServRPCEvent.CALL,
+                        retnPromise,
+                        args,
+                        api,
+                        service,
+                        this.terminal,
+                        this.terminal.servkit);
+                } catch (e) {
+                    asyncThrow(e);
                 }
             }
 

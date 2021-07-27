@@ -8,7 +8,6 @@ export enum EServTerminal {
     MASTER,
     SLAVE,
 }
-
 export interface ServTerminalConfig {
     id: string;
     type: EServTerminal;
@@ -18,7 +17,7 @@ export interface ServTerminalConfig {
     session: ServSessionConfig;
 }
 
-export class ServTerminal  {
+export class ServTerminal {
     id: string;
     type: EServTerminal;
 
@@ -27,6 +26,8 @@ export class ServTerminal  {
     client: ServServiceClient;
     server: ServServiceServer;
     session: ServSession;
+
+    protected extData: any;
 
     constructor(servkit: Servkit) {
         this.servkit = servkit;
@@ -53,6 +54,16 @@ export class ServTerminal  {
         this.client.release();
         this.server.release();
         this.session.release();
+
+        delete this.extData;
+    }
+
+    setExtData<T = any>(data: T) {
+        this.extData = data;
+    }
+
+    getExtData<T = any>(): T {
+        return this.extData;
     }
 
     openSession(options?: ServSessionOpenOptions) {

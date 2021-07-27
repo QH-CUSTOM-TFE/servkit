@@ -603,7 +603,7 @@ export class SappMGR {
         options = options || {};
 
         const info = {
-            id: EServConstant.SHOST_TERMINAL_ID,
+            id: EServConstant.SHOST_APP_ID,
             version: '1.0.0',
             type: ESappType.HOST_PAGE,
             url: '',

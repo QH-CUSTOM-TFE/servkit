@@ -26,6 +26,8 @@ export const SERVICE_ID_TEST1 = 'com.servkit.service.test1';
 export const SERVICE_ID_TEST2 = 'com.servkit.service.test2';
 export const SERVICE_ID_APIACL = 'com.servkit.service.apiacl';
 export const SERVICE_ID_SERVACL = 'com.servkit.service.servacl';
+export const SERVICE_ID_CHECKCONTEXT = 'com.servkit.service.checkcontext';
+export const SERVICE_ID_CHECKCONTEXT1 = 'com.servkit.service.checkcontext1';
 
 @anno.decl({
     id: SERVICE_ID_TEST,
@@ -362,4 +364,26 @@ export class ServACLTest extends ServService {
         ACL: EACL.PUBLIC,
     })
     publicEvent: ServEventer;
+}
+
+@anno.decl({
+    id: SERVICE_ID_CHECKCONTEXT,
+    version: '1.0.0',
+})
+export class TestCallContext extends ServService {
+    @anno.decl.api()
+    checkContext(): ServAPIRetn<any> {
+        return API_UNSUPPORT();
+    }
+}
+
+@anno.decl({
+    id: SERVICE_ID_CHECKCONTEXT1,
+    version: '1.0.0',
+})
+export class TestCallContext1 extends ServService {
+    @anno.decl.api()
+    checkContext(): ServAPIRetn<any> {
+        return API_UNSUPPORT();
+    }
 }

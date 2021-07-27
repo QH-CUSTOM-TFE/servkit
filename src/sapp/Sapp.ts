@@ -4,7 +4,7 @@ import {
     asyncThrow,
     EServConstant,
 } from '../common/common';
-import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, API_ERROR } from '../service/ServService';
+import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, API_ERROR, ServAPICallContext } from '../service/ServService';
 import { ServServiceClientConfig, ServServiceClient } from '../service/ServServiceClient';
 import { ServSessionConfig } from '../session/ServSession';
 import { SappLifecycle, SappShowParams, SappHideParams, SappCloseResult, SappAuthParams } from './service/m/SappLifecycle';
@@ -329,6 +329,28 @@ export interface SappStartOptions {
      * @memberof SappStartOptions
      */
     showData?: any | SappConfig['resolveStartShowData'];
+}
+
+/**
+ * Sapp在Terminal中的扩展数据，该数据可以在needCallContext的service中拿到
+ *
+ * @export
+ * @interface SappTerminalExtData
+ */
+export interface SappTerminalExtData {
+    app: Sapp;
+    info: SappInfo;
+}
+
+/**
+ * 基于Sapp机制的RPC API上下文
+ *
+ * @export
+ * @interface SappAPICallContext
+ * @extends {ServAPICallContext}
+ */
+export interface SappAPICallContext extends ServAPICallContext {
+    extData: SappTerminalExtData;
 }
 
 /**
@@ -1069,6 +1091,10 @@ export class Sapp {
 
         // Setup terminal
         this.terminal = this.getServkit().createTerminal(terminalConfig);
+        this.terminal.setExtData<SappTerminalExtData>({
+            app: this,
+            info: this.info,
+        });
 
         // Setup lifecycle
         const self = this;

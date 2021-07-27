@@ -1,4 +1,4 @@
-import { anno, API_UNSUPPORT, ServAPIRetn, ServService } from 'servkit';
+import { anno, API_UNSUPPORT, ServAPIRetn, ServEventer, ServService } from 'servkit';
 
 export interface IMessageOption {
     /**

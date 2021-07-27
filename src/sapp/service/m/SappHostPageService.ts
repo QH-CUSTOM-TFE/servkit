@@ -9,6 +9,7 @@ export interface SappHostOnCloseResult {
     id: '$service.sapp.m.hostPageService',
     version: '1.0.0',
     noVersionCheck: true,
+    noRPCCallEvent: true,
 })
 export class SappHostPageService extends ServService {
     @anno.decl.api({

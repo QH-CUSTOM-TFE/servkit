@@ -1,4 +1,4 @@
-import { Sapp, SappStartOptions } from './Sapp';
+import { Sapp, SappStartOptions, SappTerminalExtData } from './Sapp';
 import { DeferredUtil } from '../common/Deferred';
 import { SappShowParams, SappHideParams } from './service/m/SappLifecycle';
 import { ServTerminalConfig, EServTerminal } from '../terminal/ServTerminal';
@@ -11,6 +11,8 @@ import { anno } from '../service/ServService';
 export type SappHostOnCloseHandle = (app: SappHostPage) => Promise<SappHostOnCloseResult>;
 
 export class SappHostPage extends Sapp {
+    static APP_ID = EServConstant.SHOST_APP_ID;
+
     static isInHostEnv() {
         return window.parent !== window;
     }
@@ -181,7 +183,7 @@ export class SappHostPage extends Sapp {
         const config = this.config;
         
         let terminalConfig: ServTerminalConfig = {
-            id: EServConstant.SHOST_TERMINAL_ID,
+            id: EServConstant.SHOST_APP_ID,
             type: EServTerminal.SLAVE,
             session: {
                 channel: {
@@ -227,7 +229,11 @@ export class SappHostPage extends Sapp {
         }
 
         // Setup terminal
-        this.terminal = this.manager.getServkit().createTerminal(terminalConfig);
+        this.terminal = this.getServkit().createTerminal(terminalConfig);
+        this.terminal.setExtData<SappTerminalExtData>({
+            app: this,
+            info: this.info,
+        });
 
         // Setup host service
         const self = this;

@@ -24,6 +24,8 @@ export interface SappCloseResult {
 @anno.decl({
     id: '$service.sapp.m.lifecycle',
     version: '1.0.0',
+    noVersionCheck: true,
+    noRPCCallEvent: true,
 })
 export class SappLifecycle extends ServService {
     @anno.decl.api()
