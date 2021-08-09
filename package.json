@@ -10,6 +10,7 @@
     "registry": "http://registry.npmjs.org",
     "access": "public"
   },
+  "license": "MIT",
   "devDependencies": {
     "open-browser-webpack-plugin": "^0.0.5",
     "@babel/core": "^7.10.5",
