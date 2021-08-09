@@ -33,7 +33,7 @@ const DEFAULT_APP_INFO: SappInfo = {
  *
  * @export
  * @class SappLayoutOptions
- * 
+ *
  * @example
  * ``` ts
  * // layout管理容器元素
@@ -46,7 +46,7 @@ const DEFAULT_APP_INFO: SappInfo = {
  *     onStart: () => { document.body.appendChild(container); },
  *     onClose: () => { document.body.removeChild(container); }
  * };
- * 
+ *
  * ```
  */
 export class SappLayoutOptions {
@@ -153,7 +153,7 @@ export interface SappHostCreateOptions {
       * @memberof SappHostCreateOptions
       */
      createACLResolver?(app: Sapp): SappACLResolver;
-     
+
     /**
      * 配置主应用向从应用提供的服务
      *
@@ -609,7 +609,7 @@ export class SappMGR {
             url: '',
             options: {},
         };
-    
+
         const appOptions = {
             ...options,
             startTimeout: EServConstant.SHOST_CREATE_TIMEOUT,
@@ -648,7 +648,7 @@ export class SappMGR {
             // createHost need sync, no await here
             app.start();
         }
-        
+
         return app;
     }
 
@@ -693,7 +693,7 @@ export class SappMGR {
      * @memberof SappMGR
      */
     isHostConnected() {
-        return this.hostApp && this.hostApp.isStarted; 
+        return this.hostApp && this.hostApp.isStarted;
     }
 
     /**
@@ -729,7 +729,7 @@ export class SappMGR {
             options.createACLResolver = this.config.createACLResolver;
         }
 
-        app = this.createApp(this.nextAppUuid(info), info, options);
+        app = this.createApp(this.nextAppUuid(info, options), info, options);
 
         this.addApp(app);
         app.closed.then(() => {
@@ -863,12 +863,26 @@ export class SappMGR {
         return false;
     }
 
-    protected nextAppUuid(info: SappInfo) {
+    protected nextAppUuid(info: SappInfo, options?: SappCreateOptions) {
+        if (options?.useTerminalId) {
+            return options.useTerminalId;
+        }
+        const sappOption = info.options;
+        const {
+            useTerminalId,
+            create,
+        } = sappOption;
+        if (useTerminalId) {
+            return useTerminalId;
+        }
+        if (create === undefined || create === ESappCreatePolicy.SINGLETON) {
+            return info.id;
+        }
         return `${info.id}-${nextUUID()}`;
     }
 
     protected createApp(uuid: string, info: SappInfo, options: SappCreateOptions): Sapp {
-        const app = info.type === ESappType.HOST_PAGE ? new SappHostPage(uuid, info, this) 
+        const app = info.type === ESappType.HOST_PAGE ? new SappHostPage(uuid, info, this)
                     : info.options.isPlainPage ? new SappPlainPage(uuid, info, this)
                     : new Sapp(uuid, info, this);
         this.createAppController(app, options);
