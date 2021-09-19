@@ -230,7 +230,7 @@ export class ServServiceClient {
     }
 
     private generateServiceEvent(service: string, meta: ServEventerMeta) {
-        return this.eventerManager.spawn(service, meta.name);
+        return this.eventerManager.spawn(service, meta.name, meta.options.transform);
     }
 
     private sendMessage(message: ServMessage): Promise<void> {

@@ -70,6 +70,22 @@ export interface ServImplOptions {
 }
 
 /**
+ * API 调用时，数据传输过程当中的序列化与反序列化功能
+ */
+export interface ServApiTransformOptions<T = any, R = any> {
+    /**
+     * 发送数据时，序列化操作
+     * @param args
+     */
+    send: (args: T) => R;
+    /**
+     * 接收到数据，反序列化操作
+     * @param rawArgs
+     */
+    recv: (rawArgs: R) => T;
+}
+
+/**
  * Service API 注解参数；anno.decl.api
  *
  * @export
@@ -103,40 +119,25 @@ export interface ServAPIOptions {
      *              -> Client.onCallTransform.recv
      *
      * @memberof ServAPIOptions
+     *
+     * send  API调用时发送阶段的转换回调，args为原始参数，返回值为最终发送给Server的数据
+     *
+     * recv  Client API接收阶段的转换回调，args为接收的原始数据，返回值为最终API返回的数据
+     *
      */
-    onCallTransform?: {
-        /**
-         * API调用时发送阶段的转换回调，args为原始参数，返回值为最终发送给Server的数据
-         *
-         */
-        send: (args: any) => any;
-
-        /**
-         * Client API接收阶段的转换回调，args为接收的原始数据，返回值为最终API返回的数据
-         *
-         */
-        recv: (rawArgs: any) => any;
-    };
+    onCallTransform?: ServApiTransformOptions;
 
     /**
      * 对API的参数和结果提供的序列化能力；
      * API返回阶段的数据转换回调，这是Server方的回调处理
      *
      * @memberof ServAPIOptions
+     *
+     * send Server API处理后在发送阶段的转换回调，args为处理返回的原始数据，返回值为最终发送给Client的数据
+     * recv Server API接收阶段的转换回调，args为Client发送的原始数据，返回值为最终处理函数的参数
+     *
      */
-    onRetnTransform?: {
-        /**
-         * Server API处理后在发送阶段的转换回调，args为处理返回的原始数据，返回值为最终发送给Client的数据
-         *
-         */
-        send: (data: any) => any;
-
-        /**
-         * Server API接收阶段的转换回调，args为Client发送的原始数据，返回值为最终处理函数的参数
-         *
-         */
-        recv: (rawData: any) => any;
-    };
+    onRetnTransform?: ServApiTransformOptions;
 
     /**
      * API 粒度的访问权限
@@ -192,6 +193,18 @@ export interface ServEventerOptions {
      * @memberof ServEventerOptions
      */
     EXT?: ServEXT;
+    /**
+     * 对API的参数和结果提供的序列化能力；
+     * API调用阶段的数据转换回调，这是Client方的回调处理；
+     * 回调调用时序为 Client.onCallTransform.send -> send message to Server
+     *              -> Server.onRetnTransform.recv
+     *              -> impl process
+     *              -> Server.onRetnTransform.send -> send message to Client
+     *              -> Client.onCallTransform.recv
+     *
+     * @memberof ServAPIOptions
+     */
+    transform?: ServApiTransformOptions;
 }
 
 const DEFAULT_SERV_API_OPTIONS: ServAPIOptions = {};

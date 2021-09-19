@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
-import { ServEventer, ServEventListener, ServEventUnListener } from '../ServService';
+import { ServApiTransformOptions, ServEventer, ServEventListener, ServEventUnListener } from '../ServService';
 
 const DUMMY_UNLISTENER: ServEventUnListener = () => undefined;
 
@@ -16,23 +16,33 @@ class Eventer implements ServEventer {
 
     protected center?: EventEmitter;
 
-    constructor(service: string, event: string) {
+    constructor(service: string, event: string, protected readonly option?: ServApiTransformOptions) {
         this.service = service;
         this.event = event;
         this.rawEvent = Eventer.generateRawEvent(service, event);
     }
 
+    protected wrapTransformListener(listener: ServEventListener): ServEventListener {
+        if (this.option?.recv) {
+            return function(this: any, value: any) {
+                return listener.call(this, value);
+            } as ServEventListener;
+        }
+        return listener;
+    }
+
     on(listener: ServEventListener): ServEventUnListener {
-        const unlistener = this.generateUnlitener(listener);
+        const wrappedListener = this.wrapTransformListener(listener);
+        const unlistener = this.generateUnlitener(wrappedListener);
         if (this.center) {
-            this.center.on(this.rawEvent, listener);
+            this.center.on(this.rawEvent, wrappedListener);
         }
 
         return unlistener;
     }
 
     once(listener: ServEventListener): ServEventUnListener {
-        const old = listener;
+        const old = this.wrapTransformListener(listener);
         let unlistener: ServEventUnListener = undefined!;
         listener = function() {
             old.apply(this, arguments);
@@ -54,7 +64,9 @@ class Eventer implements ServEventer {
             return Promise.reject(new Error('unknown'));
         }
 
-        return Promise.resolve(this.center.emit(this.rawEvent, this, args) as any);
+        const passArgs = this.option?.send ? this.option.send(args) : args;
+
+        return Promise.resolve(this.center.emit(this.rawEvent, this, passArgs) as any);
     }
 
     attach(center: EventEmitter) {
@@ -127,8 +139,8 @@ export class ServEventerManager {
         this.onEmit = undefined;
     }
 
-    spawn(service: string, event: string) {
-        const eventer = new Eventer(service, event);
+    spawn(service: string, event: string, option?: ServApiTransformOptions) {
+        const eventer = new Eventer(service, event, option);
         eventer.attach(this.center);
         this.eventers.push(eventer);
 
