@@ -23,9 +23,10 @@ class Eventer implements ServEventer {
     }
 
     protected wrapTransformListener(listener: ServEventListener): ServEventListener {
-        if (this.option?.recv) {
+        if (this.option) {
+            const recv = this.option.recv;
             return function(this: any, value: any) {
-                return listener.call(this, value);
+                return listener.call(this, recv(value));
             } as ServEventListener;
         }
         return listener;
@@ -64,7 +65,7 @@ class Eventer implements ServEventer {
             return Promise.reject(new Error('unknown'));
         }
 
-        const passArgs = this.option?.send ? this.option.send(args) : args;
+        const passArgs = this.option ? this.option.send(args) : args;
 
         return Promise.resolve(this.center.emit(this.rawEvent, this, passArgs) as any);
     }
