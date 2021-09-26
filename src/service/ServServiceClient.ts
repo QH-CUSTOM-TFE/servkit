@@ -69,9 +69,9 @@ export class ServServiceClient {
         return service as InstanceType<T>;
     }
 
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
+    getService<T extends typeof ServService>(decl: T): IServClientService<T> | undefined;
     getService<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> | undefined };
+        : { [key in keyof M]: IServClientService<M[key]> | undefined };
     getService() {
         if (arguments.length === 0) {
             return;
