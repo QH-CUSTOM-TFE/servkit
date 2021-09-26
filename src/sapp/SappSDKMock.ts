@@ -365,7 +365,7 @@ export class SappSDKMock {
             return;
         }
 
-        return this.terminal.client.getService(arguments[0]);
+        return this.terminal.client.getService(arguments[0]) as any;
     };
 
     getServiceUnsafe: ServServiceClient['getServiceUnsafe'] = function(this: SappSDK) {

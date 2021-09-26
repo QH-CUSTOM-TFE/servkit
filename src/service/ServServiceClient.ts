@@ -7,9 +7,9 @@ import { ServEventerManager } from './event/ServEventerManager';
 import { ServAPI, ServAPIMeta, ServServiceMeta, ServEventerMeta, ServService, ServAPICallOptions } from './ServService';
 
 // tslint:disable-next-line:no-empty-interface
-export interface ServServiceClientConfig {
+export interface ServServiceClientConfig {}
 
-}
+export type IServClientService<T extends typeof ServService = any> = Omit<InstanceType<T>, keyof ServService>;
 
 export class ServServiceClient {
     protected messageContextManager: ServMessageContextManager;
@@ -69,9 +69,9 @@ export class ServServiceClient {
         return service as InstanceType<T>;
     }
 
-    getService<T extends typeof ServService>(decl: T): InstanceType<T> | undefined;
+    getService<T extends typeof ServService>(decl: T): IServClientService<T> | undefined;
     getService<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> | undefined };
+        : { [key in keyof M]: IServClientService<M[key]> | undefined };
     getService() {
         if (arguments.length === 0) {
             return;
@@ -91,16 +91,16 @@ export class ServServiceClient {
         }
     }
 
-    getServiceUnsafe<T extends typeof ServService>(decl: T): InstanceType<T>;
+    getServiceUnsafe<T extends typeof ServService>(decl: T): IServClientService<T>;
     getServiceUnsafe<M extends { [key: string]: typeof ServService }>(decls: M)
-        : { [key in keyof M]: InstanceType<M[key]> };
+        : { [key in keyof M]: IServClientService<M[key]> };
     getServiceUnsafe() {
         return this.getService.apply(this, arguments);
     }
 
-    service<T extends typeof ServService>(decl: T): Promise<InstanceType<T>>;
+    service<T extends typeof ServService>(decl: T): Promise<IServClientService<T>>;
     service<M extends { [key: string]: typeof ServService }>(decls: M)
-        : Promise<{ [key in keyof M]: InstanceType<M[key]> }>;
+        : Promise<{ [key in keyof M]: IServClientService<M[key]> }>;
     service() {
         if (arguments.length === 0) {
             return Promise.reject(new Error('[SERVKIT] Decl is empty'));
@@ -117,12 +117,12 @@ export class ServServiceClient {
         T extends typeof ServService,
         R>(
         decl: T,
-        exec: ((service: InstanceType<T>) => R));
+        exec: ((service: IServClientService<T>) => R));
     serviceExec<
         M extends { [key: string]: typeof ServService },
         R>(
         decls: M,
-        exec: ((services: { [key in keyof M]: InstanceType<M[key]> }) => R));
+        exec: ((services: { [key in keyof M]: IServClientService<M[key]> }) => R));
     serviceExec() {
         if (arguments.length < 2) {
             return null;
