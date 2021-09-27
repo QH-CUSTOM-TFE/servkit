@@ -866,7 +866,7 @@ export class Sapp {
             return;
         }
 
-        return this.terminal.client.getService(arguments[0]);
+        return this.terminal.client.getService(arguments[0]) as any;
     };
 
     /**
