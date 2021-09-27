@@ -1,6 +1,6 @@
 import { asyncThrow, asyncThrowMessage } from '../common/common';
 import { ServEventerManager, ServEventerOnEmitListener } from './event/ServEventerManager';
-import { ServService, ServServiceMeta } from './ServService';
+import { ServApiTransformOptions, ServService, ServServiceMeta } from './ServService';
 
 interface ServServiceInfo {
     meta: ServServiceMeta;
@@ -408,7 +408,7 @@ export class ServServiceManager {
     private generateService(info: ServServiceInfo): ServService {
         const obj = new info.impl();
         info.meta.evts.forEach((item) => {
-            (obj as any)[item.name] = this.generateServiceEvent(info.meta.id, item.name);
+            (obj as any)[item.name] = this.generateServiceEvent(info.meta.id, item.name, item.options.transform);
         });
 
         // Inject service apis
@@ -422,8 +422,8 @@ export class ServServiceManager {
         return obj;
     }
 
-    private generateServiceEvent(service: string, event: string) {
-        return this.eventerManager.spawn(service, event);
+    private generateServiceEvent(service: string, event: string, option?: ServApiTransformOptions) {
+        return this.eventerManager.spawn(service, event, option);
     }
 
     private _onEventerEmit: ServEventerOnEmitListener = (eventer, args) => {
