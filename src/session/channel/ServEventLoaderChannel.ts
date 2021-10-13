@@ -53,9 +53,9 @@ export class ServEventLoaderChannel extends ServEventChannel {
             const waitEcho = this.waitSlaveEcho(options);
 
             const loader = master.createLoader(this);
-            
+            this.loader = loader;
             if (master.onCreate) {
-                master.onCreate(this.loader, this);
+                master.onCreate(loader, this);
             }
 
             return loader.load().then(() => {
@@ -64,11 +64,11 @@ export class ServEventLoaderChannel extends ServEventChannel {
                 if (this.recvable) {
                     this.sendable = true;
                     if (master.onEcho) {
-                        master.onEcho(this.loader, this);
+                        master.onEcho(loader, this);
                     }
 
                     if (master.onOpened) {
-                        master.onOpened(this.loader, this);
+                        master.onOpened(loader, this);
                     }
                 }
             }).catch((error) => {

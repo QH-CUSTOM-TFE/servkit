@@ -1,4 +1,4 @@
-import { Sapp } from './Sapp';
+import { Sapp, SappInfo } from './Sapp';
 import { SappController } from './SappController';
 import { SappCreateOptions, SappLayoutOptions } from './SappMGR';
 import { EServChannel } from '../session/channel/ServChannel';
@@ -166,12 +166,14 @@ export class SappDefaultAsyncLoadController extends SappController {
     }
 
     protected generateLoadCreator(options: SappCreateOptions) {
+        let info: SappInfo;
         return {
             createLoader: (channel) => {
+                info = this.app.info;
                 const load = async () => {
-                    let context = getAsyncLoadDeclContext(this.app.info.id);
+                    let context = getAsyncLoadDeclContext(info.id);
                     if (!context) { // Not loaded
-                        const preloaded = SappPreloader.instance.getPreloadDeferred(this.app.info.id);
+                        const preloaded = SappPreloader.instance.getPreloadDeferred(info.id);
                         let needLoad = true;
                         if (preloaded) { // Has preload ?
                             try {
@@ -183,13 +185,13 @@ export class SappDefaultAsyncLoadController extends SappController {
                         }
 
                         if (needLoad) { // Need load by self
-                            if (this.app.info.url) {
-                                const url = Sapp.transformContentByInfo(this.app.info.url, this.app.info);
+                            if (info.url) {
+                                const url = Sapp.transformContentByInfo(info.url, info);
                                 await LoadUtil.loadScript({
                                     url,
                                 }).loaded;
                             } else {
-                                const html = Sapp.transformContentByInfo(this.app.info.html!, this.app.info);
+                                const html = Sapp.transformContentByInfo(info.html!, info);
                                 await LoadUtil.loadHtml({
                                     html,
                                 }).loaded;
@@ -198,9 +200,9 @@ export class SappDefaultAsyncLoadController extends SappController {
                     }
 
                     // Re-read the context, if not exist, load fail
-                    context = getAsyncLoadDeclContext(this.app.info.id);
+                    context = getAsyncLoadDeclContext(info.id);
                     if (!context) {
-                        if (!this.app.info.options.isPlainPage) {
+                        if (!info.options.isPlainPage) {
                             throw new Error(`[SAPPMGR] Can't find bootstrap for preload app ${this.app.info.id}; Please ensure has decl bootstrap info by SappSDK.declAsyncLoad`);
                         }
                     } else {
@@ -216,11 +218,14 @@ export class SappDefaultAsyncLoadController extends SappController {
                 };
             },
             destroyLoader: (loader, channel) => {
-                delAsyncLoadStartParams(this.app.info.id);
-                const context = getAsyncLoadDeclContext(this.app.info.id);
+                if (!info) {
+                    return;
+                }
+                const context = getAsyncLoadDeclContext(info.id);
                 if (context) {
                     context.deBootstrap();
-                }  
+                } 
+                delAsyncLoadStartParams(info.id);
             },
         };
     }

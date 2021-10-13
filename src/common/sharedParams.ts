@@ -64,6 +64,10 @@ function declContextKey(id: string) {
     return `${id}-declContext`;
 }
 
+function globalKey(name: string, appId?: string) {
+    return `${name}-${appId || ''}-global`;
+}
+
 export function putAsyncLoadStartParams(appId: string, params: SappSDKAsyncLoadStartParams) {
     return putSharedParams(defaultServkit, startParamsKey(appId), params);
 }
@@ -86,4 +90,43 @@ export function getAsyncLoadDeclContext(appId: string) {
 
 export function delAsyncLoadDeclContext(appId: string) {
     return delSharedParams(defaultServkit, declContextKey(appId));
+}
+
+/**
+ * 注册全局对象，只在Async Load应用中可用
+ *
+ * @export
+ * @param {*} val 全局对象
+ * @param {string} name 全局对象名称
+ * @param {string} [appId] 应用id
+ * @returns
+ */
+export function putAsyncLoadGlobal(val: any, name: string, appId?: string) {
+    return putSharedParams(defaultServkit, globalKey(name, appId), val);
+}
+
+/**
+ * 获取全局对象，只在Async Load应用中可用
+ *
+ * @export
+ * @template T
+ * @param {string} name
+ * @param {string} [appId]
+ * @returns
+ */
+export function getAsyncLoadGlobal<T = any>(name: string, appId?: string) {
+    return getSharedParams<T>(defaultServkit, globalKey(name, appId));
+}
+
+/**
+ * 删除全局对象，只在Async Load应用中可用
+ *
+ * @export
+ * @param {*} val
+ * @param {string} name
+ * @param {string} [appId]
+ * @returns
+ */
+export function delAsyncLoadGlobal(val: any, name: string, appId?: string) {
+    return delSharedParams(defaultServkit, globalKey(name, appId));
 }
