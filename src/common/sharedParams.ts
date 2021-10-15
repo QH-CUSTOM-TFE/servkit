@@ -101,7 +101,7 @@ export function delAsyncLoadDeclContext(appId: string) {
  * @param {string} [appId] 应用id
  * @returns
  */
-export function putAsyncLoadGlobal(val: any, name: string, appId?: string) {
+export function putAsyncLoadGlobal(name: string, val: any, appId?: string) {
     return putSharedParams(defaultServkit, globalKey(name, appId), val);
 }
 
@@ -122,11 +122,10 @@ export function getAsyncLoadGlobal<T = any>(name: string, appId?: string) {
  * 删除全局对象，只在Async Load应用中可用
  *
  * @export
- * @param {*} val
  * @param {string} name
  * @param {string} [appId]
  * @returns
  */
-export function delAsyncLoadGlobal(val: any, name: string, appId?: string) {
+export function delAsyncLoadGlobal(name: string, appId?: string) {
     return delSharedParams(defaultServkit, globalKey(name, appId));
 }
