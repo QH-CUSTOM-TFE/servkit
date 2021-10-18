@@ -7,7 +7,7 @@
     "eventemitter3": "2.0.3"
   },
   "publishConfig": {
-    "registry": "http://registry.npmjs.org",
+    "registry": "https://registry.npmjs.org",
     "access": "public"
   },
   "license": "MIT",
