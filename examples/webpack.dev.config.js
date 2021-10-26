@@ -45,7 +45,7 @@ module.exports = {
             'servkit': path.resolve(__dirname, '../src'),
             '@example/first-example-decl': path.resolve(__dirname, 'packages/first-example-decl'),
             '@example/first-children-decl': path.resolve(__dirname, 'packages/first-children-decl'),
-            '@example/first-example-parent-decl': path.resolve(__dirname, 'packages/first-example-parent-decl'),
+            '@example/first-example-parent-decl': path.resolve(__dirname, 'packages/first-example-parent-decl')
         },
         extensions: ['.js', '.ts', '.d.ts', '.tsx', '.css'],
     },

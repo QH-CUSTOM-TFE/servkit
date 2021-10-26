@@ -209,6 +209,179 @@ common.message('调用服务');
 ### 双向通信
 这里只展示了从IFrame向承载页的单向通信，但**servkit提供了IFrame页面和承载页面的双向通信机制，IFrame自身也可以向承载页暴露服务**，具体使用与上述例子类似（不同点在于**承载页通过sappMGR.create后的app获取服务**）。
 
+## 基座运行环境微应用
+基于基座应用上搭建微应用也是典型的场景，这里基座应用负责提供基础能力，而微应用以HTML片段（或者JSBundle链接）形式暴露，由基座应用进行管理，并运行在基座应用的上下文，利用基座应用的能力API做业务开发；针对两种场景，servkit做了归一化。
+
+相互间的关系：
+
+基座应用 -> sappMGR -> service decl <- sappSDK <- 微应用
+
+### 基座应用代码（主应用）
+打开微应用:
+
+``` typescript
+// 在承载页面都通过sappMGR进行操作
+import { sappMGR } from 'servkit';
+import { CommonService } from 'servkit-service-decl';
+import { CommonServiceImpl } from './service/CommonServiceImpl';
+
+sappMGR.create(
+{
+    // 页面的ID
+    id: 'com.page.demo',
+    // 页面的版本
+    version: '1.0.0',
+    // 页面的名称
+    name: 'demo',
+    // 页面的地址，基于url提供的html片段
+    url: 'https://www.demo.com',
+    // 或者直接基于html片段
+    html: '<html><script src="xxxx"></script></html>',
+    // 应用类型为异步加载类型
+    type: ESappType.ASYNC_LOAD
+    // 页面的可选参数
+    options: {
+    }
+}, 
+{
+    // 页面布局相关配置
+    layout: {
+        // 微应用的容器DOM元素
+        container: domElement,
+    },
+    // 配置承载页面向iframe页面提供的服务，iframe页面可直接调用相应的服务API
+    services: [
+        // 注册CommonService
+        {
+            // 服务声明，类型声明会和iframe进行共享，保证了API的类型检查 
+            decl: CommonService,
+            // 服务实现，实现只存在与承载页代码之中，iframe页面不感知
+            impl: CommonServiceImpl
+        },
+    ],
+}).then((app) => {
+    // 页面创建成功，app为对应iframe的抽象体；
+    // 可通过app直接与iframe通信，以及显示、隐藏和关闭操作
+}).catch((e) => {
+    // 页面创建失败
+});
+
+```
+
+声明服务:
+``` typescript
+// CommonService.ts
+// 服务声明通常单独放在一个npm包里面，能够给实现方和使用方进行共享使用
+import { ServService, ServEventer, anno, ServAPIArgs, ServAPIRetn, API_UNSUPPORT } from 'servkit';
+
+// 声明一个服务class，该class定义了IFrame间的通信语义，类型声明
+@anno.decl({
+    // 服务id
+    id: 'demo.service.common',
+    // 服务版本
+    version: '1.0.0',
+})
+export class CommonService extends ServService {
+    // 声明一个服务notify型api，notify型的api不带有返回数据；
+    // 参数为一个字符串；
+    @anno.decl.notify()
+    message(args: ServAPIArgs<string>): ServAPIRetn {
+        return API_UNSUPPORT();
+    }
+
+    // 声明一个服务api，具有返回数据；
+    // 参数为一个字符串，返回boolean值；
+    @anno.decl.api()
+    confirm(args: ServAPIArgs<string>): ServAPIRetn<boolean> {
+        return API_UNSUPPORT();
+    }
+}
+```
+
+实现服务:
+``` typescript
+// CommonService.ts
+// 服务声明通常单独放在一个npm包里面，能够给实现方和使用方进行共享使用
+import { CommonService } from 'servkit-service-decl';
+import { anno, ServAPIArgs, ServAPIRetn, API_SUCCEED, DeferredUtil } from 'servkit';
+// 通过antd实现message和confirm
+import message from 'antd/lib/message';
+import 'antd/lib/message/style/css';
+import Modal from 'antd/lib/modal';
+import 'antd/lib/modal/style/css';
+
+// 实现一个服务class
+@anno.impl()
+export class CommonServiceImpl extends CommonService {
+    // 实现message接口
+    message(args: ServAPIArgs<string>): ServAPIRetn {
+        message.success(args);
+        return API_SUCCEED();
+    }
+
+    // 实现confirm接口
+    confirm(args: ServAPIArgs<string>): ServAPIRetn<boolean> {
+        const deffered = DeferredUtil.create<boolean>();
+        Modal.confirm({
+            title: '确认',
+            content: args,
+            onCancel: () => {
+                deffered.resolve(false);
+            },
+            onOk: () => {
+                deffered.resolve(true);
+            }
+        })
+        return deffered;
+    }
+}
+```
+
+### 微应用相关代码
+微应用启动:
+``` typescript
+// 异步微应用需要通过SappSDK进行注册
+import { SappSDK } from 'servkit';
+import { IAsyncAppCommonService } from 'servkit-service-decl';
+import { IAsyncAppCommonServiceImpl } from './service/CommonServiceImpl';
+import { CommonService } from 'servkit-service-decl';
+
+// 注册异步应用，这里的id需要与基座应用中对应
+SappSDK.declAsyncLoad('demo.service.common', {
+    // 微应用的启动函数
+    bootstrap: (sdk) => {
+        // 后续通过sdk进行服务调用
+        sdk.setConfig(
+        {
+            // 配置微应用向基座应用提供的服务，基座应用可直接调用相应的服务API
+            services: [
+                // 注册IAsyncAppCommonService
+                {
+                    // 服务声明
+                    decl: IAsyncAppCommonService,
+                    // 服务实现
+                    impl: IAsyncAppCommonServiceImpl
+                },
+            ],
+        }).start().then((app) => {
+            render();
+
+            const common = await sappSDK.service(CommonService);
+            // 调用基座应用提供的服务API
+            common.message('调用服务');
+
+        }).catch((e) => {
+            // 启动失败
+        });
+    },
+    // 微应用的卸载函数
+    deBootstrap: () => {
+        // 卸载应用
+        unmount();
+    },
+});
+
+```
 # Example
 ## 自带例子
 ```npm start```，基础例子演示
