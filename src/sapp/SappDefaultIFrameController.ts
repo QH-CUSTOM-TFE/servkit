@@ -57,6 +57,7 @@ export class SappDefaultIFrameController extends SappController {
             } else {
                 className = className + ' ' + layout.showClassName;
             }
+            element.className = className;
             return;
         }
 
@@ -83,6 +84,7 @@ export class SappDefaultIFrameController extends SappController {
             } else {
                 className = className + ' ' + layout.hideClassName;
             }
+            element.className = className;
             return;
         }
 
